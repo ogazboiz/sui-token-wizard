@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Search, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +10,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 export default function Navbar() {
   const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const router = useRouter()
+
+  const handleFungibleTokenClick = () => {
+    router.push("/generate")
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-zinc-900 border-b border-zinc-800">
@@ -42,11 +48,14 @@ export default function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-zinc-800 border-zinc-700">
-                <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700">
+                <DropdownMenuItem
+                  className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                  onClick={handleFungibleTokenClick}
+                >
                   Fungible Token
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700">
-                  NFT Collection
+                <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 opacity-60 cursor-not-allowed">
+                  NFT Collection <span className="ml-2 text-xs bg-zinc-700 px-1.5 py-0.5 rounded">Coming soon</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

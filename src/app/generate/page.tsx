@@ -1,14 +1,9 @@
 import { Suspense } from "react"
 import Navbar from "@/components/navbar"
-import HeroSection from "@/components/hero-section"
-import ContractTemplates from "@/components/contract-templates"
-import ActiveChains from "@/components/active-chains"
-import FeaturesSection from "@/components/features-section"
-import BlogSection from "@/components/blog-section"
-import FaqSection from "@/components/faq-section"
 import { Toaster } from "@/components/ui/sonner"
+import TokenGenerator from "@/components/generator/token-projector"
 
-export default function Home() {
+export default function GeneratePage() {
   return (
     <main className="min-h-screen bg-zinc-950">
       <Navbar />
@@ -19,12 +14,7 @@ export default function Home() {
           </div>
         }
       >
-        <HeroSection />
-        <ContractTemplates isLandingPage={true} />
-        <ActiveChains />
-        <FeaturesSection />
-        <BlogSection />
-        <FaqSection />
+        <TokenGenerator/>
       </Suspense>
       <Toaster />
     </main>

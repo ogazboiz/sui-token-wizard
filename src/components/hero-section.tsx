@@ -1,19 +1,18 @@
 "use client"
-
-import { useState } from "react"
 import { motion } from "framer-motion"
 import { PlusCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import TokenModal from "@/components/token-modal"
-import FeatureBanner from "@/components/feature-banner"
+import { useRouter } from "next/navigation"
 
 export default function HeroSection() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const router = useRouter()
+
+  const handleCreateToken = () => {
+    router.push("/generate")
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">
-      <FeatureBanner />
-
       <div className="mt-8 md:mt-12">
         <motion.div
           className="bg-zinc-900 rounded-xl border border-zinc-800 p-8 md:p-12"
@@ -34,7 +33,7 @@ export default function HeroSection() {
             </p>
 
             <Button
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleCreateToken}
               className="bg-teal-500 hover:bg-teal-600 text-white text-lg px-8 py-6 h-auto rounded-lg"
             >
               <PlusCircle className="mr-2" size={24} />
@@ -60,8 +59,6 @@ export default function HeroSection() {
           </div>
         </motion.div>
       </div>
-
-      <TokenModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }

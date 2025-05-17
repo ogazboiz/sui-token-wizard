@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import TokenFormStandard from "./generator/token-form-standard"
 import TokenFormEssential from "./generator/token-form-essential"
-
+import { ConnectButton, useCurrentAccount, useWallets } from "@mysten/dapp-kit"
+import { WalletIcon } from "lucide-react"
+import { toast } from "sonner"
 
 interface TemplateFeature {
   name: string
@@ -72,8 +74,17 @@ interface ContractTemplatesProps {
 
 export default function ContractTemplates({ network = "mainnet", isLandingPage = false }: ContractTemplatesProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
+  const currentAccount = useCurrentAccount()
+  const wallets = useWallets()
+  
+  // Check if user is connected
+  const isConnected = !!currentAccount && !!wallets.find(w => w.name === wallets.selected)
 
   const handleSelectTemplate = (templateId: string) => {
+    if (!isConnected) {
+      toast.error("Please connect your wallet first to create a token")
+      return
+    }
     setSelectedTemplate(templateId)
   }
 
@@ -109,9 +120,22 @@ export default function ContractTemplates({ network = "mainnet", isLandingPage =
       <div className="text-center mb-8">
         <h2 className="text-xl md:text-2xl font-bold text-white">Select contract template</h2>
         <div className="mt-2 w-48 h-1 bg-purple-500 mx-auto rounded-full"></div>
+        
+        {!isConnected && !isLandingPage && (
+          <div className="mt-6 flex flex-col items-center">
+            <div className="text-zinc-400 mb-3">Connect your wallet to create tokens</div>
+            <ConnectButton 
+              connectText="Connect wallet to continue" 
+              className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2"
+            >
+              <WalletIcon size={16} className="mr-2" />
+              Connect Wallet
+            </ConnectButton>
+          </div>
+        )}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-7xl mx-auto">
+      <div className="container grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
         {templates.map((template) => (
           <motion.div
             key={template.id}
@@ -173,8 +197,13 @@ export default function ContractTemplates({ network = "mainnet", isLandingPage =
                     ? "bg-teal-500 hover:bg-teal-600 text-white"
                     : "bg-zinc-700 hover:bg-zinc-600 text-white"
                 }`}
+                disabled={!isLandingPage && !isConnected}
               >
-                Create token
+                {!isLandingPage && !isConnected ? (
+                  "Connect wallet first"
+                ) : (
+                  "Create token"
+                )}
               </Button>
             </div>
           </motion.div>

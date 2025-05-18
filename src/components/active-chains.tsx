@@ -63,7 +63,7 @@ const chains: Chain[] = [
 
 export default function ActiveChains() {
   return (
-    <div className="container mx-auto px-4 py-12 bg-zinc-900/30">
+    <div className=" max-w-7xl mx-auto px-4 py-12 mt-9 bg-zinc-900/30">
       <div className="text-center mb-10">
         <h2 className="text-2xl md:text-3xl font-bold text-white">Active chains</h2>
         <div className="mt-2 w-32 h-1 bg-purple-500 mx-auto rounded-full"></div>

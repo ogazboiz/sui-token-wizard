@@ -80,7 +80,7 @@ export default function ContractTemplates() {
         <div className="mt-2 w-48 h-1 bg-purple-500 mx-auto rounded-full"></div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 max-w-5xl mx-auto gap-6">
         {templates.map((template) => (
           <motion.div
             key={template.id}

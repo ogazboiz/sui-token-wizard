@@ -36,7 +36,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-zinc-900 border-b border-zinc-800">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-md bg-teal-500 flex items-center justify-center text-white font-bold text-xl">

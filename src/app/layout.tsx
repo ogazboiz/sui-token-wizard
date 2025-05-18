@@ -9,6 +9,7 @@ const varelaRound = Varela_Round({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-varela-round",
+
 })
 
 export const metadata: Metadata = {

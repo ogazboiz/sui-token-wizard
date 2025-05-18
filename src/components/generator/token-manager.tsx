@@ -5,9 +5,13 @@ import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText } from "lucide-react"
+import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { Terminal } from "lucide-react"
 import ContractTemplates from "@/components/contract-templates"
+import { ConnectButton } from "@mysten/dapp-kit"
+import { useWalletConnection } from "@/components/hooks/useWalletConnection"
 
 interface TokenManagerProps {
   network: string
@@ -70,6 +74,7 @@ const tools: Tool[] = [
 
 export default function TokenManager({ network }: TokenManagerProps) {
   const [activeTool, setActiveTool] = useState("token-creator")
+  const { isConnected, isReady } = useWalletConnection()
 
   const getNetworkName = () => {
     switch (network) {
@@ -82,6 +87,51 @@ export default function TokenManager({ network }: TokenManagerProps) {
       default:
         return "Sui"
     }
+  }
+
+  // Show loading state while checking wallet connection
+  if (!isReady) {
+    return (
+      <div className="container mx-auto px-4 py-6 flex justify-center items-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+      </div>
+    )
+  }
+
+  // Show wallet connection prompt if not connected
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        {/* Breadcrumb */}
+        <div className="flex items-center text-sm text-zinc-400 mb-6">
+          <Link href="/" className="hover:text-white flex items-center">
+            <Home className="w-4 h-4 mr-1" />
+          </Link>
+          <ChevronRight className="w-4 h-4 mx-1" />
+          <Link href="/generate" className="hover:text-white">
+            {getNetworkName()}
+          </Link>
+          <ChevronRight className="w-4 h-4 mx-1" />
+          <span className="text-white">Token Creator</span>
+        </div>
+
+        <div className="max-w-xl mx-auto">
+          <Alert className="bg-zinc-900 border-zinc-800">
+            <Terminal className="h-4 w-4 text-teal-500" />
+            <AlertTitle className="text-white">Wallet Not Connected</AlertTitle>
+            <AlertDescription className="text-zinc-400">
+              You need to connect your wallet to create or manage tokens on {getNetworkName()}.
+              <div className="mt-4 flex justify-center">
+                <ConnectButton 
+                  connectText="Connect Wallet to Continue" 
+                  className="bg-teal-500 hover:bg-teal-600 text-white" 
+                />
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
   }
 
   return (

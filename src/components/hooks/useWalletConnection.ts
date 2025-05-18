@@ -1,81 +1,83 @@
 "use client";
 
-import { useCurrentAccount, useWallets } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useWallets,
+  useConnectWallet,
+  useDisconnectWallet,
+} from "@mysten/dapp-kit";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function useWalletConnection() {
   const currentAccount = useCurrentAccount();
-  const { wallets, currentWallet, select } = useWallets();
+  const wallets = useWallets();
+  const { mutateAsync: connectWallet } = useConnectWallet();
+  const { mutateAsync: disconnectWallet } = useDisconnectWallet();
   const [isReady, setIsReady] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  
+
   // Derived state
-  const isConnected = !!currentWallet && !!currentAccount;
+  const isConnected = !!currentAccount;
 
-  // Handle hydration mismatch by only rendering after client-side mount
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
+  // Handle hydration mismatch
+  useEffect(() => setIsReady(true), []);
 
-  // Notify user when connection status changes
+  // Connection status notifications
   useEffect(() => {
-    if (isReady && isConnected && currentAccount) {
-      toast.success("Wallet connected");
+    if (isReady && isConnected) {
+      toast.success(`Connected to ${currentAccount?.address.slice(0, 6)}...`);
     }
   }, [isConnected, currentAccount, isReady]);
 
-  const handleConnect = useCallback(async (walletName?: string) => {
-    try {
-      setIsConnecting(true);
-      
-      // If a specific wallet is requested, select it
-      if (walletName && wallets) {
-        const wallet = wallets.find(w => w.name.toLowerCase() === walletName.toLowerCase());
-        if (wallet) {
-          await select(wallet.name);
+  const handleConnect = useCallback(
+    async (walletName?: string) => {
+      try {
+        setIsConnecting(true);
+
+        // Specific wallet requested
+        if (walletName) {
+          const wallet = wallets.find(
+            (w) => w.name.toLowerCase() === walletName.toLowerCase()
+          );
+          if (!wallet) throw new Error("Wallet not found");
+          await connectWallet({ wallet });
           return;
         }
+
+        // Auto-connect to first available wallet
+        if (wallets.length > 0) {
+          await connectWallet({ wallet: wallets[0] });
+        } else {
+          throw new Error("No wallets available");
+        }
+      } catch (error) {
+        console.error("Connection failed:", error);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to connect"
+        );
+      } finally {
+        setIsConnecting(false);
       }
-      
-      // Otherwise, if we have a current wallet, use that
-      if (currentWallet) {
-        await select(currentWallet.name);
-      } 
-      // Or select the first available wallet
-      else if (wallets && wallets.length > 0) {
-        await select(wallets[0].name);
-      } else {
-        toast.error("No wallets available");
-      }
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-      toast.error("Failed to connect wallet");
-    } finally {
-      setIsConnecting(false);
-    }
-  }, [wallets, currentWallet, select]);
+    },
+    [wallets, connectWallet]
+  );
 
   const handleDisconnect = useCallback(async () => {
     try {
-      // The dApp Kit doesn't have a direct disconnect method in useWallets()
-      // It's handled through the UI components
-      
-      // This is a workaround - we can select null to disconnect
-      // @ts-ignore - Type safety issue but this works
-      await select(null);
+      await disconnectWallet();
       toast.info("Wallet disconnected");
     } catch (error) {
-      console.error("Failed to disconnect wallet:", error);
+      console.error("Disconnection failed:", error);
+      toast.error("Failed to disconnect wallet");
     }
-  }, [select]);
+  }, [disconnectWallet]);
 
   return {
     isConnected,
     isConnecting,
     currentAccount,
-    currentWallet,
-    availableWallets: wallets || [],
+    availableWallets: wallets,
     isReady,
     connect: handleConnect,
     disconnect: handleDisconnect,

@@ -33,12 +33,12 @@ export default function TokenForm({ network }: TokenFormProps) {
 
   const getNetworkName = () => {
     switch (network) {
-      case "sui":
-        return "Sui"
-      case "solana":
-        return "Solana"
-      case "aptos":
-        return "Aptos"
+      case "mainnet":
+        return "Sui Mainnet"
+      case "testnet":
+        return "Sui Testnet"
+      case "devnet":
+        return "Sui Devnet"
       default:
         return network.charAt(0).toUpperCase() + network.slice(1)
     }
@@ -46,12 +46,12 @@ export default function TokenForm({ network }: TokenFormProps) {
 
   const getNetworkColor = () => {
     switch (network) {
-      case "sui":
+      case "mainnet":
+        return "text-green-500"
+      case "testnet":
+        return "text-yellow-500"
+      case "devnet":
         return "text-blue-500"
-      case "solana":
-        return "text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500"
-      case "aptos":
-        return "text-blue-600"
       default:
         return "text-white"
     }
@@ -83,8 +83,8 @@ export default function TokenForm({ network }: TokenFormProps) {
         variant: "default",
       })
 
-      // Redirect to success page or dashboard
-      router.push("/")
+      // Redirect to dashboard
+      router.push("/dashboard")
     } catch (error) {
       toast({
         title: "Error creating token",

@@ -1,7 +1,7 @@
 import { formatAddress } from "@mysten/sui.js/utils";
 
 // Format a Sui address for display (0x1234...6789)
-export function shortenAddress(address: string, chars = 4): string {
+export function shortenAddress(address: string): string {
   return formatAddress(address);
 }
 
@@ -10,7 +10,7 @@ export function isWalletInstalled(walletName: string): boolean {
   if (typeof window === "undefined") return false;
   
   // Check if wallet is in the window.wallet object
-  // @ts-ignore
+  // @ts-expect-error - window.wallet might not exist
   return !!window.wallet?.[walletName];
 }
 
@@ -20,13 +20,13 @@ export function getAvailableWallets(): string[] {
   
   const wallets = [];
   
-  // @ts-ignore
+  // @ts-expect-error - window.suiWallet might not exist
   if (window.suiWallet) wallets.push("Sui Wallet");
-  // @ts-ignore
+  // @ts-expect-error - window.martian might not exist
   if (window.martian) wallets.push("Martian Wallet");
-  // @ts-ignore
+  // @ts-expect-error - window.ethos might not exist
   if (window.ethos) wallets.push("Ethos Wallet");
-  // @ts-ignore
+  // @ts-expect-error - window.suiet might not exist
   if (window.suiet) wallets.push("Suiet Wallet");
   
   return wallets;

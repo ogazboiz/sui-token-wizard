@@ -65,7 +65,7 @@ const mockNftCollections = [
 ]
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("tokens")
+  const [, setActiveTab] = useState("tokens")
   const router = useRouter()
   const { toast } = useToast()
 
@@ -229,7 +229,7 @@ export default function Dashboard() {
                 <Wallet className="h-16 w-16 text-zinc-700 mb-4" />
                 <h3 className="text-xl font-medium text-white mb-2">No tokens yet</h3>
                 <p className="text-zinc-400 text-center max-w-md mb-6">
-                  You haven't created any tokens yet. Create your first token to get started.
+                  You haven&apos;t created any tokens yet. Create your first token to get started.
                 </p>
                 <Button onClick={() => router.push("/generate")} className="bg-teal-500 hover:bg-teal-600 text-white">
                   Create Token
@@ -323,7 +323,7 @@ export default function Dashboard() {
                 <ImageIcon className="h-16 w-16 text-zinc-700 mb-4" />
                 <h3 className="text-xl font-medium text-white mb-2">No NFT collections yet</h3>
                 <p className="text-zinc-400 text-center max-w-md mb-6">
-                  You haven't created any NFT collections yet. Create your first collection to get started.
+                  You haven&apos;t created any NFT collections yet. Create your first collection to get started.
                 </p>
                 <Button
                   onClick={() => router.push("/nft/generate")}

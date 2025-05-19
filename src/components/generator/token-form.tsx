@@ -86,6 +86,7 @@ export default function TokenForm({ network }: TokenFormProps) {
       // Redirect to dashboard
       router.push("/dashboard")
     } catch (error) {
+      console.error("Error creating token:", error)
       toast({
         title: "Error creating token",
         description: "There was an error creating your token. Please try again.",

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useRouter } from "next/navigation"
+
 
 interface TemplateFeature {
   name: string
@@ -65,7 +65,7 @@ const templates: ContractTemplate[] = [
 
 export default function ContractTemplates() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-  const router = useRouter()
+
 
   const handleSelectTemplate = (templateId: string) => {
     setSelectedTemplate(templateId)

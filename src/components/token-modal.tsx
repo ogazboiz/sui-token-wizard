@@ -226,7 +226,7 @@ export default function TokenModal({ isOpen, onClose }: TokenModalProps) {
                 </div>
                 <h3 className="mt-6 text-xl font-medium text-white">Creating your token</h3>
                 <p className="mt-2 text-zinc-400 text-center">
-                  This may take a few moments. Please don't close this window.
+                  This may take a few moments. Please don&apos;t close this window.
                 </p>
               </div>
             )}
@@ -237,7 +237,7 @@ export default function TokenModal({ isOpen, onClose }: TokenModalProps) {
                   <AlertCircle size={32} className="text-red-500" />
                 </div>
                 <h3 className="mt-6 text-xl font-medium text-white">Something went wrong</h3>
-                <p className="mt-2 text-zinc-400 text-center">We couldn't create your token. Please try again.</p>
+                <p className="mt-2 text-zinc-400 text-center">We couldn&apos;t create your token. Please try again.</p>
                 <Button onClick={resetForm} className="mt-6 bg-zinc-800 hover:bg-zinc-700 text-white">
                   Try Again
                 </Button>

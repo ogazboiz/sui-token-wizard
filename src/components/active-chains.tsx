@@ -95,7 +95,7 @@ export default function ActiveChains() {
         </motion.div>
 
         <p className="text-zinc-400 text-sm">
-          Don't see your network?{" "}
+          Don&apos;t see your network?{" "}
           <Link href="#" className="text-teal-400 hover:underline">
             Contact us
           </Link>

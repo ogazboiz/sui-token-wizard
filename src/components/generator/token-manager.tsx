@@ -73,7 +73,7 @@ const tools: Tool[] = [
 ]
 
 export default function TokenManager({ network }: TokenManagerProps) {
-  const [activeTool, setActiveTool] = useState("token-creator")
+  const [, setActiveTool] = useState("token-creator")
   const { isConnected, isReady } = useWalletConnection()
 
   const getNetworkName = () => {

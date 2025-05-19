@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState} from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, Loader2, Upload, Plus, Trash2, Terminal } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -145,6 +145,7 @@ export default function NftForm({ network }: NftFormProps) {
       // Redirect to dashboard
       router.push("/dashboard")
     } catch (error) {
+      console.error("Error creating collection:", error)
       toast({
         title: "Error creating collection",
         description: "There was an error creating your NFT collection. Please try again.",

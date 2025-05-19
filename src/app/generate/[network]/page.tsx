@@ -4,7 +4,13 @@ import Navbar from "@/components/navbar"
 import TokenForm from "@/components/generator/token-form"
 import { Toaster } from "@/components/ui/sonner"
 
-export default function NetworkGeneratePage({ params }: { params: { network: string } }) {
+interface PageProps {
+  params: {
+    network: string
+  }
+}
+
+export default function NetworkGeneratePage({ params }: PageProps) {
   const validNetworks = ["sui", "solana", "aptos"]
 
   if (!validNetworks.includes(params.network)) {

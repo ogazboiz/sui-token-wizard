@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText, Loader2 } from "lucide-react"
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
 import ContractTemplates from "@/components/contract-templates"
-import { ConnectButton } from "@mysten/dapp-kit"
+import { ConnectButton } from "@mysten/dapp-kit";
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
 
 interface TokenManagerProps {
@@ -73,8 +72,32 @@ const tools: Tool[] = [
 ]
 
 export default function TokenManager({ network }: TokenManagerProps) {
-  const [, setActiveTool] = useState("token-creator")
+  const [activeTool, setActiveTool] = useState("token-creator")
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const { isConnected, isReady } = useWalletConnection()
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const template = params.get("template")
+      if (template && ["standard", "essential"].includes(template)) {
+        setSelectedTemplate(template)
+      }
+    }
+  }, [])
+
+  const handleTemplateSelect = (templateId: string | null) => {
+    setSelectedTemplate(templateId)
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href)
+      if (templateId) {
+        url.searchParams.set("template", templateId)
+      } else {
+        url.searchParams.delete("template")
+      }
+      window.history.replaceState(null, "", url.toString())
+    }
+  }
 
   const getNetworkName = () => {
     switch (network) {
@@ -102,7 +125,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
   if (!isConnected) {
     return (
       <div className="container mx-auto px-4 py-6">
-        {/* Breadcrumb */}
         <div className="flex items-center text-sm text-zinc-400 mb-6">
           <Link href="/" className="hover:text-white flex items-center">
             <Home className="w-4 h-4 mr-1" />
@@ -122,9 +144,9 @@ export default function TokenManager({ network }: TokenManagerProps) {
             <AlertDescription className="text-zinc-400">
               You need to connect your wallet to create or manage tokens on {getNetworkName()}.
               <div className="mt-4 flex justify-center">
-                <ConnectButton 
-                  connectText="Connect Wallet to Continue" 
-                  className="bg-teal-500 hover:bg-teal-600 text-white" 
+                <ConnectButton
+                  connectText="Connect Wallet to Continue"
+                  className="bg-teal-500 hover:bg-teal-600 text-white"
                 />
               </div>
             </AlertDescription>
@@ -136,7 +158,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Breadcrumb */}
       <div className="flex items-center text-sm text-zinc-400 mb-6">
         <Link href="/" className="hover:text-white flex items-center">
           <Home className="w-4 h-4 mr-1" />
@@ -150,14 +171,12 @@ export default function TokenManager({ network }: TokenManagerProps) {
       </div>
 
       <div className="grid md:grid-cols-[300px_1fr] gap-6">
-        {/* Sidebar */}
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
           <div className="p-4 border-b border-zinc-800">
             <h2 className="font-medium text-white flex items-center">
               List of tools <span className="ml-1 text-orange-400">🔥</span>
             </h2>
           </div>
-
           <div className="p-2">
             {tools.map((tool) => (
               <button
@@ -179,7 +198,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
               </button>
             ))}
           </div>
-
           <div className="p-4 mt-4 border-t border-zinc-800">
             <Button variant="outline" className="w-full text-zinc-400 border-zinc-700 hover:text-white">
               Need other tools? Contact us
@@ -187,7 +205,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
           </div>
         </div>
 
-        {/* Main Content */}
         <div>
           <motion.div
             className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mb-8"
@@ -212,8 +229,12 @@ export default function TokenManager({ network }: TokenManagerProps) {
             </div>
           </motion.div>
 
-          {/* Contract Templates */}
-          <ContractTemplates />
+          <ContractTemplates
+            network={network}
+            isLandingPage={false}
+            selectedTemplate={selectedTemplate}
+            onTemplateSelect={handleTemplateSelect}
+          />
         </div>
       </div>
     </div>

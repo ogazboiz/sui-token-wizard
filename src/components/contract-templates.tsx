@@ -1,10 +1,18 @@
+
 "use client"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
+import TokenFormStandard from "@/components/generator/token-form-standard"
+import TokenFormEssential from "@/components/generator/token-form-essential"
+import { useRouter } from "next/navigation"
+import { ConnectButton } from "@mysten/dapp-kit"
+import { useWalletConnection } from "@/components/hooks/useWalletConnection"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Terminal, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface TemplateFeature {
   name: string
@@ -63,24 +71,94 @@ const templates: ContractTemplate[] = [
   },
 ]
 
-export default function ContractTemplates() {
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
+interface ContractTemplatesProps {
+  network?: string
+  isLandingPage?: boolean
+  selectedTemplate?: string | null
+  onTemplateSelect?: (templateId: string | null) => void
+}
 
+export default function ContractTemplates({
+  network = "mainnet",
+  isLandingPage = false,
+  selectedTemplate = null,
+  onTemplateSelect,
+}: ContractTemplatesProps) {
+  const router = useRouter()
+  const { isConnected, isReady } = useWalletConnection()
 
   const handleSelectTemplate = (templateId: string) => {
-    setSelectedTemplate(templateId)
-    // In a real app, you would navigate to the token form with the selected template
-    // router.push(`/token-form?template=${templateId}`)
+    if (!isConnected) {
+      toast.error("Please connect your wallet first to create a token")
+      return
+    }
+    onTemplateSelect?.(templateId)
+  }
+
+  const handleBack = () => {
+    onTemplateSelect?.(null)
+  }
+
+  const handleSwitchTemplate = (templateId: string) => {
+    onTemplateSelect?.(templateId)
+  }
+
+  const handleTemplateClick = (templateId: string) => {
+    if (isLandingPage) {
+      if (!isConnected) {
+        toast.error("Please connect your wallet first to create a token")
+        return
+      }
+      router.push(`/generator/${network}?template=${templateId}`)
+      return
+    }
+    handleSelectTemplate(templateId)
+  }
+
+  // Show loading state while checking wallet connection
+  if (!isReady) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+      </div>
+    )
+  }
+
+  // Render forms only when not on landing page and template is selected
+  if (!isLandingPage && selectedTemplate === "standard") {
+    return <TokenFormStandard network={network} onBack={handleBack} onSwitchTemplate={handleSwitchTemplate} />
+  }
+
+  if (!isLandingPage && selectedTemplate === "essential") {
+    return <TokenFormEssential network={network} onBack={handleBack} onSwitchTemplate={handleSwitchTemplate} />
   }
 
   return (
-    <div>
+    <div className={isLandingPage ? "container mx-auto px-4 py-16" : ""}>
       <div className="text-center mb-8">
         <h2 className="text-xl md:text-2xl font-bold text-white">Select contract template</h2>
         <div className="mt-2 w-48 h-1 bg-purple-500 mx-auto rounded-full"></div>
+
+        {!isConnected && (
+          <div className="mt-6 max-w-md mx-auto">
+            <Alert className="bg-zinc-800 border-zinc-700">
+              <Terminal className="h-4 w-4 text-teal-500" />
+              <AlertTitle className="text-white">Wallet Not Connected</AlertTitle>
+              <AlertDescription className="text-zinc-400">
+                You need to connect your wallet to create tokens.
+                <div className="mt-4 flex justify-center">
+                  <ConnectButton
+                    connectText="Connect Wallet"
+                    className="bg-teal-500 hover:bg-teal-600 text-white"
+                  />
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
       </div>
 
-      <div className="grid md:grid-cols-2 max-w-5xl mx-auto gap-6">
+      <div className="grid md:grid-cols-2 max-w-4xl mx-auto gap-6">
         {templates.map((template) => (
           <motion.div
             key={template.id}
@@ -100,7 +178,6 @@ export default function ContractTemplates() {
                   <div className="absolute inset-0 bg-fuchsia-500/10 pattern-dots pattern-fuchsia-500 pattern-bg-transparent pattern-size-4 pattern-opacity-10"></div>
                 )}
               </div>
-
               <div className="relative flex justify-between items-start">
                 <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm">
                   {template.id === "standard" ? <div className="text-3xl">😊</div> : <div className="text-3xl">😎</div>}
@@ -117,16 +194,13 @@ export default function ContractTemplates() {
                   )}
                 </div>
               </div>
-
               <div className="mt-3 inline-block bg-zinc-900/60 backdrop-blur-sm px-3 py-1 rounded-lg">
                 <span className="text-teal-400 font-medium">Discount: {template.discount}%</span>
               </div>
             </div>
-
             <div className="p-6">
               <h3 className="text-xl font-bold text-white mb-2">{template.name}</h3>
               <p className="text-zinc-400 text-sm mb-4">{template.description}</p>
-
               <div className="flex flex-wrap gap-2 mb-6">
                 {template.tags.map((tag) => (
                   <Badge key={tag} variant="outline" className="bg-zinc-700/50 text-zinc-300 border-zinc-600">
@@ -134,9 +208,8 @@ export default function ContractTemplates() {
                   </Badge>
                 ))}
               </div>
-
               <Button
-                onClick={() => handleSelectTemplate(template.id)}
+                onClick={() => handleTemplateClick(template.id)}
                 className={`w-full ${
                   template.id === "essential"
                     ? "bg-teal-500 hover:bg-teal-600 text-white"

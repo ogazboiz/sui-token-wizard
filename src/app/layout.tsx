@@ -2,17 +2,19 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Varela_Round } from "next/font/google"
 import "./globals.css"
+import { Providers } from "./providers"
 
 const varelaRound = Varela_Round({
   weight: ["400"],
   subsets: ["latin"],
   display: "swap",
   variable: "--font-varela-round",
+
 })
 
 export const metadata: Metadata = {
-  title: "SuiCraft - Sui Hackathon Token Creator",
-  description: "Create and deploy your own Sui tokens with ease for your hackathon project.",
+   title: 'Sui Token Creator',
+  description: 'Create and deploy Sui tokens easily',
 }
 
 export default function RootLayout({
@@ -22,7 +24,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={varelaRound.className}>{children}</body>
+      <body className={varelaRound.className}>
+        <Providers>{children}</Providers>
+        </body>
     </html>
   )
 }

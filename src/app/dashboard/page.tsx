@@ -1,16 +1,11 @@
 import { Suspense } from "react"
 import Navbar from "@/components/navbar"
-import HeroSection from "@/components/hero-section"
-import ContractTemplates from "@/components/contract-templates"
-import ActiveChains from "@/components/active-chains"
-import FeaturesSection from "@/components/features-section"
-import BlogSection from "@/components/blog-section"
-import FaqSection from "@/components/faq-section"
+import Dashboard from "@/components/dashboard/dashboard"
 import { Toaster } from "@/components/ui/sonner"
 
-export default function Home() {
+export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-zinc-950 ">
+    <main className="min-h-screen bg-zinc-950">
       <Navbar />
       <Suspense
         fallback={
@@ -19,12 +14,7 @@ export default function Home() {
           </div>
         }
       >
-        <HeroSection />
-        <ContractTemplates />
-        <ActiveChains />
-        <FeaturesSection />
-        <BlogSection />
-        <FaqSection />
+        <Dashboard />
       </Suspense>
       <Toaster />
     </main>

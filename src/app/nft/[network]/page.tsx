@@ -4,7 +4,13 @@ import Navbar from "@/components/navbar"
 import NftForm from "@/components/generator/nft-form"
 import { Toaster } from "@/components/ui/sonner"
 
-export default function NftNetworkPage({ params }: { params: { network: string } }) {
+interface NetworkPageProps {
+  params: {
+    network: string
+  }
+}
+
+export default function NftNetworkPage({ params }: NetworkPageProps) {
   const validNetworks = ["mainnet", "testnet", "devnet"]
 
   if (!validNetworks.includes(params.network)) {

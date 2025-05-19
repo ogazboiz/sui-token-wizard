@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import Navbar from "@/components/navbar"
+import TokenGenerator from "@/components/generator/token-generator"
 import { Toaster } from "@/components/ui/sonner"
-import TokenGenerator from "@/components/generator/token-projector"
 
 export default function GeneratePage() {
   return (
@@ -14,7 +14,7 @@ export default function GeneratePage() {
           </div>
         }
       >
-        <TokenGenerator/>
+        <TokenGenerator />
       </Suspense>
       <Toaster />
     </main>

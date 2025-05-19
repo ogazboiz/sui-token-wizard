@@ -1,11 +1,16 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import Navbar from "@/components/navbar"
-
-import { Toaster } from "@/components/ui/sonner"
 import TokenManager from "@/components/generator/token-manager"
+import { Toaster } from "@/components/ui/sonner"
 
-export default function NetworkGeneratorPage({ params }: { params: { network: string } }) {
+interface NetworkPageProps {
+  params: {
+    network: string
+  }
+}
+
+export default function NetworkGeneratorPage({ params }: NetworkPageProps) {
   const validNetworks = ["mainnet", "testnet", "devnet"]
 
   if (!validNetworks.includes(params.network)) {

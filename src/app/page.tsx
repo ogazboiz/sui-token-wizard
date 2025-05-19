@@ -1,12 +1,16 @@
+"use client"
 import { Suspense } from "react"
 import Navbar from "@/components/navbar"
-import HeroSection from "@/components/hero-section"
-import ContractTemplates from "@/components/contract-templates"
-import ActiveChains from "@/components/active-chains"
-import FeaturesSection from "@/components/features-section"
-import BlogSection from "@/components/blog-section"
-import FaqSection from "@/components/faq-section"
+import dynamic from 'next/dynamic'
 import { Toaster } from "@/components/ui/sonner"
+
+// Dynamic imports with SSR disabled
+const HeroSection = dynamic(() => import('@/components/hero-section'), { ssr: false })
+const ContractTemplates = dynamic(() => import('@/components/contract-templates'), { ssr: false })
+const ActiveChains = dynamic(() => import('@/components/active-chains'), { ssr: false })
+const FeaturesSection = dynamic(() => import('@/components/features-section'), { ssr: false })
+const BlogSection = dynamic(() => import('@/components/blog-section'), { ssr: false })
+const FaqSection = dynamic(() => import('@/components/faq-section'), { ssr: false })
 
 export default function Home() {
   return (

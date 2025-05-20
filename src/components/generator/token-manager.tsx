@@ -80,7 +80,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
       const template = params.get("template")
-      if (template && ["standard", "essential"].includes(template)) {
+      if (template && ["standard", "regulated"].includes(template)) {
         setSelectedTemplate(template)
       }
     }
@@ -181,9 +181,8 @@ export default function TokenManager({ network }: TokenManagerProps) {
             {tools.map((tool) => (
               <button
                 key={tool.id}
-                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${
-                  tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-                } ${tool.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                  } ${tool.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                 disabled={tool.comingSoon}
                 onClick={() => !tool.comingSoon && setActiveTool(tool.id)}
               >

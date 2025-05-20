@@ -13,13 +13,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/components/ui/use-toast"
 import { Coins } from "@/components/ui/icons"
 
-interface TokenFormEssentialProps {
+interface TokenFormRegulatedProps {
   network: string
   onBack: () => void
   onSwitchTemplate: (templateId: string) => void
 }
 
-export default function TokenFormEssential({ network, onBack, onSwitchTemplate }: TokenFormEssentialProps) {
+export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }: TokenFormRegulatedProps) {
   const [tokenName, setTokenName] = useState("")
   const [tokenSymbol, setTokenSymbol] = useState("")
   const [customDecimals, setCustomDecimals] = useState(false)
@@ -84,7 +84,7 @@ export default function TokenFormEssential({ network, onBack, onSwitchTemplate }
             <span className="text-xl">😎</span>
           </div>
           <div>
-            <div className="text-white font-medium">Essential token</div>
+            <div className="text-white font-medium">Regulated token</div>
             <div className="text-teal-400 text-sm">0.02 SUI</div>
           </div>
         </div>
@@ -231,7 +231,7 @@ export default function TokenFormEssential({ network, onBack, onSwitchTemplate }
 
               <div className="border-t border-zinc-700 pt-4">
                 <h4 className="text-white font-medium mb-3">Token Features</h4>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center">
                     <div className="flex-1">
@@ -320,7 +320,7 @@ export default function TokenFormEssential({ network, onBack, onSwitchTemplate }
               <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
                 Create token
               </Button>
-              
+
               <Button
                 type="button"
                 variant="outline"
@@ -344,7 +344,7 @@ export default function TokenFormEssential({ network, onBack, onSwitchTemplate }
         <div className="mt-8">
           <h3 className="text-white font-medium mb-4 text-center">Other templates</h3>
           <div className="grid grid-cols-2 gap-4">
-            <div 
+            <div
               className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 cursor-pointer hover:border-teal-500 transition-colors"
               onClick={() => onSwitchTemplate("standard")}
             >
@@ -367,7 +367,7 @@ export default function TokenFormEssential({ network, onBack, onSwitchTemplate }
                   <span className="text-lg">🚀</span>
                 </div>
                 <div>
-                  <div className="text-white text-sm font-medium">Premium token</div>
+                  <div className="text-white text-sm font-medium">Closed-loop token</div>
                   <div className="text-teal-400 text-xs">Price: 0.05 SUI</div>
                 </div>
               </div>
@@ -375,7 +375,7 @@ export default function TokenFormEssential({ network, onBack, onSwitchTemplate }
             </div>
           </div>
         </div>
-        </div>
+      </div>
     </motion.div>
   )
 }

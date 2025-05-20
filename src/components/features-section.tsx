@@ -57,7 +57,7 @@ export default function FeaturesSection() {
         <Diamond className="w-12 h-12 text-teal-400 mx-auto mb-4" />
         <h2 className="text-2xl md:text-3xl font-bold text-white">Features</h2>
         <p className="mt-4 max-w-2xl mx-auto text-zinc-400">
-          Discover a suite of essential features for creating and managing your tokens with ease. Explore our
+          Discover a suite of regulated features for creating and managing your tokens with ease. Explore our
           comprehensive set of capabilities, including standard compliance, minting, burning, access control, code
           verification, token recovery support, and supply management. Your token journey starts here.
         </p>

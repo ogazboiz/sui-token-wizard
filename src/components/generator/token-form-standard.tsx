@@ -11,6 +11,12 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/use-toast"
+import { useUpdateCoin } from "../hooks/updateCoin"
+import { Transaction } from '@mysten/sui/transactions';
+import { normalizeSuiObjectId } from "@mysten/sui.js/utils"
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
+
+
 
 interface TokenFormStandardProps {
   network: string
@@ -19,13 +25,21 @@ interface TokenFormStandardProps {
 }
 
 export default function TokenFormStandard({ network, onBack, onSwitchTemplate }: TokenFormStandardProps) {
+  const { toast } = useToast()
+  const suiClient = useSuiClient();
+  const updateCoin = useUpdateCoin;
+  const account = useCurrentAccount();
+  // const tokenPackageId = useNetworkVariable("tokenPackageId");
+  const { mutate: signAndExecute, isSuccess, isPending } = useSignAndExecuteTransaction();
+
   const [tokenName, setTokenName] = useState("")
   const [tokenSymbol, setTokenSymbol] = useState("")
   const [customDecimals, setCustomDecimals] = useState(false)
   const [decimals, setDecimals] = useState("9")
+  const [description, setDescription] = useState("")
   const [initialSupply, setInitialSupply] = useState("")
   const [maxSupply, setMaxSupply] = useState("")
-  const { toast } = useToast()
+  const [newTokenId, setNewTokenId] = useState('');
 
   const getNetworkName = () => {
     switch (network) {
@@ -40,11 +54,11 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Validation
-    if (!tokenName || !tokenSymbol || !initialSupply) {
+    if (!tokenName || !tokenSymbol || !initialSupply || !maxSupply || !decimals || !description) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -53,12 +67,72 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
       return
     }
 
+    console.log({
+      tokenName,
+      tokenSymbol,
+      description,
+      decimals: Number(decimals),
+      initialSupply: Number(initialSupply),
+      maxSupply: Number(maxSupply),
+    });
+
     // Submit form logic would go here
     toast({
       title: "Token creation initiated",
       description: "Your token is being created. Please wait...",
     })
+
+    try {
+      const { updatedBytes } = await updateCoin(tokenName, tokenSymbol, description, Number(decimals));
+      await publishNewBytecode(updatedBytes);
+    } catch (err) {
+      console.error("Token creation failed:", err);
+    }
   }
+
+  const publishNewBytecode = async (updatedBytes: Uint8Array) => {
+    const tx = new Transaction();
+    tx.setGasBudget(100_000_000);
+
+    const [upgradeCap] = tx.publish({
+      modules: [[...updatedBytes]],
+      dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")], // normalize original package id as well
+    });
+
+    tx.transferObjects([upgradeCap], tx.pure("address", account!.address));
+
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: async ({ digest }) => {
+          const { effects } = await suiClient.waitForTransaction({
+            digest,
+            options: {
+              showEffects: true,
+              showEvents: true,
+              showObjectChanges: true,
+              showBalanceChanges: true,
+              showInput: true,
+            },
+          });
+
+          if (effects?.status.status === "success") {
+            const newPkgId = effects.created?.find(
+              item => item.owner === "Immutable"
+            )?.reference.objectId;
+            console.log("New package ID Tx:", newPkgId); //find a way to get the exact package id
+            setNewTokenId(newPkgId || '');
+          } else {
+            throw new Error("Publishing failed");
+          }
+        },
+        onError: (err) => {
+          console.error("Publish transaction failed:", err);
+        }
+      }
+    );
+  };
+
 
   return (
     <motion.div
@@ -106,7 +180,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                           <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="w-[200px] text-xs">The name of your token (e.g., "My Awesome Token")</p>
+                          <p className="w-[200px] text-xs">The name of your token (e.g., &quot;My Awesome Token&quot;)</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -129,7 +203,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="w-[200px] text-xs">
-                            The symbol of your token (e.g., "AWE"). Usually 3-5 characters.
+                            The symbol of your token (e.g., &quot;AWE&quot;). Usually 3-5 characters.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -168,6 +242,35 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                     className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 w-24"
                   />
                 )}
+              </div>
+
+
+              <div>
+                <Label htmlFor="description" className="text-zinc-300 flex items-center">
+                  Description*
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="w-[200px] text-xs">
+                          The description for your token (e.g., My awesome token)
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <Input
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="My custom token"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
+                />
+                <p className="text-zinc-500 text-xs mt-1">
+                  The initial number of available tokens that will be created in your wallet
+                </p>
               </div>
 
               <div>
@@ -253,14 +356,14 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
           <div className="grid grid-cols-2 gap-4">
             <div
               className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 cursor-pointer hover:border-teal-500 transition-colors"
-              onClick={() => onSwitchTemplate("essential")}
+              onClick={() => onSwitchTemplate("regulated")}
             >
               <div className="flex items-center mb-2">
                 <div className="w-8 h-8 rounded-full bg-fuchsia-900/50 flex items-center justify-center mr-2">
                   <span className="text-lg">😎</span>
                 </div>
                 <div>
-                  <div className="text-white text-sm font-medium">Essential token</div>
+                  <div className="text-white text-sm font-medium">Regulated token</div>
                   <div className="text-teal-400 text-xs">Price: 0.02 SUI</div>
                 </div>
               </div>
@@ -272,7 +375,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                   <span className="text-lg">🚀</span>
                 </div>
                 <div>
-                  <div className="text-white text-sm font-medium">Premium token</div>
+                  <div className="text-white text-sm font-medium">Closed-loop token</div>
                   <div className="text-teal-400 text-xs">Price: 0.05 SUI</div>
                 </div>
               </div>

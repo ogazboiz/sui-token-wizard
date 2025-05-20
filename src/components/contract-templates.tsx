@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import TokenFormStandard from "@/components/generator/token-form-standard"
-import TokenFormEssential from "@/components/generator/token-form-essential"
+import TokenFormRegulated from "@/components/generator/token-form-regulated"
 import { useRouter } from "next/navigation"
 import { ConnectButton } from "@mysten/dapp-kit"
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
@@ -51,13 +51,13 @@ const templates: ContractTemplate[] = [
     imageSrc: "/placeholder.svg?height=120&width=120",
   },
   {
-    id: "essential",
-    name: "Essential Token",
+    id: "regulated",
+    name: "Regulated Token",
     price: "0.02 SUI",
     discount: 60,
     popular: true,
     description:
-      "Discover the perfect Essential token that comes with all the basics from the Sui standard, plus extra features! Customize your token by setting supply limits, ownership parameters, and even consider its mintable, burnable, pausable, and blacklist functionalities. Create your unique token with ease!",
+      "Discover the perfect regulated token that comes with all the basics from the Sui standard, plus extra features! Customize your token by setting supply limits, ownership parameters, and even consider its mintable, burnable, pausable, and blacklist functionalities. Create your unique token with ease!",
     features: [
       { name: "Basic Token Functionality", included: true },
       { name: "Supply Limits", included: true },
@@ -79,7 +79,7 @@ interface ContractTemplatesProps {
 }
 
 export default function ContractTemplates({
-  network = "mainnet",
+  network = "testnet",
   isLandingPage = false,
   selectedTemplate = null,
   onTemplateSelect,
@@ -129,8 +129,8 @@ export default function ContractTemplates({
     return <TokenFormStandard network={network} onBack={handleBack} onSwitchTemplate={handleSwitchTemplate} />
   }
 
-  if (!isLandingPage && selectedTemplate === "essential") {
-    return <TokenFormEssential network={network} onBack={handleBack} onSwitchTemplate={handleSwitchTemplate} />
+  if (!isLandingPage && selectedTemplate === "regulated") {
+    return <TokenFormRegulated network={network} onBack={handleBack} onSwitchTemplate={handleSwitchTemplate} />
   }
 
   return (
@@ -162,9 +162,8 @@ export default function ContractTemplates({
         {templates.map((template) => (
           <motion.div
             key={template.id}
-            className={`bg-zinc-800 rounded-xl overflow-hidden border ${
-              selectedTemplate === template.id ? "border-teal-500" : "border-zinc-700"
-            } transition-all hover:border-teal-500`}
+            className={`bg-zinc-800 rounded-xl overflow-hidden border ${selectedTemplate === template.id ? "border-teal-500" : "border-zinc-700"
+              } transition-all hover:border-teal-500`}
             whileHover={{ y: -5 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -210,11 +209,10 @@ export default function ContractTemplates({
               </div>
               <Button
                 onClick={() => handleTemplateClick(template.id)}
-                className={`w-full ${
-                  template.id === "essential"
-                    ? "bg-teal-500 hover:bg-teal-600 text-white"
-                    : "bg-zinc-700 hover:bg-zinc-600 text-white"
-                }`}
+                className={`w-full ${template.id === "regulated"
+                  ? "bg-teal-500 hover:bg-teal-600 text-white"
+                  : "bg-zinc-700 hover:bg-zinc-600 text-white"
+                  }`}
               >
                 Create token
               </Button>

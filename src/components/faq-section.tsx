@@ -41,9 +41,9 @@ const faqItems: FaqItem[] = [
       "A Fixed Supply Token has a predetermined maximum supply that cannot be increased after creation. This creates scarcity and can be valuable for certain use cases. Once all tokens are minted, no more can be created, making it different from mintable tokens where the supply can be increased later.",
   },
   {
-    question: "What is the difference between Standard and Essential token templates?",
+    question: "What is the difference between Standard and Regulated token templates?",
     answer:
-      "The Standard template provides basic token functionality with supply limits at a lower cost. The Essential template includes additional features like mintable, burnable, pausable capabilities, and blacklist functionality, giving you more control over your token's behavior and management.",
+      "The Standard template provides basic token functionality with supply limits at a lower cost. The Regulated template includes additional features like mintable, burnable, pausable capabilities, and blacklist functionality, giving you more control over your token's behavior and management.",
   },
 ]
 

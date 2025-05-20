@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/use-toast"
-import { useUpdateToken } from "../hooks/updateToken"
+import { useUpdateCoin } from "../hooks/updateCoin"
 import { Transaction } from '@mysten/sui/transactions';
 import { normalizeSuiObjectId } from "@mysten/sui.js/utils"
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
@@ -27,7 +27,7 @@ interface TokenFormStandardProps {
 export default function TokenFormStandard({ network, onBack, onSwitchTemplate }: TokenFormStandardProps) {
   const { toast } = useToast()
   const suiClient = useSuiClient();
-  const updateToken = useUpdateToken;
+  const updateCoin = useUpdateCoin;
   const account = useCurrentAccount();
   // const tokenPackageId = useNetworkVariable("tokenPackageId");
   const { mutate: signAndExecute, isSuccess, isPending } = useSignAndExecuteTransaction();
@@ -83,7 +83,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
     })
 
     try {
-      const { updatedBytes } = await updateToken(tokenName, tokenSymbol, description, Number(decimals));
+      const { updatedBytes } = await updateCoin(tokenName, tokenSymbol, description, Number(decimals));
       await publishNewBytecode(updatedBytes);
     } catch (err) {
       console.error("Token creation failed:", err);

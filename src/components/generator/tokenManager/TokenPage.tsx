@@ -2,19 +2,17 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, ChevronRight, Home, Copy, ExternalLink } from "lucide-react"
+import { Copy, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { ClipLoader } from "react-spinners"
 import { useCurrentAccount } from "@mysten/dapp-kit"
-import Link from "next/link"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
@@ -86,7 +84,7 @@ export default function TokenPage({ network }: TokenPageProps) {
         <Terminal className="h-4 w-4 text-teal-500" />
         <AlertTitle className="text-white">No Token Found</AlertTitle>
         <AlertDescription className="text-zinc-400">
-          You haven't created any tokens yet or token data was lost. Please create a new token.
+          You haven&apos;t created any tokens yet or token data was lost. Please create a new token.
           <div className="mt-4">
             <Button
               className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -113,12 +111,12 @@ export default function TokenPage({ network }: TokenPageProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-bold flex items-center">
             <span
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent"
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent capitalize"
             >
               {tokenData?.name} ({tokenData?.symbol})
             </span>
           </CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-zinc-400 capitalize">
             {tokenData?.description}
           </CardDescription>
         </CardHeader>

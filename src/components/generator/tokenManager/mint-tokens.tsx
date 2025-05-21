@@ -110,10 +110,7 @@ export default function MintTokens({ network }: MintTokensProps) {
             setMintAmount('')
             setCoin(coin as string)
 
-            localStorage.setItem('tokenData', JSON.stringify({
-              ...tokenData,
-              coin: coin as string,
-            }))
+            localStorage.setItem('coinId', coin as string)
           }
         },
         onError: (err) => {
@@ -170,7 +167,7 @@ export default function MintTokens({ network }: MintTokensProps) {
         <CardHeader>
           <CardTitle className="text-xl flex items-center">
             <Coins className="mr-2 h-5 w-5 text-yellow-400" />
-            Mint {tokenData?.symbol} Tokens
+            Mint {tokenData?.symbol} tokens
           </CardTitle>
           <CardDescription className="text-zinc-400">
             Create new tokens and send them to any address
@@ -180,7 +177,7 @@ export default function MintTokens({ network }: MintTokensProps) {
           <div className="bg-zinc-800 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center mb-2">
               <span className="text-zinc-400 text-sm">Token:</span>
-              <span className="text-white font-medium">{tokenData?.name} ({tokenData?.symbol})</span>
+              <span className="text-white font-medium capitalize">{tokenData?.name} ({tokenData?.symbol})</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-zinc-400 text-sm">Treasury Cap:</span>

@@ -8,7 +8,6 @@ import { useToast } from "@/components/ui/use-toast"
 import { ClipLoader } from "react-spinners"
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from '@mysten/sui/transactions'
-import Link from "next/link"
 import {
   Card,
   CardContent,

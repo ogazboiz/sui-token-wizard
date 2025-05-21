@@ -120,7 +120,11 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
             console.log("Token created successfully:", res);
 
             const txId = res.effects.transactionDigest;
-            const owner = res.effects.created?.[0]?.owner?.AddressOwner;
+            const createdArr = res.effects.created || [];
+            const ownerObj = createdArr.find(
+              (item) => typeof item.owner === "object" && "AddressOwner" in item.owner
+            );
+            const owner = ownerObj ? ownerObj?.owner?.AddressOwner : "";
 
             const newPkgId = res.objectChanges?.find(
               (item) => item.type === "published"

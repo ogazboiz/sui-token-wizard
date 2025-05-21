@@ -47,6 +47,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
   const [owner, setOwner] = useState('')
   const [newPkgId, setNewPkgId] = useState('');
   const [treasuryCap, setTreasuryCap] = useState('');
+  const [denyCap, setDenyCap] = useState('');
   const [tokenCreated, setTokenCreated] = useState(false);
 
 
@@ -132,8 +133,11 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
             console.log("Token created successfully:", res);
 
             const txId = res.effects.transactionDigest;
-            const owner = res.effects.created?.[0]?.owner?.AddressOwner;
-
+            const createdArr = res.effects.created || [];
+            const ownerObj = createdArr.find(
+              (item) => typeof item.owner === "object" && "AddressOwner" in item.owner
+            );
+            const owner = ownerObj ? ownerObj?.owner?.AddressOwner : "";
 
             const newPkgId = res.objectChanges?.find(
               (item) => item.type === "published"
@@ -146,10 +150,20 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                 item.objectType.includes("TreasuryCap")
             )?.objectId;
 
+            const denyCap = res.objectChanges?.find(
+              (item) =>
+                item.type === "created" &&
+                typeof item.objectType === "string" &&
+                item.objectType.includes("DenyCap")
+            )?.objectId;
+
+            console.log({ owner, denyCap, treasuryCap, newPkgId });
+
             setTxId(txId);
             setOwner(owner ? String(owner) : "");
             setNewPkgId(newPkgId || "");
             setTreasuryCap(treasuryCap);
+            setDenyCap(denyCap);
             setTokenCreated(true);
           } else {
             throw new Error("Publishing failed");

@@ -18,7 +18,13 @@ interface TemplateFeature {
   name: string
   included: boolean
 }
-
+interface ContractTemplatesProps {
+  network?: string
+  isLandingPage?: boolean
+  selectedTemplate?: string | null
+  onTemplateSelect?: (templateId: string | null) => void
+  onTokenCreated?: (tokenData: any) => void
+}
 interface ContractTemplate {
   id: string
   name: string
@@ -71,12 +77,12 @@ const templates: ContractTemplate[] = [
   },
 ]
 
-interface ContractTemplatesProps {
-  network?: string
-  isLandingPage?: boolean
-  selectedTemplate?: string | null
-  onTemplateSelect?: (templateId: string | null) => void
-}
+// interface ContractTemplatesProps {
+//   network?: string
+//   isLandingPage?: boolean
+//   selectedTemplate?: string | null
+//   onTemplateSelect?: (templateId: string | null) => void
+// }
 
 export default function ContractTemplates({
   network = "testnet",

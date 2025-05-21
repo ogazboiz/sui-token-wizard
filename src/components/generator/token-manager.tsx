@@ -67,19 +67,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
       route: `/generator/${network}/token`,
     },
     {
-      id: "liquidity-pool",
-      name: "Create Liquidity Pool",
-      icon: <Plus className="w-5 h-5" />,
-      isNew: true,
-      comingSoon: true,
-    },
-    {
-      id: "multisender",
-      name: "Multisender",
-      icon: <Users className="w-5 h-5" />,
-      comingSoon: true,
-    },
-    {
       id: "denylist",
       name: "Denylist",
       icon: <Shield className="w-5 h-5" />,
@@ -115,6 +102,19 @@ export default function TokenManager({ network }: TokenManagerProps) {
       comingSoon: !hasCreatedToken,
       route: `/generator/${network}/burn`,
     },
+    {
+      id: "liquidity-pool",
+      name: "Create Liquidity Pool",
+      icon: <Plus className="w-5 h-5" />,
+      isNew: false,
+      comingSoon: true,
+    },
+    {
+      id: "multisender",
+      name: "Multisender",
+      icon: <Users className="w-5 h-5" />,
+      comingSoon: true,
+    },
   ]
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
         setActiveTool('pausable')
       } else {
         setActiveTool('token-creator')
-        
+
         // Set template from URL if on token-creator
         const params = new URLSearchParams(window.location.search)
         const template = params.get("template")
@@ -232,11 +232,11 @@ export default function TokenManager({ network }: TokenManagerProps) {
         </Link>
         <ChevronRight className="w-4 h-4 mx-1" />
         <span className="text-white">
-          {activeTool === "token-page" ? "Token Page" : 
-           activeTool === "mint-tokens" ? "Mint Tokens" :
-           activeTool === "burn-tokens" ? "Burn Tokens" :
-           activeTool === "denylist" ? "Denylist" :
-           activeTool === "pausable" ? "Pausable" : "Token Creator"}
+          {activeTool === "token-page" ? "Token Page" :
+            activeTool === "mint-tokens" ? "Mint Tokens" :
+              activeTool === "burn-tokens" ? "Burn Tokens" :
+                activeTool === "denylist" ? "Denylist" :
+                  activeTool === "pausable" ? "Pausable" : "Token Creator"}
         </span>
       </div>
 
@@ -251,9 +251,8 @@ export default function TokenManager({ network }: TokenManagerProps) {
             {tools.map((tool) => (
               <button
                 key={tool.id}
-                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${
-                  tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-                } ${tool.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                  } ${tool.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                 disabled={tool.comingSoon}
                 onClick={() => !tool.comingSoon && handleToolSelect(tool.id, tool.route)}
               >
@@ -261,7 +260,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
                   <div className="w-6 h-6 mr-2 flex items-center justify-center">{tool.icon}</div>
                   <span>{tool.name}</span>
                   {tool.isNew && (
-                    <span className="ml-2 text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded font-medium">New</span>
+                    <span className="ml-2 text-xs bg-yellow-800 text-black px-1.5 py-0.5 rounded font-medium">New</span>
                   )}
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-50" />
@@ -321,11 +320,11 @@ export default function TokenManager({ network }: TokenManagerProps) {
           {activeTool === "burn-tokens" && (
             <BurnTokens network={network} />
           )}
-          
+
           {activeTool === "denylist" && (
             <DenylistTokens network={network} />
           )}
-          
+
           {activeTool === "pausable" && (
             <PausableTokens network={network} />
           )}

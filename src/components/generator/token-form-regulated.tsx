@@ -42,15 +42,14 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
   const [burnable, setBurnable] = useState(true)
   const [mintable, setMintable] = useState(true)
   const [pausable, setPausable] = useState(true)
-  const [blacklist, setBlacklist] = useState(true)
-  const [isCreatingToken, setIsCreatingToken] = useState(false)
-  
-  // Transaction tracking state variables
+  const [denylist, setDenylist] = useState(true)
   const [txId, setTxId] = useState('');
   const [owner, setOwner] = useState('')
   const [newPkgId, setNewPkgId] = useState('');
   const [treasuryCap, setTreasuryCap] = useState('');
+  const [denyCap, setDenyCap] = useState('');
   const [tokenCreated, setTokenCreated] = useState(false);
+  const [isCreatingToken, setIsCreatingToken] = useState(false)
 
   const getNetworkName = () => {
     switch (network) {
@@ -118,7 +117,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
 
     const [upgradeCap] = tx.publish({
       modules: [[...updatedBytes]],
-      dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")],
+      dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")], // normalize package as well?
     });
 
     tx.transferObjects([upgradeCap], tx.pure("address", account!.address));
@@ -142,8 +141,11 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
             console.log("Token created successfully:", res);
 
             const txId = res.effects.transactionDigest;
-            const owner = res.effects.created?.[0]?.owner?.AddressOwner;
-
+            const createdArr = res.effects.created || [];
+            const ownerObj = createdArr.find(
+              (item) => typeof item.owner === "object" && "AddressOwner" in item.owner
+            );
+            const owner = ownerObj ? ownerObj?.owner?.AddressOwner : "";
             // Get the new package ID
             const newPkgId = res.objectChanges?.find(
               (item) => item.type === "published"
@@ -157,13 +159,23 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                 item.objectType.includes("TreasuryCap")
             )?.objectId || "";
 
+            const denyCap = res.objectChanges?.find(
+              (item) =>
+                item.type === "created" &&
+                typeof item.objectType === "string" &&
+                item.objectType.includes("DenyCap")
+            )?.objectId;
+
+            console.log({ owner, denyCap, treasuryCap, newPkgId });
+
             // Set state variables
             setTxId(txId);
             setOwner(owner ? String(owner) : "");
             setNewPkgId(newPkgId);
             setTreasuryCap(treasuryCap);
+            setDenyCap(denyCap);
             setTokenCreated(true);
-            
+
             // Create token data object to save
             const tokenData = {
               name: tokenName,
@@ -173,12 +185,13 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
               newPkgId,
               txId,
               treasuryCap,
+              denyCap,
               type: "regulated",
               features: {
                 burnable,
                 mintable,
                 pausable,
-                blacklist
+                denylist
               }
             }
 
@@ -371,6 +384,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                 </Label>
                 <Input
                   id="initialSupply"
+                  type="number"
                   value={initialSupply}
                   onChange={(e) => setInitialSupply(e.target.value)}
                   placeholder="1000000000"
@@ -397,6 +411,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                 </Label>
                 <Input
                   id="maxSupply"
+                  type="number"
                   value={maxSupply}
                   onChange={(e) => setMaxSupply(e.target.value)}
                   placeholder="1000000000"
@@ -473,8 +488,8 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Shield className="h-4 w-4 text-red-400 mr-2" />
-                        <Label htmlFor="blacklist" className="text-zinc-300 cursor-pointer">
-                          Blacklist
+                        <Label htmlFor="denylist" className="text-zinc-300 cursor-pointer">
+                          Denylist
                         </Label>
                       </div>
                       <p className="text-zinc-500 text-xs mt-1 ml-6">
@@ -482,9 +497,9 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                       </p>
                     </div>
                     <Switch
-                      id="blacklist"
-                      checked={blacklist}
-                      onCheckedChange={setBlacklist}
+                      id="denylist"
+                      checked={denylist}
+                      onCheckedChange={setDenylist}
                       className="data-[state=checked]:bg-teal-500"
                     />
                   </div>
@@ -493,8 +508,8 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
             </div>
 
             <div className="pt-4 space-y-2">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                 disabled={isPending || isCreatingToken}
               >

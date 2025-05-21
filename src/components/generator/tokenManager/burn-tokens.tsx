@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { ClipLoader } from "react-spinners"
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from '@mysten/sui/transactions'
-import Link from "next/link"
 import {
   Card,
   CardContent,
@@ -27,7 +26,6 @@ interface BurnTokensProps {
 
 export default function BurnTokens({ network }: BurnTokensProps) {
   const { toast } = useToast()
-  const account = useCurrentAccount()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
 
@@ -43,7 +41,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
   } | null>(null)
 
   // Burn state
-  const [burnAmount, setBurnAmount] = useState('')
+  const [treasuryCap, setTreasuryCap] = useState('')
   const [burnCoin, setBurnCoin] = useState('')
   const [burnSuccess, setBurnSuccess] = useState(false)
   const [tokenLoaded, setTokenLoaded] = useState(false)
@@ -51,12 +49,19 @@ export default function BurnTokens({ network }: BurnTokensProps) {
   useEffect(() => {
     // Check localStorage for token data when component mounts
     const savedTokenData = localStorage.getItem('tokenData')
+    const coinId = localStorage.getItem('coinId')
     if (savedTokenData) {
       const parsedData = JSON.parse(savedTokenData)
+      setTreasuryCap(parsedData?.treasuryCap)
       setTokenData(parsedData)
       setTokenLoaded(true)
     }
+    if (coinId) {
+      setBurnCoin(coinId)
+    }
   }, [])
+
+  console.log(tokenData)
 
   // Handle burn token function
   const handleBurn = async (e: React.FormEvent) => {
@@ -66,7 +71,6 @@ export default function BurnTokens({ network }: BurnTokensProps) {
     console.log("Burning with values:", {
       treasuryCap: tokenData.treasuryCap,
       coinId: burnCoin,
-      amount: burnAmount
     })
 
     const tx = new Transaction()
@@ -74,10 +78,10 @@ export default function BurnTokens({ network }: BurnTokensProps) {
 
     // Call the burn function on the Coin contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::regulated_coin::burn`,
+      target: `${tokenData.newPkgId}::my_coin::burn`,
       arguments: [
         tx.object(tokenData.treasuryCap),
-        tx.pure.u64(Number(burnAmount)),
+        tx.object(burnCoin),
       ],
     })
 
@@ -94,10 +98,9 @@ export default function BurnTokens({ network }: BurnTokensProps) {
             console.log("Burn successful:", res)
             toast({
               title: "Success",
-              description: `Successfully burned ${burnAmount} ${tokenData.symbol} tokens`,
+              description: `Successfully burned ${tokenData.symbol} tokens`,
             })
             setBurnSuccess(true)
-            setBurnAmount('')
             setBurnCoin('')
             setTimeout(() => setBurnSuccess(false), 3000)
           }
@@ -131,7 +134,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
         <Terminal className="h-4 w-4 text-teal-500" />
         <AlertTitle className="text-white">No Token Found</AlertTitle>
         <AlertDescription className="text-zinc-400">
-          You haven't created any tokens yet or token data was lost. Please create a new token.
+          You haven&apos;t created any tokens yet or token data was lost. Please create a new token.
           <div className="mt-4">
             <Button
               className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -166,7 +169,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
           <div className="bg-zinc-800 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center mb-2">
               <span className="text-zinc-400 text-sm">Token:</span>
-              <span className="text-white font-medium">{tokenData?.name} ({tokenData?.symbol})</span>
+              <span className="text-white font-medium capitalize">{tokenData?.name} ({tokenData?.symbol})</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-zinc-400 text-sm">Treasury Cap:</span>
@@ -174,9 +177,9 @@ export default function BurnTokens({ network }: BurnTokensProps) {
                 <span className="text-white truncate max-w-[200px]">
                   {tokenData?.treasuryCap.substring(0, 6)}...{tokenData?.treasuryCap.substring(tokenData.treasuryCap.length - 4)}
                 </span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-6 w-6 ml-1"
                   onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`, '_blank')}
                 >
@@ -185,38 +188,38 @@ export default function BurnTokens({ network }: BurnTokensProps) {
               </div>
             </div>
           </div>
-          
+
           <form onSubmit={handleBurn} className="space-y-5">
             <div>
-              <label className="text-zinc-300 text-sm block mb-1">Amount</label>
+              <label className="text-zinc-300 text-sm block mb-1">Treasury Cap</label>
               <Input
-                type="number"
-                placeholder="Enter amount to burn"
-                value={burnAmount}
-                onChange={(e) => setBurnAmount(e.target.value)}
+                placeholder="Enter treasury cap"
+                value={treasuryCap}
+                onChange={(e) => setTreasuryCap(e.target.value)}
                 required
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
               <p className="text-zinc-500 text-xs mt-1">
-                Enter the number of tokens to burn. This amount will be deducted from the total supply.
+                Enter the treasury cap of your coin.
               </p>
             </div>
-            
+
             <div>
-              <label className="text-zinc-300 text-sm block mb-1">Coin ID (Optional)</label>
+              <label className="text-zinc-300 text-sm block mb-1">Coin ID</label>
               <Input
                 placeholder="Enter coin ID to burn (optional)"
                 value={burnCoin}
                 onChange={(e) => setBurnCoin(e.target.value)}
+                required
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
               <p className="text-zinc-500 text-xs mt-1">
                 Optionally specify a coin ID to burn. Leave empty to burn from your wallet balance.
               </p>
             </div>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full bg-red-600 hover:bg-red-700 text-white"
               disabled={isPending}
             >
@@ -227,7 +230,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
                 </>
               ) : "Burn Tokens"}
             </Button>
-            
+
             {burnSuccess && (
               <div className="text-green-500 text-sm text-center py-2 px-4 bg-green-900/20 border border-green-900 rounded-md">
                 Tokens burned successfully!
@@ -237,7 +240,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
         </CardContent>
         <CardFooter className="flex justify-between border-t border-zinc-800 pt-4 mt-6">
           <Button
-            variant="outline" 
+            variant="outline"
             size="sm"
             className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
             onClick={() => window.location.href = `/generator/${network}/token`}
@@ -245,7 +248,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Token Page
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -263,19 +266,19 @@ export default function BurnTokens({ network }: BurnTokensProps) {
 
 function Flame(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg 
+    <svg
       {...props}
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
     </svg>
   )
 }

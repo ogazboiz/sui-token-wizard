@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import TokenFormStandard from "@/components/generator/token-form-standard"
 import TokenFormRegulated from "@/components/generator/token-form-regulated"
+import TokenFormClosedLoop from "@/components/generator/token-form-closed-loop"
 import { useRouter } from "next/navigation"
 import { ConnectButton } from "@mysten/dapp-kit"
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
@@ -75,14 +75,27 @@ const templates: ContractTemplate[] = [
     tags: ["sui-standard", "supply-limits", "ownership", "mintable", "burnable", "pausable", "denylist"],
     imageSrc: "/placeholder.svg?height=120&width=120",
   },
+  {
+    id: "closed-loop",
+    name: "Closed-Loop Token",
+    price: "0.05 SUI",
+    discount: 40,
+    description:
+      "Create a sophisticated closed-loop token system with advanced circulation controls, restricted transfers, and ecosystem management features. Perfect for loyalty programs, gaming economies, and controlled token ecosystems with enhanced security and compliance features.",
+    features: [
+      { name: "Basic Token Functionality", included: true },
+      { name: "Supply Limits", included: true },
+      { name: "Mintable", included: true },
+      { name: "Burnable", included: true },
+      { name: "Pausable", included: true },
+      { name: "Denylist", included: true },
+      { name: "Allowlist", included: true },
+      { name: "Transfer Restrictions", included: true },
+    ],
+    tags: ["sui-standard", "supply-limits", "allowlist", "transfer-restrictions", "ecosystem-control"],
+    imageSrc: "/placeholder.svg?height=120&width=120",
+  },
 ]
-
-// interface ContractTemplatesProps {
-//   network?: string
-//   isLandingPage?: boolean
-//   selectedTemplate?: string | null
-//   onTemplateSelect?: (templateId: string | null) => void
-// }
 
 export default function ContractTemplates({
   network = "testnet",
@@ -139,6 +152,10 @@ export default function ContractTemplates({
     return <TokenFormRegulated network={network} onBack={handleBack} onSwitchTemplate={handleSwitchTemplate} />
   }
 
+  if (!isLandingPage && selectedTemplate === "closed-loop") {
+    return <TokenFormClosedLoop network={network} onBack={handleBack} onSwitchTemplate={handleSwitchTemplate} />
+  }
+
   return (
     <div className={isLandingPage ? "container mx-auto px-4 py-16" : ""}>
       <div className="text-center mb-8">
@@ -164,7 +181,7 @@ export default function ContractTemplates({
         )}
       </div>
 
-      <div className="grid md:grid-cols-2 max-w-4xl mx-auto gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6">
         {templates.map((template) => (
           <motion.div
             key={template.id}
@@ -175,17 +192,29 @@ export default function ContractTemplates({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className={`relative p-6 ${template.id === "standard" ? "bg-indigo-900/20" : "bg-fuchsia-900/20"}`}>
+            <div className={`relative p-6 ${
+              template.id === "standard" ? "bg-indigo-900/20" : 
+              template.id === "regulated" ? "bg-fuchsia-900/20" : 
+              "bg-emerald-900/20"
+            }`}>
               <div className="absolute inset-0 opacity-10">
                 {template.id === "standard" ? (
                   <div className="absolute inset-0 bg-indigo-500/10 pattern-dots pattern-indigo-500 pattern-bg-transparent pattern-size-4 pattern-opacity-10"></div>
-                ) : (
+                ) : template.id === "regulated" ? (
                   <div className="absolute inset-0 bg-fuchsia-500/10 pattern-dots pattern-fuchsia-500 pattern-bg-transparent pattern-size-4 pattern-opacity-10"></div>
+                ) : (
+                  <div className="absolute inset-0 bg-emerald-500/10 pattern-dots pattern-emerald-500 pattern-bg-transparent pattern-size-4 pattern-opacity-10"></div>
                 )}
               </div>
               <div className="relative flex justify-between items-start">
                 <div className="flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm">
-                  {template.id === "standard" ? <div className="text-3xl">😊</div> : <div className="text-3xl">😎</div>}
+                  {template.id === "standard" ? (
+                    <div className="text-3xl">😊</div>
+                  ) : template.id === "regulated" ? (
+                    <div className="text-3xl">😎</div>
+                  ) : (
+                    <div className="text-3xl">🚀</div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="bg-zinc-900/60 backdrop-blur-sm px-3 py-1 rounded-lg inline-block">
@@ -215,10 +244,13 @@ export default function ContractTemplates({
               </div>
               <Button
                 onClick={() => handleTemplateClick(template.id)}
-                className={`w-full ${template.id === "regulated"
-                  ? "bg-teal-500 hover:bg-teal-600 text-white"
-                  : "bg-zinc-700 hover:bg-zinc-600 text-white"
-                  }`}
+                className={`w-full ${
+                  template.id === "regulated"
+                    ? "bg-teal-500 hover:bg-teal-600 text-white"
+                    : template.id === "closed-loop"
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                    : "bg-zinc-700 hover:bg-zinc-600 text-white"
+                }`}
               >
                 Create token
               </Button>

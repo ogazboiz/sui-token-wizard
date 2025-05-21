@@ -129,6 +129,6 @@ function getStatusLabel(status: string): string {
     case "development":
       return "Development"
     default:
-      return status
+      return "Unknown"
   }
 }

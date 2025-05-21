@@ -40,6 +40,17 @@ export default function TokenManager({ network }: TokenManagerProps) {
   const { isConnected, isReady } = useWalletConnection()
   const [hasCreatedToken, setHasCreatedToken] = useState(false)
 
+  // Add network validation at the beginning
+  if (!network || typeof network !== 'string') {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center text-red-400">
+          Error: Invalid network parameter
+        </div>
+      </div>
+    )
+  }
+
   // Check if the user has already created a token
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -136,7 +147,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
         // Set template from URL if on token-creator
         const params = new URLSearchParams(window.location.search)
         const template = params.get("template")
-        if (template && ["standard", "regulated"].includes(template)) {
+        if (template && ["standard", "regulated", "closed-loop"].includes(template)) {
           setSelectedTemplate(template)
         }
       }
@@ -260,7 +271,9 @@ export default function TokenManager({ network }: TokenManagerProps) {
                   <div className="w-6 h-6 mr-2 flex items-center justify-center">{tool.icon}</div>
                   <span>{tool.name}</span>
                   {tool.isNew && (
-                    <span className="ml-2 text-xs bg-yellow-800 text-black px-1.5 py-0.5 rounded font-medium">New</span>
+                    <span className="ml-2 text-xs bg-teal-500/20 text-teal-400 px-1.5 py-0.5 rounded font-medium">
+                      New
+                    </span>
                   )}
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-50" />

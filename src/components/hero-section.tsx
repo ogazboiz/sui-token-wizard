@@ -144,7 +144,7 @@ export default function LandingHeroSection() {
 
   const handleCreateAction = () => {
     if (activeTab === "tokens") {
-      router.push("/generator/mainnet")
+      router.push("/generate")
     } else {
       router.push("/nft/generate")
     }

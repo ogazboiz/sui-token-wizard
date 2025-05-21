@@ -6,7 +6,7 @@ import { ArrowLeft, ExternalLink, Loader2, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { ClipLoader } from "react-spinners"
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from '@mysten/sui/transactions'
 import {
   Card,
@@ -21,6 +21,7 @@ import { Terminal } from "lucide-react"
 import {
   Badge
 } from "@/components/ui/badge"
+import { useNetworkVariables } from "@/components/utils/networkConfig"
 
 interface PausableTokensProps {
   network: string
@@ -28,9 +29,9 @@ interface PausableTokensProps {
 
 export default function PausableTokens({ network }: PausableTokensProps) {
   const { toast } = useToast()
-  const account = useCurrentAccount()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
+  const { coinPackageId } = useNetworkVariables();
 
   // Token data state
   const [tokenData, setTokenData] = useState<{
@@ -41,6 +42,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     newPkgId: string
     txId: string
     treasuryCap: string
+    denyCap: string
     features?: {
       pausable?: boolean
     }
@@ -58,11 +60,8 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     if (savedTokenData) {
       const parsedData = JSON.parse(savedTokenData)
       setTokenData(parsedData)
-      
-      // For demo purposes, assume token is not paused initially
-      // In a real implementation, you would fetch this from the blockchain
+
       setIsPaused(false)
-      
       setTokenLoaded(true)
     }
   }, [])
@@ -78,12 +77,13 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
-    // Call the pause function on the token contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::regulated_coin::pause`,
+      target: "0x2::coin::deny_list_v2_enable_global_pause",
       arguments: [
-        tx.object(tokenData.treasuryCap),
+        tx.object('0x403'),
+        tx.object(tokenData.denyCap),
       ],
+      typeArguments: [`${coinPackageId}::regulated_coin::mint`],
     })
 
     signAndExecute(
@@ -129,12 +129,13 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
-    // Call the unpause function on the token contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::regulated_coin::unpause`,
+      target: "0x2::coin::deny_list_v2_disable_global_pause",
       arguments: [
-        tx.object(tokenData.treasuryCap),
+        tx.object('0x403'),
+        tx.object(tokenData.denyCap),
       ],
+      typeArguments: [`${coinPackageId}::regulated_coin::mint`],
     })
 
     signAndExecute(
@@ -186,7 +187,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
         <Terminal className="h-4 w-4 text-teal-500" />
         <AlertTitle className="text-white">No Token Found</AlertTitle>
         <AlertDescription className="text-zinc-400">
-          You haven't created any tokens yet or token data was lost. Please create a new token.
+          You haven&apos;t created any tokens yet or token data was lost. Please create a new token.
           <div className="mt-4">
             <Button
               className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -250,11 +251,27 @@ export default function PausableTokens({ network }: PausableTokensProps) {
                 <span className="text-white truncate max-w-[200px]">
                   {tokenData?.treasuryCap.substring(0, 6)}...{tokenData?.treasuryCap.substring(tokenData.treasuryCap.length - 4)}
                 </span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-6 w-6 ml-1"
                   onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`, '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 text-zinc-400" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-zinc-400 text-sm">Deny Cap:</span>
+              <div className="flex items-center">
+                <span className="text-white truncate max-w-[200px]">
+                  {tokenData?.denyCap.substring(0, 6)}...{tokenData?.denyCap.substring(tokenData?.denyCap.length - 4)}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 ml-1"
+                  onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.denyCap}`, '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 text-zinc-400" />
                 </Button>
@@ -267,11 +284,11 @@ export default function PausableTokens({ network }: PausableTokensProps) {
               </Badge>
             </div>
           </div>
-          
+
           <div className="mt-6 space-y-6">
             <div className="bg-zinc-800 rounded-lg p-5 border border-zinc-700">
               <h3 className="text-white font-medium mb-4">Token Transfer Status</h3>
-              
+
               <div className="text-zinc-300 text-sm mb-6">
                 {isPaused ? (
                   <div className="flex items-start">
@@ -289,10 +306,10 @@ export default function PausableTokens({ network }: PausableTokensProps) {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex flex-col gap-4">
                 {isPaused ? (
-                  <Button 
+                  <Button
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                     disabled={isPending}
                     onClick={handleUnpauseToken}
@@ -310,7 +327,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
                     )}
                   </Button>
                 ) : (
-                  <Button 
+                  <Button
                     className="w-full bg-red-600 hover:bg-red-700 text-white"
                     disabled={isPending}
                     onClick={handlePauseToken}
@@ -328,13 +345,13 @@ export default function PausableTokens({ network }: PausableTokensProps) {
                     )}
                   </Button>
                 )}
-                
+
                 {pauseSuccess && (
                   <div className="text-yellow-500 text-sm text-center py-2 px-4 bg-yellow-900/20 border border-yellow-900 rounded-md">
                     Token transfers have been paused successfully!
                   </div>
                 )}
-                
+
                 {unpauseSuccess && (
                   <div className="text-green-500 text-sm text-center py-2 px-4 bg-green-900/20 border border-green-900 rounded-md">
                     Token transfers have been unpaused successfully!
@@ -342,7 +359,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
                 )}
               </div>
             </div>
-            
+
             <div className="bg-zinc-800 rounded-lg p-5 border border-zinc-700">
               <h3 className="text-white font-medium mb-2">Important Information</h3>
               <ul className="text-zinc-300 text-sm list-disc pl-5 space-y-2">
@@ -364,7 +381,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
         </CardContent>
         <CardFooter className="flex justify-between border-t border-zinc-800 pt-4 mt-6">
           <Button
-            variant="outline" 
+            variant="outline"
             size="sm"
             className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
             onClick={() => window.location.href = `/generator/${network}/token`}
@@ -372,7 +389,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Token Page
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"

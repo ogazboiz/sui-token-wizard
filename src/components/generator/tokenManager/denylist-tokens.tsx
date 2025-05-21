@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { ClipLoader } from "react-spinners"
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from '@mysten/sui/transactions'
 import {
   Card,
@@ -30,7 +30,6 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
   const { coinPackageId } = useNetworkVariables();
-  // for some reason, this dont work when imported
 
   // Token data state
   const [tokenData, setTokenData] = useState<{
@@ -64,8 +63,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
       const parsedData = JSON.parse(savedTokenData)
       setTokenData(parsedData)
 
-      // For demo purposes, we're showing some mock denylisted addresses
-      // In a real implementation, you would fetch this from the blockchain
+      // dummy addresses
       setDenylistedAddresses([
         "0x1234...5678",
         "0xabcd...ef01"

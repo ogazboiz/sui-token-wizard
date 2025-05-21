@@ -383,6 +383,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                 </Label>
                 <Input
                   id="initialSupply"
+                  type="number"
                   value={initialSupply}
                   onChange={(e) => setInitialSupply(e.target.value)}
                   placeholder="1000000000"
@@ -409,6 +410,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                 </Label>
                 <Input
                   id="maxSupply"
+                  type="number"
                   value={maxSupply}
                   onChange={(e) => setMaxSupply(e.target.value)}
                   placeholder="1000000000"

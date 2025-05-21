@@ -38,7 +38,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
   const [initialSupply, setInitialSupply] = useState("")
   const [maxSupply, setMaxSupply] = useState("")
   const [isCreatingToken, setIsCreatingToken] = useState(false)
-  
+
   // These state variables are for tracking transaction results
   const [txId, setTxId] = useState('');
   const [owner, setOwner] = useState('')
@@ -332,7 +332,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                   className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
                 />
                 <p className="text-zinc-500 text-xs mt-1">
-                  A brief description of your token's purpose
+                  A brief description of your token&#39;s purpose
                 </p>
               </div>
 
@@ -354,6 +354,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                 </Label>
                 <Input
                   id="initialSupply"
+                  type="number"
                   value={initialSupply}
                   onChange={(e) => setInitialSupply(e.target.value)}
                   placeholder="1000000000"
@@ -380,6 +381,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                 </Label>
                 <Input
                   id="maxSupply"
+                  type="number"
                   value={maxSupply}
                   onChange={(e) => setMaxSupply(e.target.value)}
                   placeholder="1000000000"
@@ -390,8 +392,8 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
             </div>
 
             <div className="pt-4 space-y-2">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                 disabled={isPending || isCreatingToken}
               >

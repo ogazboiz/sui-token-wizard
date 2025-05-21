@@ -46,6 +46,7 @@ export default function MintTokens({ network }: MintTokensProps) {
   const [mintRecipient, setMintRecipient] = useState('')
   const [mintSuccess, setMintSuccess] = useState(false)
   const [tokenLoaded, setTokenLoaded] = useState(false)
+  const [coin, setCoin] = useState('')
 
   useEffect(() => {
     // Check localStorage for token data when component mounts
@@ -77,7 +78,7 @@ export default function MintTokens({ network }: MintTokensProps) {
 
     // Call the mint function on the Coin contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::regulated_coin::mint`,
+      target: `${tokenData.newPkgId}::my_coin::mint`,
       arguments: [
         tx.object(tokenData.treasuryCap),
         tx.pure.u64(Number(mintAmount)),
@@ -96,13 +97,23 @@ export default function MintTokens({ network }: MintTokensProps) {
 
           if (res.effects?.status.status === "success") {
             console.log("Mint successful:", res)
+
+            const coin = res.effects.created?.[0]?.reference?.objectId;
+            console.log("Coin ID:", coin)
+
             toast({
               title: "Success",
               description: `Successfully minted ${mintAmount} ${tokenData.symbol} tokens to ${mintRecipient}`,
             })
-            setMintSuccess(true)
+            setMintSuccess(true);
+            setTimeout(() => setMintSuccess(false), 3000);
             setMintAmount('')
-            setTimeout(() => setMintSuccess(false), 3000)
+            setCoin(coin as string)
+
+            localStorage.setItem('tokenData', JSON.stringify({
+              ...tokenData,
+              coin: coin as string,
+            }))
           }
         },
         onError: (err) => {
@@ -177,9 +188,9 @@ export default function MintTokens({ network }: MintTokensProps) {
                 <span className="text-white truncate max-w-[200px]">
                   {tokenData?.treasuryCap.substring(0, 6)}...{tokenData?.treasuryCap.substring(tokenData.treasuryCap.length - 4)}
                 </span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-6 w-6 ml-1"
                   onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`, '_blank')}
                 >
@@ -188,7 +199,7 @@ export default function MintTokens({ network }: MintTokensProps) {
               </div>
             </div>
           </div>
-          
+
           <form onSubmit={handleMint} className="space-y-5">
             <div>
               <label className="text-zinc-300 text-sm block mb-1">Amount</label>
@@ -204,7 +215,7 @@ export default function MintTokens({ network }: MintTokensProps) {
                 Enter the number of tokens to mint. This amount will be added to the total supply.
               </p>
             </div>
-            
+
             <div>
               <label className="text-zinc-300 text-sm block mb-1">Recipient Address</label>
               <Input
@@ -218,9 +229,9 @@ export default function MintTokens({ network }: MintTokensProps) {
                 Enter the address that will receive the minted tokens.
               </p>
             </div>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full bg-purple-600 hover:bg-purple-700 text-white"
               disabled={isPending}
             >
@@ -231,7 +242,7 @@ export default function MintTokens({ network }: MintTokensProps) {
                 </>
               ) : "Mint Tokens"}
             </Button>
-            
+
             {mintSuccess && (
               <div className="text-green-500 text-sm text-center py-2 px-4 bg-green-900/20 border border-green-900 rounded-md">
                 Tokens minted successfully!
@@ -241,7 +252,7 @@ export default function MintTokens({ network }: MintTokensProps) {
         </CardContent>
         <CardFooter className="flex justify-between border-t border-zinc-800 pt-4 mt-6">
           <Button
-            variant="outline" 
+            variant="outline"
             size="sm"
             className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
             onClick={() => window.location.href = `/generator/${network}/token`}
@@ -249,7 +260,7 @@ export default function MintTokens({ network }: MintTokensProps) {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Token Page
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"

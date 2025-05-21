@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState} from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, Loader2, Upload, Plus, Trash2, Terminal } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,12 +10,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert" 
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ConnectButton } from "@mysten/dapp-kit"
+import { ConnectButton, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
+// import { useNetworkVariable } from "../utils/networkConfig"
+import { Transaction } from "@mysten/sui/transactions"
+
 
 interface NftFormProps {
   network: string
@@ -29,19 +32,27 @@ interface NftAttribute {
 export default function NftForm({ network }: NftFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [collectionName, setCollectionName] = useState("")
-  const [collectionSymbol, setCollectionSymbol] = useState("")
+  const [imageUrl, setImageUrl] = useState("")
   const [description, setDescription] = useState("")
   const [royaltyPercentage, setRoyaltyPercentage] = useState("5")
   const [maxSupply, setMaxSupply] = useState("10000")
   const [mintPrice, setMintPrice] = useState("0.1")
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [attributes, setAttributes] = useState<NftAttribute[]>([{ trait_type: "", value: "" }])
   const [isRevealable, setIsRevealable] = useState(false)
   const [isWhitelistEnabled, setIsWhitelistEnabled] = useState(false)
+  const [nftId, setNftId] = useState('')
+
   const { toast } = useToast()
   const router = useRouter()
   const { isConnected, isReady } = useWalletConnection()
+  // const nftPackageId = useNetworkVariable("nftPackageId");
+  // for some reason, this dont work when imported
+  const {
+    mutate: signAndExecute,
+    isSuccess,
+    isPending,
+  } = useSignAndExecuteTransaction();
+  const suiClient = useSuiClient();
 
   const getNetworkName = () => {
     switch (network) {
@@ -69,18 +80,6 @@ export default function NftForm({ network }: NftFormProps) {
     }
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
   const handleAddAttribute = () => {
     setAttributes([...attributes, { trait_type: "", value: "" }])
   }
@@ -98,63 +97,78 @@ export default function NftForm({ network }: NftFormProps) {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    // Check wallet connection before processing
-    if (!isConnected) {
-      toast({
-        title: "Wallet not connected",
-        description: "Please connect your wallet to create an NFT collection",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Validation
-    if (!collectionName || !collectionSymbol || !description) {
+    if (!collectionName || !description || !imageUrl) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
+    console.log({ collectionName, description, imageUrl });
 
-    if (!imageFile) {
-      toast({
-        title: "Missing image",
-        description: "Please upload a collection image",
-        variant: "destructive",
-      })
-      return
-    }
+    setIsSubmitting(true);
 
-    setIsSubmitting(true)
-
-    // Simulate NFT collection creation process
     try {
-      // This would be an API call in a real application
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const tx = new Transaction();
+      tx.moveCall({
+        arguments: [
+          tx.pure.string(collectionName),
+          tx.pure.string(description),
+          tx.pure.string(imageUrl),
+        ],
+        target: `0xd2bfa388fa7ba1ee3cf9f15de83f9bf8323f821bc11e1c4163defdabe43352c3::my_nft::mint_to_sender`,
+      });
 
-      toast({
-        title: "Collection created successfully!",
-        description: `Your ${collectionName} NFT collection has been deployed to the ${getNetworkName()} blockchain.`,
-        variant: "default",
-      })
+      signAndExecute(
+        {
+          transaction: tx,
+        },
+        {
+          onSuccess: async ({ digest }) => {
+            const { effects } = await suiClient.waitForTransaction({
+              digest: digest,
+              options: {
+                showEffects: true,
+              },
+            });
+            console.log("List created successfully:", effects);
 
-      // Redirect to dashboard
-      router.push("/dashboard")
+            const nftId = effects?.created?.[0]?.reference?.objectId;
+            setNftId(nftId || "");
+
+            toast({
+              title: "Collection created successfully!",
+              description: `Your ${collectionName} NFT collection has been deployed to the ${getNetworkName()} blockchain.`,
+              variant: "default",
+            });
+
+            // Redirect to dashboard
+            // router.push("/dashboard");
+          },
+          onError: (error) => {
+            console.error("Error creating collection:", error);
+            toast({
+              title: "Error creating collection",
+              description: "There was an error creating your NFT collection. Please try again.",
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+          },
+        }
+      );
     } catch (error) {
-      console.error("Error creating collection:", error)
+      console.error("Error creating collection:", error);
       toast({
         title: "Error creating collection",
         description: "There was an error creating your NFT collection. Please try again.",
         variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
+      });
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Show loading state while checking wallet connection
   if (!isReady) {
@@ -184,9 +198,9 @@ export default function NftForm({ network }: NftFormProps) {
             <AlertDescription className="text-zinc-400">
               You need to connect your wallet to create an NFT collection on {getNetworkName()}.
               <div className="mt-4 flex justify-center">
-                <ConnectButton 
-                  connectText="Connect Wallet to Continue" 
-                  className="bg-purple-500 hover:bg-purple-600 text-white" 
+                <ConnectButton
+                  connectText="Connect Wallet to Continue"
+                  className="bg-purple-500 hover:bg-purple-600 text-white"
                 />
               </div>
             </AlertDescription>
@@ -245,19 +259,6 @@ export default function NftForm({ network }: NftFormProps) {
                   </div>
 
                   <div>
-                    <Label htmlFor="collectionSymbol" className="text-zinc-300">
-                      Collection Symbol <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="collectionSymbol"
-                      value={collectionSymbol}
-                      onChange={(e) => setCollectionSymbol(e.target.value)}
-                      placeholder="e.g. SPNK"
-                      className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-purple-500 mt-1"
-                    />
-                  </div>
-
-                  <div>
                     <Label htmlFor="description" className="text-zinc-300">
                       Description <span className="text-red-500">*</span>
                     </Label>
@@ -267,6 +268,19 @@ export default function NftForm({ network }: NftFormProps) {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Describe your NFT collection"
                       className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-purple-500 min-h-[100px] mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="imageUrl" className="text-zinc-300">
+                      Image URL <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="imageUrl"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="e.g. https://example.com/image.png"
+                      className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-purple-500 mt-1"
                     />
                   </div>
 
@@ -315,49 +329,6 @@ export default function NftForm({ network }: NftFormProps) {
                       placeholder="e.g. 5"
                       className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-purple-500 mt-1"
                     />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="collectionImage" className="text-zinc-300 block mb-2">
-                      Collection Image <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-purple-500 transition-colors">
-                          <input
-                            type="file"
-                            id="collectionImage"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleImageChange}
-                          />
-                          <label htmlFor="collectionImage" className="cursor-pointer block">
-                            <Upload className="mx-auto h-8 w-8 text-zinc-500 mb-2" />
-                            <p className="text-zinc-400 text-sm">Click to upload collection image</p>
-                            <p className="text-zinc-500 text-xs mt-1">PNG, JPG, GIF up to 5MB</p>
-                          </label>
-                        </div>
-                      </div>
-                      {imagePreview && (
-                        <div className="w-24 h-24 relative">
-                          <img
-                            src={imagePreview || "/placeholder.svg"}
-                            alt="Preview"
-                            className="w-full h-full object-cover rounded-lg border border-zinc-700"
-                          />
-                          <button
-                            type="button"
-                            className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
-                            onClick={() => {
-                              setImageFile(null)
-                              setImagePreview(null)
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3 text-white" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </form>
@@ -483,6 +454,22 @@ export default function NftForm({ network }: NftFormProps) {
             </Button>
           </div>
         </motion.div>
+        {isSuccess && (
+          <div className="mt-4 text-green-500 flex flex-col gap-1 font-semibold">
+            <span>NFT created successfully!</span>
+            <span>NFT ID: {nftId || "loading id..."}</span>
+            {nftId && (
+              <a
+                href={`https://suiscan.xyz/testnet/object/${nftId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-green-400 hover:text-green-300"
+              >
+                View NFT
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

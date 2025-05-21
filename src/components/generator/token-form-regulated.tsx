@@ -12,6 +12,10 @@ import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/use-toast"
 import { Coins } from "@/components/ui/icons"
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
+import { useUpdatePRegCoin, useUpdateURegCoin } from "../hooks/updateCoin"
+import { Transaction } from "@mysten/sui/transactions"
+import { normalizeSuiObjectId } from "@mysten/sui.js/utils"
 
 interface TokenFormRegulatedProps {
   network: string
@@ -20,17 +24,31 @@ interface TokenFormRegulatedProps {
 }
 
 export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }: TokenFormRegulatedProps) {
+  const { toast } = useToast()
+  const suiClient = useSuiClient();
+  const updatePRegCoin = useUpdatePRegCoin;
+  const updateURegCoin = useUpdateURegCoin;
+  const account = useCurrentAccount();
+  // const tokenPackageId = useNetworkVariable("tokenPackageId");
+  const { mutate: signAndExecute, isSuccess, isPending } = useSignAndExecuteTransaction();
+
   const [tokenName, setTokenName] = useState("")
   const [tokenSymbol, setTokenSymbol] = useState("")
   const [customDecimals, setCustomDecimals] = useState(false)
   const [decimals, setDecimals] = useState("9")
+  const [description, setDescription] = useState("")
   const [initialSupply, setInitialSupply] = useState("")
   const [maxSupply, setMaxSupply] = useState("")
   const [burnable, setBurnable] = useState(true)
   const [mintable, setMintable] = useState(true)
   const [pausable, setPausable] = useState(true)
-  const [blacklist, setBlacklist] = useState(true)
-  const { toast } = useToast()
+  const [denylist, setDenylist] = useState(true)
+  const [txId, setTxId] = useState('');
+  const [owner, setOwner] = useState('')
+  const [newPkgId, setNewPkgId] = useState('');
+  const [treasuryCap, setTreasuryCap] = useState('');
+  const [tokenCreated, setTokenCreated] = useState(false);
+
 
   const getNetworkName = () => {
     switch (network) {
@@ -45,11 +63,10 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validation
-    if (!tokenName || !tokenSymbol || !initialSupply) {
+    if (!tokenName || !tokenSymbol || !decimals || !description || !initialSupply || !maxSupply) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -58,12 +75,100 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
       return
     }
 
-    // Submit form logic would go here
+    console.log({
+      tokenName,
+      tokenSymbol,
+      description,
+      decimals: Number(decimals),
+      pausable
+    });
+
     toast({
-      title: "Token creation initiated",
+      title: "Regulated coin creation initiated",
       description: "Your token is being created. Please wait...",
     })
+
+    try {
+      if (pausable) {
+        const { updatedBytes } = await updatePRegCoin(tokenName, tokenSymbol, description, Number(decimals));
+        await publishNewBytecode(updatedBytes);
+      } else {
+        const { updatedBytes } = await updateURegCoin(tokenName, tokenSymbol, description, Number(decimals));
+        await publishNewBytecode(updatedBytes);
+      }
+    } catch (err) {
+      console.error("Regulated coin creation failed:", err);
+    }
   }
+
+  const publishNewBytecode = async (updatedBytes: Uint8Array) => {
+    const tx = new Transaction();
+    tx.setGasBudget(100_000_000);
+
+    const [upgradeCap] = tx.publish({
+      modules: [[...updatedBytes]],
+      dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")], // normalize original package id as well
+    });
+
+    tx.transferObjects([upgradeCap], tx.pure("address", account!.address));
+
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: async ({ digest }) => {
+          const res = await suiClient.waitForTransaction({
+            digest,
+            options: {
+              showEffects: true,
+              showEvents: true,
+              showObjectChanges: true,
+              showBalanceChanges: true,
+              showInput: true,
+            },
+          });
+
+
+          if (res.effects?.status.status === "success") {
+            console.log("Token created successfully:", res);
+
+            const txId = res.effects.transactionDigest;
+            const owner = res.effects.created?.[0]?.owner?.AddressOwner;
+
+
+            const newPkgId = res.objectChanges?.find(
+              (item) => item.type === "published"
+            )?.packageId;
+
+            const treasuryCap = res.objectChanges?.find(
+              (item) =>
+                item.type === "created" &&
+                typeof item.objectType === "string" &&
+                item.objectType.includes("TreasuryCap")
+            )?.objectId;
+
+            setTxId(txId);
+            setOwner(owner ? String(owner) : "");
+            setNewPkgId(newPkgId || "");
+            setTreasuryCap(treasuryCap);
+            setTokenCreated(true);
+          } else {
+            throw new Error("Publishing failed");
+          }
+        },
+        onError: (err) => {
+          console.error("Publish transaction failed:", err);
+        }
+      }
+    );
+
+    // store these values
+    // txId,
+    // owner,
+    // newPkgId,
+    // treasuryCap,
+    // tokenCreated,
+
+  };
 
   return (
     <motion.div
@@ -111,7 +216,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                           <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="w-[200px] text-xs">The name of your token (e.g., "My Awesome Token")</p>
+                          <p className="w-[200px] text-xs">The name of your token (e.g., &quot;My Awesome Token&quot;)</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -134,7 +239,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="w-[200px] text-xs">
-                            The symbol of your token (e.g., "AWE"). Usually 3-5 characters.
+                            The symbol of your token (e.g., &quot;AWE&quot;). Usually 3-5 characters.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -175,6 +280,34 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 w-24"
                   />
                 )}
+              </div>
+
+              <div>
+                <Label htmlFor="description" className="text-zinc-300 flex items-center">
+                  Description*
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="w-[200px] text-xs">
+                          The description for your token (e.g., My awesome token)
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <Input
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="My custom token"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
+                />
+                <p className="text-zinc-500 text-xs mt-1">
+                  The description for your token being created
+                </p>
               </div>
 
               <div>
@@ -297,8 +430,8 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Shield className="h-4 w-4 text-red-400 mr-2" />
-                        <Label htmlFor="blacklist" className="text-zinc-300 cursor-pointer">
-                          Blacklist
+                        <Label htmlFor="denylist" className="text-zinc-300 cursor-pointer">
+                          Denylist
                         </Label>
                       </div>
                       <p className="text-zinc-500 text-xs mt-1 ml-6">
@@ -306,9 +439,9 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                       </p>
                     </div>
                     <Switch
-                      id="blacklist"
-                      checked={blacklist}
-                      onCheckedChange={setBlacklist}
+                      id="denylist"
+                      checked={denylist}
+                      onCheckedChange={setDenylist}
                       className="data-[state=checked]:bg-teal-500"
                     />
                   </div>

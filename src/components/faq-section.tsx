@@ -43,7 +43,7 @@ const faqItems: FaqItem[] = [
   {
     question: "What is the difference between Standard and Regulated token templates?",
     answer:
-      "The Standard template provides basic token functionality with supply limits at a lower cost. The Regulated template includes additional features like mintable, burnable, pausable capabilities, and blacklist functionality, giving you more control over your token's behavior and management.",
+      "The Standard template provides basic token functionality with supply limits at a lower cost. The Regulated template includes additional features like mintable, burnable, pausable capabilities, and denylist functionality, giving you more control over your token's behavior and management.",
   },
 ]
 

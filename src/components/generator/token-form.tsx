@@ -27,7 +27,7 @@ export default function TokenForm({ network }: TokenFormProps) {
   const [isMintable, setIsMintable] = useState(false)
   const [isBurnable, setIsBurnable] = useState(false)
   const [isPausable, setIsPausable] = useState(false)
-  const [hasBlacklist, setHasBlacklist] = useState(false)
+  const [hasDenylist, setHasDenylist] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -246,15 +246,15 @@ export default function TokenForm({ network }: TokenFormProps) {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="blacklist" className="text-zinc-300">
-                      Blacklist
+                    <Label htmlFor="denylist" className="text-zinc-300">
+                      Denylist
                     </Label>
                     <p className="text-zinc-500 text-sm">Allow blocking specific addresses</p>
                   </div>
                   <Switch
-                    id="blacklist"
-                    checked={hasBlacklist}
-                    onCheckedChange={setHasBlacklist}
+                    id="denylist"
+                    checked={hasDenylist}
+                    onCheckedChange={setHasDenylist}
                     className="data-[state=checked]:bg-teal-500"
                   />
                 </div>

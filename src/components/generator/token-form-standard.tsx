@@ -39,7 +39,11 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
   const [description, setDescription] = useState("")
   const [initialSupply, setInitialSupply] = useState("")
   const [maxSupply, setMaxSupply] = useState("")
-  const [newTokenId, setNewTokenId] = useState('');
+  const [txId, setTxId] = useState('');
+  const [owner, setOwner] = useState('')
+  const [newPkgId, setNewPkgId] = useState('');
+  const [treasuryCap, setTreasuryCap] = useState('');
+  const [tokenCreated, setTokenCreated] = useState(false);
 
   const getNetworkName = () => {
     switch (network) {
@@ -57,8 +61,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validation
-    if (!tokenName || !tokenSymbol || !initialSupply || !maxSupply || !decimals || !description) {
+    if (!tokenName || !tokenSymbol || !decimals || !description || !initialSupply || !maxSupply) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -72,13 +75,10 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
       tokenSymbol,
       description,
       decimals: Number(decimals),
-      initialSupply: Number(initialSupply),
-      maxSupply: Number(maxSupply),
     });
 
-    // Submit form logic would go here
     toast({
-      title: "Token creation initiated",
+      title: "Standard coin creation initiated",
       description: "Your token is being created. Please wait...",
     })
 
@@ -86,7 +86,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
       const { updatedBytes } = await updateCoin(tokenName, tokenSymbol, description, Number(decimals));
       await publishNewBytecode(updatedBytes);
     } catch (err) {
-      console.error("Token creation failed:", err);
+      console.error("Standard coin creation failed:", err);
     }
   }
 
@@ -105,7 +105,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
       { transaction: tx },
       {
         onSuccess: async ({ digest }) => {
-          const { effects } = await suiClient.waitForTransaction({
+          const res = await suiClient.waitForTransaction({
             digest,
             options: {
               showEffects: true,
@@ -116,12 +116,28 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
             },
           });
 
-          if (effects?.status.status === "success") {
-            const newPkgId = effects.created?.find(
-              item => item.owner === "Immutable"
-            )?.reference.objectId;
-            console.log("New package ID Tx:", newPkgId); //find a way to get the exact package id
-            setNewTokenId(newPkgId || '');
+          if (res.effects?.status.status === "success") {
+            console.log("Token created successfully:", res);
+
+            const txId = res.effects.transactionDigest;
+            const owner = res.effects.created?.[0]?.owner?.AddressOwner;
+
+            const newPkgId = res.objectChanges?.find(
+              (item) => item.type === "published"
+            )?.packageId;
+
+            const treasuryCap = res.objectChanges?.find(
+              (item) =>
+                item.type === "created" &&
+                typeof item.objectType === "string" &&
+                item.objectType.includes("TreasuryCap")
+            )?.objectId;
+
+            setTxId(txId);
+            setOwner(owner ? String(owner) : "");
+            setNewPkgId(newPkgId || "");
+            setTreasuryCap(treasuryCap);
+            setTokenCreated(true);
           } else {
             throw new Error("Publishing failed");
           }
@@ -131,6 +147,13 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
         }
       }
     );
+
+    // store these values
+    // txId,
+    // owner,
+    // newPkgId,
+    // treasuryCap,
+    // tokenCreated,
   };
 
 
@@ -269,7 +292,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                   className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
                 />
                 <p className="text-zinc-500 text-xs mt-1">
-                  The initial number of available tokens that will be created in your wallet
+                  The description for your token being created
                 </p>
               </div>
 

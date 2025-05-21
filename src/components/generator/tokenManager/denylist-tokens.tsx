@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, ExternalLink, Loader2, Shield, X, Check, Plus } from "lucide-react"
+import { ArrowLeft, ExternalLink, Loader2, Shield, X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
+import { useNetworkVariables } from "@/components/utils/networkConfig"
 
 interface DenylistTokensProps {
   network: string
@@ -26,9 +27,10 @@ interface DenylistTokensProps {
 
 export default function DenylistTokens({ network }: DenylistTokensProps) {
   const { toast } = useToast()
-  const account = useCurrentAccount()
   const suiClient = useSuiClient()
-  const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction()
+  const { coinPackageId } = useNetworkVariables();
+  // for some reason, this dont work when imported
 
   // Token data state
   const [tokenData, setTokenData] = useState<{
@@ -39,6 +41,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     newPkgId: string
     txId: string
     treasuryCap: string
+    denyCap: string
     features?: {
       denylist?: boolean
     }
@@ -51,6 +54,8 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
   const [denylistRemoveSuccess, setDenylistRemoveSuccess] = useState(false)
   const [tokenLoaded, setTokenLoaded] = useState(false)
   const [denylistedAddresses, setDenylistedAddresses] = useState<string[]>([])
+  const [isAddPending, setIsAddPending] = useState(false)
+  const [isRemovePending, setIsRemovePending] = useState(false)
 
   useEffect(() => {
     // Check localStorage for token data when component mounts
@@ -75,6 +80,8 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     e.preventDefault()
     if (!tokenData || !addressToAdd) return
 
+    setIsAddPending(true)
+
     console.log("Adding to denylist:", {
       treasuryCap: tokenData.treasuryCap,
       address: addressToAdd
@@ -83,13 +90,14 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
-    // Call the denylist function on the token contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::regulated_coin::add_to_denylist`,
+      target: "0x2::coin::deny_list_v2_add",
       arguments: [
-        tx.object(tokenData.treasuryCap),
+        tx.object('0x403'),
+        tx.object(tokenData.denyCap),
         tx.pure.address(addressToAdd),
       ],
+      typeArguments: [`${coinPackageId}::regulated_coin::mint`],
     })
 
     signAndExecute(
@@ -112,6 +120,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
             setDenylistAddSuccess(true)
             setAddressToAdd('')
             setTimeout(() => setDenylistAddSuccess(false), 3000)
+            setIsAddPending(false)
           }
         },
         onError: (err) => {
@@ -121,6 +130,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
             description: "Failed to add address to denylist. Please try again.",
             variant: "destructive",
           })
+          setIsAddPending(false)
         }
       }
     )
@@ -131,6 +141,8 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     e.preventDefault()
     if (!tokenData || !addressToRemove) return
 
+    setIsRemovePending(true)
+
     console.log("Removing from denylist:", {
       treasuryCap: tokenData.treasuryCap,
       address: addressToRemove
@@ -139,13 +151,14 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
-    // Call the function to remove from denylist
     tx.moveCall({
-      target: `${tokenData.newPkgId}::regulated_coin::remove_from_denylist`,
+      target: "0x2::coin::deny_list_v2_remove",
       arguments: [
-        tx.object(tokenData.treasuryCap),
-        tx.pure.address(addressToRemove),
+        tx.object('0x403'),
+        tx.object(tokenData.denyCap),
+        tx.pure.address(addressToAdd),
       ],
+      typeArguments: [`${coinPackageId}::regulated_coin::mint`],
     })
 
     signAndExecute(
@@ -168,6 +181,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
             setDenylistRemoveSuccess(true)
             setAddressToRemove('')
             setTimeout(() => setDenylistRemoveSuccess(false), 3000)
+            setIsRemovePending(false)
           }
         },
         onError: (err) => {
@@ -177,6 +191,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
             description: "Failed to remove address from denylist. Please try again.",
             variant: "destructive",
           })
+          setIsRemovePending(false)
         }
       }
     )
@@ -208,7 +223,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
         <Terminal className="h-4 w-4 text-teal-500" />
         <AlertTitle className="text-white">No Token Found</AlertTitle>
         <AlertDescription className="text-zinc-400">
-          You haven't created any tokens yet or token data was lost. Please create a new token.
+          You haven&apos;t created any tokens yet or token data was lost. Please create a new token.
           <div className="mt-4">
             <Button
               className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -266,7 +281,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
               <span className="text-zinc-400 text-sm">Token:</span>
               <span className="text-white font-medium">{tokenData?.name} ({tokenData?.symbol})</span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-zinc-400 text-sm">Treasury Cap:</span>
               <div className="flex items-center">
                 <span className="text-white truncate max-w-[200px]">
@@ -277,6 +292,22 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
                   size="icon"
                   className="h-6 w-6 ml-1"
                   onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`, '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 text-zinc-400" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400 text-sm">Deny Cap:</span>
+              <div className="flex items-center">
+                <span className="text-white truncate max-w-[200px]">
+                  {tokenData?.denyCap.substring(0, 6)}...{tokenData?.denyCap.substring(tokenData?.denyCap.length - 4)}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 ml-1"
+                  onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.denyCap}`, '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 text-zinc-400" />
                 </Button>
@@ -309,9 +340,9 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
                 <Button
                   type="submit"
                   className="w-full bg-red-600 hover:bg-red-700 text-white"
-                  disabled={isPending}
+                  disabled={isAddPending}
                 >
-                  {isPending ? (
+                  {isAddPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       Processing...
@@ -344,16 +375,16 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
                     className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
                   />
                   <p className="text-zinc-500 text-xs mt-1">
-                    Enter the address that will be unblocked.
+                    Enter the address that will be unblocked by the next epoch.
                   </p>
                 </div>
 
                 <Button
                   type="submit"
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  disabled={isPending}
+                  disabled={isRemovePending}
                 >
-                  {isPending ? (
+                  {isRemovePending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       Processing...

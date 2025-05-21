@@ -34,6 +34,7 @@ export default function TokenPage({ network }: TokenPageProps) {
     newPkgId: string
     txId: string
     treasuryCap: string
+    denyCap: string
     type?: string
     features?: {
       burnable?: boolean

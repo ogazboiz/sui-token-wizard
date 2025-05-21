@@ -185,6 +185,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
               newPkgId,
               txId,
               treasuryCap,
+              denyCap,
               type: "regulated",
               features: {
                 burnable,

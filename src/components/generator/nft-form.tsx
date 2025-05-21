@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, Loader2, Upload, Plus, Trash2, Terminal } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Trash2, Terminal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

@@ -49,6 +49,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
   const [treasuryCap, setTreasuryCap] = useState('');
   const [denyCap, setDenyCap] = useState('');
   const [tokenCreated, setTokenCreated] = useState(false);
+  const [isCreatingToken, setIsCreatingToken] = useState(false)
 
   const getNetworkName = () => {
     switch (network) {
@@ -116,7 +117,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
 
     const [upgradeCap] = tx.publish({
       modules: [[...updatedBytes]],
-      dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")],
+      dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")], // normalize package as well?
     });
 
     tx.transferObjects([upgradeCap], tx.pure("address", account!.address));
@@ -484,8 +485,8 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Shield className="h-4 w-4 text-red-400 mr-2" />
-                        <Label htmlFor="blacklist" className="text-zinc-300 cursor-pointer">
-                          Blacklist
+                        <Label htmlFor="denylist" className="text-zinc-300 cursor-pointer">
+                          Denylist
                         </Label>
                       </div>
                       <p className="text-zinc-500 text-xs mt-1 ml-6">
@@ -493,9 +494,9 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                       </p>
                     </div>
                     <Switch
-                      id="blacklist"
-                      checked={blacklist}
-                      onCheckedChange={setBlacklist}
+                      id="denylist"
+                      checked={denylist}
+                      onCheckedChange={setDenylist}
                       className="data-[state=checked]:bg-teal-500"
                     />
                   </div>

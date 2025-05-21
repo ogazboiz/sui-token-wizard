@@ -41,7 +41,7 @@ export default function TokenPage({ network }: TokenPageProps) {
       burnable?: boolean
       mintable?: boolean
       pausable?: boolean
-      blacklist?: boolean
+      denylist?: boolean
     }
   } | null>(null)
 
@@ -112,7 +112,7 @@ export default function TokenPage({ network }: TokenPageProps) {
       <Card className="bg-zinc-900 border-zinc-800 text-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-bold flex items-center">
-            <span 
+            <span
               className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent"
             >
               {tokenData?.name} ({tokenData?.symbol})
@@ -124,33 +124,33 @@ export default function TokenPage({ network }: TokenPageProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <InfoCard 
-              label="Package ID" 
-              value={tokenData?.newPkgId || ""} 
+            <InfoCard
+              label="Package ID"
+              value={tokenData?.newPkgId || ""}
               isCopyable
               explorer={`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`}
             />
-            <InfoCard 
-              label="Treasury Cap" 
-              value={tokenData?.treasuryCap || ""} 
+            <InfoCard
+              label="Treasury Cap"
+              value={tokenData?.treasuryCap || ""}
               isCopyable
               explorer={`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`}
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
-            <InfoCard 
-              label="Decimals" 
-              value={tokenData?.decimal || "9"} 
+            <InfoCard
+              label="Decimals"
+              value={tokenData?.decimal || "9"}
             />
-            <InfoCard 
-              label="Transaction" 
-              value={tokenData?.txId || ""} 
+            <InfoCard
+              label="Transaction"
+              value={tokenData?.txId || ""}
               isCopyable
               explorer={`https://suiscan.xyz/${network}/tx/${tokenData?.txId}`}
             />
           </div>
-          
+
           {tokenData?.type === "regulated" && (
             <div className="mt-4 border-t border-zinc-800 pt-4">
               <h3 className="text-sm font-medium mb-3">Token Features</h3>
@@ -168,8 +168,8 @@ export default function TokenPage({ network }: TokenPageProps) {
                   enabled={tokenData.features?.pausable || false}
                 />
                 <FeatureItem
-                  name="Blacklist"
-                  enabled={tokenData.features?.blacklist || false}
+                  name="Denylist"
+                  enabled={tokenData.features?.denylist || false}
                 />
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function TokenPage({ network }: TokenPageProps) {
               buttonVariant="default"
               href={`/generator/${network}/mint`}
             />
-            
+
             <ActionCard
               title="Burn Tokens"
               description="Burn tokens to reduce the total supply"
@@ -219,7 +219,7 @@ interface InfoCardProps {
 }
 
 function InfoCard({ label, value, isCopyable = false, explorer }: InfoCardProps) {
-  const truncatedValue = value.length > 15 
+  const truncatedValue = value.length > 15
     ? `${value.substring(0, 8)}...${value.substring(value.length - 6)}`
     : value;
 
@@ -303,11 +303,10 @@ function ActionCard({ title, description, icon, buttonText, buttonVariant, href 
       <Button
         variant={buttonVariant === "custom" ? "default" : buttonVariant}
         size="sm"
-        className={`w-full ${
-          buttonVariant === "custom" 
-            ? "bg-red-700 hover:bg-red-800 text-white" 
-            : ""
-        }`}
+        className={`w-full ${buttonVariant === "custom"
+          ? "bg-red-700 hover:bg-red-800 text-white"
+          : ""
+          }`}
         onClick={() => window.location.href = href}
       >
         {buttonText}
@@ -318,41 +317,41 @@ function ActionCard({ title, description, icon, buttonText, buttonVariant, href 
 
 function Coins(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg 
+    <svg
       {...props}
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <circle cx="8" cy="8" r="6"/>
-      <path d="M18.09 10.37A6 6 0 1 1 10.34 18"/>
-      <path d="M7 6h1v4"/>
-      <path d="m16.71 13.88.7.71-2.82 2.82"/>
+      <circle cx="8" cy="8" r="6" />
+      <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
+      <path d="M7 6h1v4" />
+      <path d="m16.71 13.88.7.71-2.82 2.82" />
     </svg>
   )
 }
 
 function Flame(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg 
+    <svg
       {...props}
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
     </svg>
   )
 }

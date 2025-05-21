@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
     "@mysten/dapp-kit": "^0.16.3",
     "@mysten/move-bytecode-template": "^0.1.0",
     "@mysten/sui.js": "^0.54.1",
+    "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-dropdown-menu": "^2.1.14",
     "@radix-ui/react-label": "^2.1.6",
     "@radix-ui/react-separator": "^1.1.7",

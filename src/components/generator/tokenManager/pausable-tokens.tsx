@@ -33,6 +33,19 @@ export default function PausableTokens({ network }: PausableTokensProps) {
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
   const { coinPackageId } = useNetworkVariables();
 
+  // Add network validation at the beginning
+  if (!network || typeof network !== 'string') {
+    return (
+      <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
+        <Terminal className="h-4 w-4 text-red-500" />
+        <AlertTitle className="text-white">Invalid Network</AlertTitle>
+        <AlertDescription className="text-zinc-400">
+          Network parameter is missing or invalid. Please check the URL and try again.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
   // Token data state
   const [tokenData, setTokenData] = useState<{
     name: string
@@ -58,17 +71,38 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     // Check localStorage for token data when component mounts
     const savedTokenData = localStorage.getItem('tokenData')
     if (savedTokenData) {
-      const parsedData = JSON.parse(savedTokenData)
-      setTokenData(parsedData)
-
-      setIsPaused(false)
+      try {
+        const parsedData = JSON.parse(savedTokenData)
+        setTokenData(parsedData)
+        setIsPaused(false)
+        setTokenLoaded(true)
+      } catch (error) {
+        console.error('Error parsing token data:', error)
+        setTokenLoaded(true) // Still set to true to show "no token" message
+      }
+    } else {
       setTokenLoaded(true)
     }
   }, [])
 
+  // Helper function to safely truncate strings
+  const truncateString = (str: string | undefined, start = 6, end = 4) => {
+    if (!str || typeof str !== 'string' || str.length <= start + end) {
+      return str || ''
+    }
+    return `${str.substring(0, start)}...${str.substring(str.length - end)}`
+  }
+
   // Handle pause token function
   const handlePauseToken = async () => {
-    if (!tokenData) return
+    if (!tokenData?.denyCap) {
+      toast({
+        title: "Error",
+        description: "Missing deny cap. Cannot pause token.",
+        variant: "destructive",
+      })
+      return
+    }
 
     console.log("Pausing token:", {
       treasuryCap: tokenData.treasuryCap,
@@ -120,7 +154,14 @@ export default function PausableTokens({ network }: PausableTokensProps) {
 
   // Handle unpause token function
   const handleUnpauseToken = async () => {
-    if (!tokenData) return
+    if (!tokenData?.denyCap) {
+      toast({
+        title: "Error",
+        description: "Missing deny cap. Cannot unpause token.",
+        variant: "destructive",
+      })
+      return
+    }
 
     console.log("Unpausing token:", {
       treasuryCap: tokenData.treasuryCap,
@@ -249,32 +290,36 @@ export default function PausableTokens({ network }: PausableTokensProps) {
               <span className="text-zinc-400 text-sm">Treasury Cap:</span>
               <div className="flex items-center">
                 <span className="text-white truncate max-w-[200px]">
-                  {tokenData?.treasuryCap.substring(0, 6)}...{tokenData?.treasuryCap.substring(tokenData.treasuryCap.length - 4)}
+                  {truncateString(tokenData?.treasuryCap)}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 ml-1"
-                  onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`, '_blank')}
-                >
-                  <ExternalLink className="h-3 w-3 text-zinc-400" />
-                </Button>
+                {tokenData?.treasuryCap && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-1"
+                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`, '_blank')}
+                  >
+                    <ExternalLink className="h-3 w-3 text-zinc-400" />
+                  </Button>
+                )}
               </div>
             </div>
             <div className="flex justify-between items-center mb-2">
               <span className="text-zinc-400 text-sm">Deny Cap:</span>
               <div className="flex items-center">
                 <span className="text-white truncate max-w-[200px]">
-                  {tokenData?.denyCap.substring(0, 6)}...{tokenData?.denyCap.substring(tokenData?.denyCap.length - 4)}
+                  {truncateString(tokenData?.denyCap)}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 ml-1"
-                  onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.denyCap}`, '_blank')}
-                >
-                  <ExternalLink className="h-3 w-3 text-zinc-400" />
-                </Button>
+                {tokenData?.denyCap && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-1"
+                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.denyCap}`, '_blank')}
+                  >
+                    <ExternalLink className="h-3 w-3 text-zinc-400" />
+                  </Button>
+                )}
               </div>
             </div>
             <div className="flex justify-between items-center">
@@ -394,7 +439,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
             variant="outline"
             size="sm"
             className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
-            onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`, '_blank')}
+            onClick={() => tokenData?.newPkgId && window.open(`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`, '_blank')}
           >
             View on Explorer
             <ExternalLink className="h-4 w-4 ml-2" />

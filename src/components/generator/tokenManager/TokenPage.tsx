@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Copy, ExternalLink } from "lucide-react"
@@ -7,15 +9,9 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { ClipLoader } from "react-spinners"
 import { useCurrentAccount } from "@mysten/dapp-kit"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Terminal } from "lucide-react"
+import { Terminal, Shield, Pause } from "lucide-react"
 
 interface TokenPageProps {
   network: string
@@ -34,7 +30,7 @@ export default function TokenPage({ network }: TokenPageProps) {
     newPkgId: string
     txId: string
     treasuryCap: string
-    denyCap: string
+    denyCap?: string
     type?: string
     features?: {
       burnable?: boolean
@@ -48,7 +44,7 @@ export default function TokenPage({ network }: TokenPageProps) {
 
   useEffect(() => {
     // Check localStorage for token data when component mounts
-    const savedTokenData = localStorage.getItem('tokenData')
+    const savedTokenData = localStorage.getItem("tokenData")
     if (savedTokenData) {
       const parsedData = JSON.parse(savedTokenData)
       setTokenData(parsedData)
@@ -88,8 +84,8 @@ export default function TokenPage({ network }: TokenPageProps) {
           You haven&apos;t created any tokens yet or token data was lost. Please create a new token.
           <div className="mt-4">
             <Button
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              onClick={() => window.location.href = `/generator/${network}`}
+              className="bg-teal-500 hover:bg-teal-600 text-white"
+              onClick={() => (window.location.href = `/generator/${network}`)}
             >
               Create a Token
             </Button>
@@ -111,15 +107,11 @@ export default function TokenPage({ network }: TokenPageProps) {
       <Card className="bg-zinc-900 border-zinc-800 text-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-bold flex items-center">
-            <span
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent capitalize"
-            >
+            <span className="bg-gradient-to-r from-teal-400 to-teal-500 bg-clip-text text-transparent capitalize">
               {tokenData?.name} ({tokenData?.symbol})
             </span>
           </CardTitle>
-          <CardDescription className="text-zinc-400 capitalize">
-            {tokenData?.description}
-          </CardDescription>
+          <CardDescription className="text-zinc-400 capitalize">{tokenData?.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -138,10 +130,7 @@ export default function TokenPage({ network }: TokenPageProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <InfoCard
-              label="Decimals"
-              value={tokenData?.decimal || "9"}
-            />
+            <InfoCard label="Decimals" value={tokenData?.decimal || "9"} />
             <InfoCard
               label="Transaction"
               value={tokenData?.txId || ""}
@@ -154,22 +143,10 @@ export default function TokenPage({ network }: TokenPageProps) {
             <div className="mt-4 border-t border-zinc-800 pt-4">
               <h3 className="text-sm font-medium mb-3">Token Features</h3>
               <div className="grid grid-cols-2 gap-3">
-                <FeatureItem
-                  name="Mintable"
-                  enabled={tokenData.features?.mintable || false}
-                />
-                <FeatureItem
-                  name="Burnable"
-                  enabled={tokenData.features?.burnable || false}
-                />
-                <FeatureItem
-                  name="Pausable"
-                  enabled={tokenData.features?.pausable || false}
-                />
-                <FeatureItem
-                  name="Denylist"
-                  enabled={tokenData.features?.denylist || false}
-                />
+                <FeatureItem name="Mintable" enabled={tokenData.features?.mintable || false} />
+                <FeatureItem name="Burnable" enabled={tokenData.features?.burnable || false} />
+                <FeatureItem name="Pausable" enabled={tokenData.features?.pausable || false} />
+                <FeatureItem name="Denylist" enabled={tokenData.features?.denylist || false} />
               </div>
             </div>
           )}
@@ -185,11 +162,11 @@ export default function TokenPage({ network }: TokenPageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-4 mb-4">
             <ActionCard
               title="Mint Tokens"
               description="Create new tokens and send them to any address"
-              icon={<Coins className="h-8 w-8 text-yellow-400" />}
+              icon={<Coins className="h-8 w-8 text-teal-400" />}
               buttonText="Mint Tokens"
               buttonVariant="default"
               href={`/generator/${network}/mint`}
@@ -204,39 +181,71 @@ export default function TokenPage({ network }: TokenPageProps) {
               href={`/generator/${network}/burn`}
             />
           </div>
+
+          {tokenData?.type === "regulated" && tokenData.features && (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {tokenData.features.denylist && (
+                <ActionCard
+                  title="Denylist Management"
+                  description="Block or unblock addresses from transferring tokens"
+                  icon={<Shield className="h-8 w-8 text-red-400" />}
+                  buttonText="Manage Denylist"
+                  buttonVariant="secondary"
+                  href={`/generator/${network}/denylist`}
+                />
+              )}
+
+              {tokenData.features.pausable && (
+                <ActionCard
+                  title="Pause/Unpause"
+                  description="Control token transfers in case of emergency"
+                  icon={<Pause className="h-8 w-8 text-blue-400" />}
+                  buttonText="Manage Pausable"
+                  buttonVariant="secondary"
+                  href={`/generator/${network}/pausable`}
+                />
+              )}
+            </div>
+          )}
         </CardContent>
+        <CardFooter className="border-t border-zinc-800 pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            onClick={() => (window.location.href = `/generator/${network}`)}
+          >
+            Back to Token Creator
+          </Button>
+        </CardFooter>
       </Card>
     </motion.div>
   )
 }
 
 interface InfoCardProps {
-  label: string;
-  value: string;
-  isCopyable?: boolean;
-  explorer?: string;
+  label: string
+  value: string
+  isCopyable?: boolean
+  explorer?: string
 }
 
 function InfoCard({ label, value, isCopyable = false, explorer }: InfoCardProps) {
-  const truncatedValue = value.length > 15
-    ? `${value.substring(0, 8)}...${value.substring(value.length - 6)}`
-    : value;
+  const truncatedValue = value.length > 15 ? `${value.substring(0, 8)}...${value.substring(value.length - 6)}` : value
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(value)
     } catch (err) {
-      console.error("Failed to copy:", err);
+      console.error("Failed to copy:", err)
     }
-  };
+  }
 
   return (
     <div className="bg-zinc-800 rounded-lg p-3">
       <div className="text-xs text-zinc-400 mb-1">{label}</div>
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium truncate max-w-[150px]">
-          {truncatedValue}
-        </div>
+        <div className="text-sm font-medium truncate max-w-[150px]">{truncatedValue}</div>
         <div className="flex items-center">
           {isCopyable && (
             <Button
@@ -253,7 +262,7 @@ function InfoCard({ label, value, isCopyable = false, explorer }: InfoCardProps)
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-zinc-500 hover:text-white"
-              onClick={() => window.open(explorer, '_blank')}
+              onClick={() => window.open(explorer, "_blank")}
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </Button>
@@ -261,35 +270,43 @@ function InfoCard({ label, value, isCopyable = false, explorer }: InfoCardProps)
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 interface FeatureItemProps {
-  name: string;
-  enabled: boolean;
+  name: string
+  enabled: boolean
 }
 
 function FeatureItem({ name, enabled }: FeatureItemProps) {
   return (
     <div className="flex items-center justify-between bg-zinc-800 rounded-lg p-2.5">
       <span className="text-sm">{name}</span>
-      <span className={`text-xs font-medium ${enabled ? 'text-green-500' : 'text-zinc-500'}`}>
-        {enabled ? 'Enabled' : 'Disabled'}
+      <span className={`text-xs font-medium ${enabled ? "text-teal-400" : "text-zinc-500"}`}>
+        {enabled ? "Enabled" : "Disabled"}
       </span>
     </div>
-  );
+  )
 }
 
 interface ActionCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  buttonText: string;
-  buttonVariant: "default" | "destructive" | "outline" | "custom";
-  href: string;
+  title: string
+  description: string
+  icon: React.ReactNode
+  buttonText: string
+  buttonVariant: "default" | "destructive" | "outline" | "secondary" | "custom"
+  href: string
 }
 
 function ActionCard({ title, description, icon, buttonText, buttonVariant, href }: ActionCardProps) {
+  const buttonClassNames = {
+    default: "bg-teal-500 hover:bg-teal-600 text-white",
+    destructive: "bg-red-500 hover:bg-red-600 text-white",
+    outline: "border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800",
+    secondary: "bg-zinc-700 hover:bg-zinc-600 text-white",
+    custom: "bg-red-700 hover:bg-red-800 text-white",
+  }
+
   return (
     <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 hover:border-zinc-600 transition-colors">
       <div className="flex items-start mb-3">
@@ -300,18 +317,15 @@ function ActionCard({ title, description, icon, buttonText, buttonVariant, href 
         </div>
       </div>
       <Button
-        variant={buttonVariant === "custom" ? "default" : buttonVariant}
+        variant={buttonVariant === "custom" || buttonVariant === "secondary" ? "default" : buttonVariant}
         size="sm"
-        className={`w-full ${buttonVariant === "custom"
-          ? "bg-red-700 hover:bg-red-800 text-white"
-          : ""
-          }`}
-        onClick={() => window.location.href = href}
+        className={`w-full ${buttonClassNames[buttonVariant]}`}
+        onClick={() => (window.location.href = href)}
       >
         {buttonText}
       </Button>
     </div>
-  );
+  )
 }
 
 function Coins(props: React.SVGProps<SVGSVGElement>) {

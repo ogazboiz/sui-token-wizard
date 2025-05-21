@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, HelpCircle, Flame, Shield, Pause } from "lucide-react"
+import { ArrowLeft, HelpCircle, Flame, Shield, Pause, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +15,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@
 import { useUpdatePRegCoin, useUpdateURegCoin } from "../hooks/updateCoin"
 import { Transaction } from "@mysten/sui/transactions"
 import { normalizeSuiObjectId } from "@mysten/sui.js/utils"
+import { useRouter } from "next/navigation"
 
 interface TokenFormRegulatedProps {
   network: string
@@ -24,31 +24,33 @@ interface TokenFormRegulatedProps {
 }
 
 export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }: TokenFormRegulatedProps) {
+  const router = useRouter()
   const { toast } = useToast()
   const suiClient = useSuiClient();
   const updatePRegCoin = useUpdatePRegCoin;
   const updateURegCoin = useUpdateURegCoin;
   const account = useCurrentAccount();
-  // const tokenPackageId = useNetworkVariable("tokenPackageId");
   const { mutate: signAndExecute, isSuccess, isPending } = useSignAndExecuteTransaction();
 
   const [tokenName, setTokenName] = useState("")
   const [tokenSymbol, setTokenSymbol] = useState("")
   const [customDecimals, setCustomDecimals] = useState(false)
   const [decimals, setDecimals] = useState("9")
-  const [description, setDescription] = useState("")
   const [initialSupply, setInitialSupply] = useState("")
   const [maxSupply, setMaxSupply] = useState("")
+  const [description, setDescription] = useState("")
   const [burnable, setBurnable] = useState(true)
   const [mintable, setMintable] = useState(true)
   const [pausable, setPausable] = useState(true)
-  const [denylist, setDenylist] = useState(true)
+  const [blacklist, setBlacklist] = useState(true)
+  const [isCreatingToken, setIsCreatingToken] = useState(false)
+  
+  // Transaction tracking state variables
   const [txId, setTxId] = useState('');
   const [owner, setOwner] = useState('')
   const [newPkgId, setNewPkgId] = useState('');
   const [treasuryCap, setTreasuryCap] = useState('');
   const [tokenCreated, setTokenCreated] = useState(false);
-
 
   const getNetworkName = () => {
     switch (network) {
@@ -75,6 +77,9 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
       return
     }
 
+    // Set creating state
+    setIsCreatingToken(true)
+
     console.log({
       tokenName,
       tokenSymbol,
@@ -98,6 +103,12 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
       }
     } catch (err) {
       console.error("Regulated coin creation failed:", err);
+      setIsCreatingToken(false)
+      toast({
+        title: "Token creation failed",
+        description: "An error occurred while creating your token",
+        variant: "destructive",
+      })
     }
   }
 
@@ -107,7 +118,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
 
     const [upgradeCap] = tx.publish({
       modules: [[...updatedBytes]],
-      dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")], // normalize original package id as well
+      dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")],
     });
 
     tx.transferObjects([upgradeCap], tx.pure("address", account!.address));
@@ -127,47 +138,79 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
             },
           });
 
-
           if (res.effects?.status.status === "success") {
             console.log("Token created successfully:", res);
 
             const txId = res.effects.transactionDigest;
             const owner = res.effects.created?.[0]?.owner?.AddressOwner;
 
-
+            // Get the new package ID
             const newPkgId = res.objectChanges?.find(
               (item) => item.type === "published"
-            )?.packageId;
+            )?.packageId || "";
 
+            // Get the treasury cap
             const treasuryCap = res.objectChanges?.find(
               (item) =>
                 item.type === "created" &&
                 typeof item.objectType === "string" &&
                 item.objectType.includes("TreasuryCap")
-            )?.objectId;
+            )?.objectId || "";
 
+            // Set state variables
             setTxId(txId);
             setOwner(owner ? String(owner) : "");
-            setNewPkgId(newPkgId || "");
+            setNewPkgId(newPkgId);
             setTreasuryCap(treasuryCap);
             setTokenCreated(true);
+            
+            // Create token data object to save
+            const tokenData = {
+              name: tokenName,
+              symbol: tokenSymbol,
+              description: description || `${tokenName} (${tokenSymbol}) - Regulated Token`,
+              decimal: decimals,
+              newPkgId,
+              txId,
+              treasuryCap,
+              type: "regulated",
+              features: {
+                burnable,
+                mintable,
+                pausable,
+                blacklist
+              }
+            }
+
+            // Save token data to localStorage
+            localStorage.setItem('tokenData', JSON.stringify(tokenData))
+
+            // Show success toast
+            toast({
+              title: "Token created successfully!",
+              description: "Your regulated token has been created and is ready to use.",
+            })
+
+            // Redirect to token page
+            setTimeout(() => {
+              router.push(`/generator/${network}/token`)
+            }, 1000)
           } else {
-            throw new Error("Publishing failed");
+            setIsCreatingToken(false)
+            throw new Error("Publishing failed")
           }
         },
         onError: (err) => {
-          console.error("Publish transaction failed:", err);
+          setIsCreatingToken(false)
+          console.error("Publish transaction failed:", err)
+          toast({
+            title: "Transaction failed",
+            description: "Failed to publish token contract",
+            variant: "destructive",
+          })
         }
       }
     );
-
-    // store these values
-    // txId,
-    // owner,
-    // newPkgId,
-    // treasuryCap,
-    // tokenCreated,
-
   };
 
   return (
@@ -216,7 +259,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                           <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="w-[200px] text-xs">The name of your token (e.g., &quot;My Awesome Token&quot;)</p>
+                          <p className="w-[200px] text-xs">The name of your token (e.g., "My Awesome Token")</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -239,7 +282,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="w-[200px] text-xs">
-                            The symbol of your token (e.g., &quot;AWE&quot;). Usually 3-5 characters.
+                            The symbol of your token (e.g., "AWE"). Usually 3-5 characters.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -292,7 +335,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="w-[200px] text-xs">
-                          The description for your token (e.g., My awesome token)
+                          Brief description of your token
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -302,11 +345,11 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="My custom token"
+                  placeholder="A regulated token with advanced features"
                   className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
                 />
                 <p className="text-zinc-500 text-xs mt-1">
-                  The description for your token being created
+                  A brief description of your token's purpose
                 </p>
               </div>
 
@@ -330,7 +373,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                   id="initialSupply"
                   value={initialSupply}
                   onChange={(e) => setInitialSupply(e.target.value)}
-                  placeholder="1 000 000 000"
+                  placeholder="1000000000"
                   className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
                 />
                 <p className="text-zinc-500 text-xs mt-1">
@@ -356,7 +399,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                   id="maxSupply"
                   value={maxSupply}
                   onChange={(e) => setMaxSupply(e.target.value)}
-                  placeholder="1 000 000 000"
+                  placeholder="1000000000"
                   className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
                 />
                 <p className="text-zinc-500 text-xs mt-1">The maximum number of tokens available</p>
@@ -430,8 +473,8 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Shield className="h-4 w-4 text-red-400 mr-2" />
-                        <Label htmlFor="denylist" className="text-zinc-300 cursor-pointer">
-                          Denylist
+                        <Label htmlFor="blacklist" className="text-zinc-300 cursor-pointer">
+                          Blacklist
                         </Label>
                       </div>
                       <p className="text-zinc-500 text-xs mt-1 ml-6">
@@ -439,9 +482,9 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                       </p>
                     </div>
                     <Switch
-                      id="denylist"
-                      checked={denylist}
-                      onCheckedChange={setDenylist}
+                      id="blacklist"
+                      checked={blacklist}
+                      onCheckedChange={setBlacklist}
                       className="data-[state=checked]:bg-teal-500"
                     />
                   </div>
@@ -450,14 +493,26 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
             </div>
 
             <div className="pt-4 space-y-2">
-              <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                Create token
+              <Button 
+                type="submit" 
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                disabled={isPending || isCreatingToken}
+              >
+                {isPending || isCreatingToken ? (
+                  <div className="flex items-center">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Creating token...
+                  </div>
+                ) : (
+                  "Create token"
+                )}
               </Button>
 
               <Button
                 type="button"
                 variant="outline"
                 className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                disabled={isPending || isCreatingToken}
               >
                 Create on testnet for FREE
               </Button>

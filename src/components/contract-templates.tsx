@@ -45,7 +45,7 @@ const templates: ContractTemplate[] = [
       { name: "Mintable", included: false },
       { name: "Burnable", included: false },
       { name: "Pausable", included: false },
-      { name: "Blacklist", included: false },
+      { name: "Denylist", included: false },
     ],
     tags: ["sui-standard", "supply-limits"],
     imageSrc: "/placeholder.svg?height=120&width=120",
@@ -57,16 +57,16 @@ const templates: ContractTemplate[] = [
     discount: 60,
     popular: true,
     description:
-      "Discover the perfect regulated token that comes with all the basics from the Sui standard, plus extra features! Customize your token by setting supply limits, ownership parameters, and even consider its mintable, burnable, pausable, and blacklist functionalities. Create your unique token with ease!",
+      "Discover the perfect regulated token that comes with all the basics from the Sui standard, plus extra features! Customize your token by setting supply limits, ownership parameters, and even consider its mintable, burnable, pausable, and denylist functionalities. Create your unique token with ease!",
     features: [
       { name: "Basic Token Functionality", included: true },
       { name: "Supply Limits", included: true },
       { name: "Mintable", included: true },
       { name: "Burnable", included: true },
       { name: "Pausable", included: true },
-      { name: "Blacklist", included: true },
+      { name: "Denylist", included: true },
     ],
-    tags: ["sui-standard", "supply-limits", "ownership", "mintable", "burnable", "pausable", "blacklist"],
+    tags: ["sui-standard", "supply-limits", "ownership", "mintable", "burnable", "pausable", "denylist"],
     imageSrc: "/placeholder.svg?height=120&width=120",
   },
 ]

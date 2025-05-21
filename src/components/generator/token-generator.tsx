@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Sparkles } from "lucide-react"
+import { Sparkles, Clock } from "lucide-react"
 import Link from "next/link"
 
 interface Network {
@@ -11,6 +11,8 @@ interface Network {
   description: string
   color: string
   status: "stable" | "testing" | "development"
+  disabled?: boolean
+  comingSoon?: boolean
 }
 
 const networks: Network[] = [
@@ -20,6 +22,8 @@ const networks: Network[] = [
     description: "Production network with permanent data persistence. Use for live deployment.",
     color: "bg-teal-500",
     status: "stable",
+    disabled: true,
+    comingSoon: true
   },
   {
     id: "testnet",
@@ -34,11 +38,18 @@ const networks: Network[] = [
     description: "Development network that is regularly wiped. Use for early development and experimentation.",
     color: "bg-blue-500",
     status: "development",
+    disabled: true,
+    comingSoon: true
   },
 ]
 
 export default function TokenGenerator() {
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null)
+
+  const handleNetworkClick = (network: Network) => {
+    if (network.disabled) return;
+    setSelectedNetwork(network.id);
+  };
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-16">
@@ -66,10 +77,16 @@ export default function TokenGenerator() {
                 key={network.id}
                 className={`bg-zinc-900 border ${
                   selectedNetwork === network.id ? "border-teal-500" : "border-zinc-800"
-                } rounded-xl overflow-hidden cursor-pointer relative`}
-                whileHover={{ y: -5, borderColor: "#14b8a6" }}
-                onClick={() => setSelectedNetwork(network.id)}
+                } rounded-xl overflow-hidden ${network.disabled ? "opacity-70 cursor-not-allowed" : "cursor-pointer"} relative`}
+                whileHover={!network.disabled ? { y: -5, borderColor: "#14b8a6" } : {}}
+                onClick={() => handleNetworkClick(network)}
               >
+                {network.comingSoon && (
+                  <div className="absolute top-3 right-3 bg-orange-500/90 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Coming Soon
+                  </div>
+                )}
                 <div className="p-6 flex items-center gap-6">
                   <div
                     className={`w-16 h-16 rounded-full ${network.color} flex items-center justify-center text-white shrink-0`}

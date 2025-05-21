@@ -57,17 +57,17 @@ export default function FeaturesSection() {
         <Diamond className="w-12 h-12 text-teal-400 mx-auto mb-4" />
         <h2 className="text-2xl md:text-3xl font-bold text-white">Features</h2>
         <p className="mt-4 max-w-2xl mx-auto text-zinc-400">
-          Discover a suite of regulated features for creating and managing your tokens with ease. Explore our
+          Discover a suite of essential features for creating and managing your tokens with ease. Explore our
           comprehensive set of capabilities, including standard compliance, minting, burning, access control, code
           verification, token recovery support, and supply management. Your token journey starts here.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {features.map((feature, index) => (
           <motion.div
             key={index}
-            className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6"
+            className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6 h-full flex flex-col"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
@@ -77,7 +77,7 @@ export default function FeaturesSection() {
               {feature.icon}
             </div>
             <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-            <p className="text-zinc-400 text-sm">{feature.description}</p>
+            <p className="text-zinc-400 text-sm flex-grow">{feature.description}</p>
           </motion.div>
         ))}
       </div>

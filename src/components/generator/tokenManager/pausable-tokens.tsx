@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, ExternalLink, Loader2, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,7 +20,8 @@ import { Terminal } from "lucide-react"
 import {
   Badge
 } from "@/components/ui/badge"
-import { useNetworkVariables } from "@/components/utils/networkConfig"
+// import { useNetworkVariables } from "@/components/utils/networkConfig"
+import { useEffect, useState } from "react"
 
 interface PausableTokensProps {
   network: string
@@ -31,20 +31,8 @@ export default function PausableTokens({ network }: PausableTokensProps) {
   const { toast } = useToast()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
-  const { coinPackageId } = useNetworkVariables();
+  // const { coinPackageId } = useNetworkVariables();
 
-  // Add network validation at the beginning
-  if (!network || typeof network !== 'string') {
-    return (
-      <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
-        <Terminal className="h-4 w-4 text-red-500" />
-        <AlertTitle className="text-white">Invalid Network</AlertTitle>
-        <AlertDescription className="text-zinc-400">
-          Network parameter is missing or invalid. Please check the URL and try again.
-        </AlertDescription>
-      </Alert>
-    )
-  }
 
   // Token data state
   const [tokenData, setTokenData] = useState<{
@@ -111,13 +99,13 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
+    // Call the global_pause function on the regulated_coin contract
     tx.moveCall({
-      target: "0x2::coin::deny_list_v2_enable_global_pause",
+      target: `${tokenData.newPkgId}::p_regulated_coin::global_pause`,
       arguments: [
         tx.object('0x403'),
         tx.object(tokenData.denyCap),
       ],
-      typeArguments: [`${coinPackageId}::regulated_coin::mint`],
     })
 
     signAndExecute(
@@ -170,13 +158,13 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
+    // Call the global_unpause function on the regulated_coin contract
     tx.moveCall({
-      target: "0x2::coin::deny_list_v2_disable_global_pause",
+      target: `${tokenData.newPkgId}::p_regulated_coin::global_unpause`,
       arguments: [
         tx.object('0x403'),
         tx.object(tokenData.denyCap),
       ],
-      typeArguments: [`${coinPackageId}::regulated_coin::mint`],
     })
 
     signAndExecute(
@@ -208,6 +196,19 @@ export default function PausableTokens({ network }: PausableTokensProps) {
           })
         }
       }
+    )
+  }
+
+    // Add network validation at the beginning
+  if (!network || typeof network !== 'string') {
+    return (
+      <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
+        <Terminal className="h-4 w-4 text-red-500" />
+        <AlertTitle className="text-white">Invalid Network</AlertTitle>
+        <AlertDescription className="text-zinc-400">
+          Network parameter is missing or invalid. Please check the URL and try again.
+        </AlertDescription>
+      </Alert>
     )
   }
 

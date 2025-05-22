@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
-import { useNetworkVariables } from "@/components/utils/networkConfig"
+// import { useNetworkVariables } from "@/components/utils/networkConfig"
 
 interface DenylistTokensProps {
   network: string
@@ -29,7 +29,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
   const { toast } = useToast()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
-  const { coinPackageId } = useNetworkVariables();
+  // const { coinPackageId } = useNetworkVariables();
 
   // Token data state
   const [tokenData, setTokenData] = useState<{
@@ -88,14 +88,14 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
+    // Call the add_deny_list function on the regulated_coin contract
     tx.moveCall({
-      target: "0x2::coin::deny_list_v2_add",
+      target: `${tokenData.newPkgId}::p_regulated_coin::add_deny_list`,
       arguments: [
         tx.object('0x403'),
         tx.object(tokenData.denyCap),
         tx.pure.address(addressToAdd),
       ],
-      typeArguments: [`${coinPackageId}::regulated_coin::mint`],
     })
 
     signAndExecute(
@@ -149,14 +149,14 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
+    // Call the remove_deny_list function on the regulated_coin contract
     tx.moveCall({
-      target: "0x2::coin::deny_list_v2_remove",
+      target: `${tokenData.newPkgId}::p_regulated_coin::remove_deny_list`,
       arguments: [
         tx.object('0x403'),
         tx.object(tokenData.denyCap),
-        tx.pure.address(addressToAdd),
+        tx.pure.address(addressToRemove),
       ],
-      typeArguments: [`${coinPackageId}::regulated_coin::mint`],
     })
 
     signAndExecute(

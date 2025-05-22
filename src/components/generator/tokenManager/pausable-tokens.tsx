@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/badge"
 // import { useNetworkVariables } from "@/components/utils/networkConfig"
 import { useEffect, useState } from "react"
+import { deriveCoinType } from "@/components/hooks/getData"
 
 interface PausableTokensProps {
   network: string
@@ -48,6 +49,15 @@ export default function PausableTokens({ network }: PausableTokensProps) {
       pausable?: boolean
     }
   } | null>(null)
+
+  let derivedCoinType: string | undefined;
+
+  if (tokenData) {
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
+      console.log("Derived coin type:", result);
+    });
+  }
 
   // Pausable state
   const [isPaused, setIsPaused] = useState(false)
@@ -101,7 +111,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
 
     // Call the global_pause function on the regulated_coin contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::p_regulated_coin::global_pause`,
+      target: `${derivedCoinType}::global_pause`,
       arguments: [
         tx.object('0x403'),
         tx.object(tokenData.denyCap),
@@ -160,7 +170,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
 
     // Call the global_unpause function on the regulated_coin contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::p_regulated_coin::global_unpause`,
+      target: `${derivedCoinType}::global_unpause`,
       arguments: [
         tx.object('0x403'),
         tx.object(tokenData.denyCap),
@@ -199,7 +209,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     )
   }
 
-    // Add network validation at the beginning
+  // Add network validation at the beginning
   if (!network || typeof network !== 'string') {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">

@@ -1,115 +1,103 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { ArrowLeft, HelpCircle, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useToast } from "@/components/ui/use-toast"
-import { useUpdateCoin } from "../hooks/updateCoin"
-import { Transaction } from '@mysten/sui/transactions'
-import { normalizeSuiObjectId } from "@mysten/sui.js/utils"
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
-import { useRouter } from "next/navigation"
+import React, { FormEvent, useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, HelpCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/components/ui/use-toast";
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
+import { normalizeSuiObjectId } from "@mysten/sui/utils";
+import { useRouter } from "next/navigation";
+import { useUpdateCoin } from "../hooks/updateCoin";
 
 interface TokenFormStandardProps {
-  network: string
-  onBack: () => void
-  onSwitchTemplate: (templateId: string) => void
+  network: "mainnet" | "testnet" | "devnet";
+  onBack: () => void;
+  onSwitchTemplate: (templateId: "regulated" | "closed-loop") => void;
+}
+
+interface TokenData {
+  name: string;
+  symbol: string;
+  description: string;
+  decimal: string;
+  newPkgId: string;
+  txId: string;
+  owner: string;
+  treasuryCap: string;
+  metadata: string;
 }
 
 export default function TokenFormStandard({ network, onBack, onSwitchTemplate }: TokenFormStandardProps) {
-  const router = useRouter()
-  const { toast } = useToast()
-  const suiClient = useSuiClient()
-  const updateCoin = useUpdateCoin
-  const account = useCurrentAccount()
-  const { mutate: signAndExecute, isSuccess, isPending } = useSignAndExecuteTransaction()
+  const router = useRouter();
+  const { toast } = useToast();
+  const suiClient = useSuiClient();
+  const account = useCurrentAccount();
+  const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction();
+  const updateCoin = useUpdateCoin;
 
-  const [tokenName, setTokenName] = useState("")
-  const [tokenSymbol, setTokenSymbol] = useState("")
-  const [customDecimals, setCustomDecimals] = useState(false)
-  const [decimals, setDecimals] = useState("9")
-  const [description, setDescription] = useState("")
-  const [initialSupply, setInitialSupply] = useState("")
-  const [maxSupply, setMaxSupply] = useState("")
-  const [isCreatingToken, setIsCreatingToken] = useState(false)
-
-  // These state variables are for tracking transaction results
-  const [txId, setTxId] = useState('');
-  const [owner, setOwner] = useState('')
-  const [newPkgId, setNewPkgId] = useState('');
-  const [treasuryCap, setTreasuryCap] = useState('');
-  const [tokenCreated, setTokenCreated] = useState(false);
+  const [formData, setFormData] = useState({
+    tokenName: "",
+    tokenSymbol: "",
+    description: "",
+    decimals: "9",
+    initialSupply: "",
+    maxSupply: "",
+  });
+  const [customDecimals, setCustomDecimals] = useState(false);
+  const [isCreatingToken, setIsCreatingToken] = useState(false);
+  const [tokenData, setTokenData] = useState<TokenData | null>(null);
 
   const getNetworkName = () => {
-    switch (network) {
-      case "mainnet":
-        return "Sui Mainnet"
-      case "testnet":
-        return "Sui Testnet"
-      case "devnet":
-        return "Sui Devnet"
-      default:
-        return "Sui"
-    }
-  }
+    const networkNames: Record<string, string> = {
+      mainnet: "Sui Mainnet",
+      testnet: "Sui Testnet",
+      devnet: "Sui Devnet",
+    };
+    return networkNames[network] || "Sui";
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleInputChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+  };
 
-    if (!tokenName || !tokenSymbol || !decimals || !description || !initialSupply || !maxSupply) {
+  const validateForm = () => {
+    const { tokenName, tokenSymbol, description, decimals, initialSupply, maxSupply } = formData;
+    if (!tokenName || !tokenSymbol || !description || !decimals || !initialSupply || !maxSupply) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
         variant: "destructive",
-      })
-      return
+      });
+      return false;
     }
-
-    // Set creating state
-    setIsCreatingToken(true)
-
-    console.log({
-      tokenName,
-      tokenSymbol,
-      description,
-      decimals: Number(decimals),
-    });
-
-    toast({
-      title: "Standard coin creation initiated",
-      description: "Your token is being created. Please wait...",
-    })
-
-    try {
-      const { updatedBytes } = await updateCoin(tokenName, tokenSymbol, description, Number(decimals))
-      await publishNewBytecode(updatedBytes)
-    } catch (err) {
-      console.error("Standard coin creation failed:", err);
-      setIsCreatingToken(false)
-      toast({
-        title: "Token creation failed",
-        description: "An error occurred while creating your token",
-        variant: "destructive",
-      })
-    }
-  }
+    return true;
+  };
 
   const publishNewBytecode = async (updatedBytes: Uint8Array) => {
-    const tx = new Transaction()
-    tx.setGasBudget(100_000_000)
+    if (!account) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet to create a token",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const tx = new Transaction();
+    tx.setGasBudget(100_000_000);
 
     const [upgradeCap] = tx.publish({
       modules: [[...updatedBytes]],
       dependencies: [normalizeSuiObjectId("0x1"), normalizeSuiObjectId("0x2")],
-    })
+    });
 
-    tx.transferObjects([upgradeCap], tx.pure("address", account!.address))
+    tx.transferObjects([upgradeCap], account.address);
 
     signAndExecute(
       { transaction: tx },
@@ -124,230 +112,225 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
               showBalanceChanges: true,
               showInput: true,
             },
-          })
+          });
 
-          if (res.effects?.status.status === "success") {
-            console.log("Token created successfully:", res);
-
-            const txId = res.effects.transactionDigest;
-            const createdArr = res.effects.created || [];
-            const ownerObj = createdArr.find(
-              (item) => typeof item.owner === "object" && "AddressOwner" in item.owner
-            );
-            const owner = ownerObj ? ownerObj?.owner?.AddressOwner : "";
-
-            // Get the new package ID
-            const newPkgId = res.objectChanges?.find(
-              (item) => item.type === "published"
-            )?.packageId || "";
-
-            // Get the treasury cap (for regulated tokens)
-            const treasuryCap = res.objectChanges?.find(
-              (item) =>
-                item.type === "created" &&
-                typeof item.objectType === "string" &&
-                item.objectType.includes("TreasuryCap")
-            )?.objectId || "";
-
-            // Set state variables with transaction results
-            setTxId(txId);
-            setOwner(owner ? String(owner) : "");
-            setNewPkgId(newPkgId);
-            setTreasuryCap(treasuryCap);
-            setTokenCreated(true);
-
-            // Create token data object to save
-            const tokenData = {
-              name: tokenName,
-              symbol: tokenSymbol,
-              description,
-              decimal: decimals,
-              newPkgId,
-              txId,
-              treasuryCap
-            }
-
-            // Save token data to localStorage
-            localStorage.setItem('tokenData', JSON.stringify(tokenData))
-
-            // Show success toast
-            toast({
-              title: "Token created successfully!",
-              description: "Your token has been created and is ready to use.",
-            })
-
-            // Redirect to token page
-            setTimeout(() => {
-              router.push(`/generator/${network}/token`)
-            }, 1000)
-          } else {
-            setIsCreatingToken(false)
-            throw new Error("Publishing failed")
+          if (res.effects?.status.status !== "success") {
+            throw new Error("Publishing failed");
           }
+
+          const createdArr = res.effects.created || [];
+          const owner = createdArr.find((item) =>
+            typeof item.owner === "object" && "AddressOwner" in item.owner
+          )?.owner.AddressOwner || "";
+
+          const newPkgId = res.objectChanges?.find((item) => item.type === "published")?.packageId || "";
+          const treasuryCap = res.objectChanges?.find(
+            (item) => item.type === "created" && typeof item.objectType === "string" && item.objectType.includes("TreasuryCap")
+          )?.objectId || "";
+          const metadata = res.objectChanges?.find(
+            (item) => item.type === "created" && typeof item.objectType === "string" && item.objectType.includes("Metadata")
+          )?.objectId || "";
+
+          const tokenData: TokenData = {
+            name: formData.tokenName,
+            symbol: formData.tokenSymbol,
+            description: formData.description,
+            decimal: formData.decimals,
+            newPkgId,
+            txId: res.digest,
+            owner,
+            treasuryCap,
+            metadata,
+          };
+
+          setTokenData(tokenData);
+          localStorage.setItem("tokenData", JSON.stringify(tokenData));
+
+          toast({
+            title: "Token created successfully!",
+            description: "Your token has been created and is ready to use.",
+          });
+
+          setTimeout(() => {
+            router.push(`/generator/${network}/token`);
+          }, 1000);
         },
         onError: (err) => {
-          setIsCreatingToken(false)
-          console.error("Publish transaction failed:", err)
+          setIsCreatingToken(false);
           toast({
             title: "Transaction failed",
             description: "Failed to publish token contract",
             variant: "destructive",
-          })
-        }
+          });
+          console.error("Publish transaction failed:", err);
+        },
       }
-    )
-  }
+    );
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setIsCreatingToken(true);
+
+    try {
+      const { updatedBytes } = await updateCoin(
+        formData.tokenName,
+        formData.tokenSymbol,
+        formData.description,
+        Number(formData.decimals)
+      );
+      await publishNewBytecode(updatedBytes);
+    } catch (err) {
+      setIsCreatingToken(false);
+      toast({
+        title: "Token creation failed",
+        description: "An error occurred while creating your token",
+        variant: "destructive",
+      });
+      console.error("Token creation failed:", err);
+    }
+  };
 
   return (
     <motion.div
-      className="bg-zinc-900 rounded-xl border max-w-4xl mx-auto border-zinc-800 overflow-hidden"
+      className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-zinc-800 p-6">
         <div className="flex items-center">
           <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h2 className="text-xl font-bold text-white">Create token on {getNetworkName()}</h2>
+          <h2 className="text-xl font-bold text-white">Create Token on {getNetworkName()}</h2>
         </div>
         <div className="flex items-center">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 mr-2">
+          <div className="mr-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
             <span className="text-xl">😊</span>
           </div>
           <div>
-            <div className="text-white font-medium">Standard token</div>
-            <div className="text-teal-400 text-sm">0.01 SUI</div>
+            <div className="font-medium text-white">Standard Token</div>
+            <div className="text-sm text-teal-400">0.01 SUI</div>
           </div>
         </div>
       </div>
 
       <div className="p-6">
-        <p className="text-zinc-400 mb-6">
-          Launch your own token on {getNetworkName()} network. With our intuitive tool you can easily generate your own
-          Sui token.
+        <p className="mb-6 text-zinc-400">
+          Launch your own token on the {getNetworkName()} network with our intuitive tool.
         </p>
 
-        <div className="bg-zinc-800 rounded-lg p-6 mb-6">
-          <h3 className="text-white font-medium mb-4">Token information</h3>
-
+        <div className="mb-6 rounded-lg bg-zinc-800 p-6">
+          <h3 className="mb-4 font-medium text-white">Token Information</h3>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="tokenName" className="text-zinc-300 flex items-center">
+                  <Label htmlFor="tokenName" className="flex items-center text-zinc-300">
                     Token Name*
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
+                          <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="w-[200px] text-xs">The name of your token (e.g., &quot;My Awesome Token&quot;)</p>
+                          <p className="w-48 text-xs">The name of your token (e.g., &quot;My Awesome Token&quot;)</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </Label>
                   <Input
                     id="tokenName"
-                    value={tokenName}
-                    onChange={(e) => setTokenName(e.target.value)}
-                    placeholder="My awesome token"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
+                    value={formData.tokenName}
+                    onChange={handleInputChange("tokenName")}
+                    placeholder="My Awesome Token"
+                    className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="tokenSymbol" className="text-zinc-300 flex items-center">
+                  <Label htmlFor="tokenSymbol" className="flex items-center text-zinc-300">
                     Token Symbol*
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
+                          <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="w-[200px] text-xs">
-                            The symbol of your token (e.g., &quot;AWE&quot;). Usually 3-5 characters.
-                          </p>
+                          <p className="w-48 text-xs">The symbol of your token (e.g., &quot;AWE&quot;). Usually 3-5 characters.</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </Label>
                   <Input
                     id="tokenSymbol"
-                    value={tokenSymbol}
-                    onChange={(e) => setTokenSymbol(e.target.value)}
-                    placeholder="AWESOME"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
+                    value={formData.tokenSymbol}
+                    onChange={handleInputChange("tokenSymbol")}
+                    placeholder="AWE"
+                    className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center mb-2">
+                <div className="mb-2 flex items-center">
                   <Switch
                     id="customDecimals"
                     checked={customDecimals}
                     onCheckedChange={setCustomDecimals}
                     className="data-[state=checked]:bg-teal-500"
                   />
-                  <Label htmlFor="customDecimals" className="ml-2 text-zinc-300">
-                    Custom Decimals
-                  </Label>
+                  <Label htmlFor="customDecimals" className="ml-2 text-zinc-300">Custom Decimals</Label>
                 </div>
-                <p className="text-zinc-500 text-xs mb-2">Change the number of decimals for your token. Default: 9.</p>
+                <p className="mb-2 text-xs text-zinc-500">Change the number of decimals for your token. Default: 9.</p>
                 {customDecimals && (
                   <Input
                     id="decimals"
                     type="number"
-                    value={decimals}
-                    onChange={(e) => setDecimals(e.target.value)}
+                    value={formData.decimals}
+                    onChange={handleInputChange("decimals")}
                     placeholder="9"
-                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 w-24"
+                    className="w-24 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
                   />
                 )}
               </div>
 
               <div>
-                <Label htmlFor="description" className="text-zinc-300 flex items-center">
+                <Label htmlFor="description" className="flex items-center text-zinc-300">
                   Description*
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
+                        <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="w-[200px] text-xs">
-                          The description for your token (e.g., My awesome token)
-                        </p>
+                        <p className="w-48 text-xs">A brief description of your token&#39;s purpose</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </Label>
                 <Input
                   id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="My custom token"
-                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
+                  value={formData.description}
+                  onChange={handleInputChange("description")}
+                  placeholder="My Custom Token"
+                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
                 />
-                <p className="text-zinc-500 text-xs mt-1">
-                  A brief description of your token&#39;s purpose
-                </p>
+                <p className="mt-1 text-xs text-zinc-500">A brief description of your token&#39;s purpose</p>
               </div>
 
               <div>
-                <Label htmlFor="initialSupply" className="text-zinc-300 flex items-center">
-                  Initial supply*
+                <Label htmlFor="initialSupply" className="flex items-center text-zinc-300">
+                  Initial Supply*
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
+                        <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="w-[200px] text-xs">
-                          The initial number of available tokens that will be created in your wallet
-                        </p>
+                        <p className="w-48 text-xs">The initial number of tokens created in your wallet</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -355,26 +338,25 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                 <Input
                   id="initialSupply"
                   type="number"
-                  value={initialSupply}
-                  onChange={(e) => setInitialSupply(e.target.value)}
+                  value={formData.initialSupply}
+                  onChange={handleInputChange("initialSupply")}
                   placeholder="1000000000"
-                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
+                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
+                  min="0"
                 />
-                <p className="text-zinc-500 text-xs mt-1">
-                  The initial number of available tokens that will be created in your wallet
-                </p>
+                <p className="mt-1 text-xs text-zinc-500">The initial number of tokens created in your wallet</p>
               </div>
 
               <div>
-                <Label htmlFor="maxSupply" className="text-zinc-300 flex items-center">
-                  Max supply*
+                <Label htmlFor="maxSupply" className="flex items-center text-zinc-300">
+                  Max Supply*
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
+                        <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="w-[200px] text-xs">The maximum number of tokens available</p>
+                        <p className="w-48 text-xs">The maximum number of tokens available</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -382,85 +364,88 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                 <Input
                   id="maxSupply"
                   type="number"
-                  value={maxSupply}
-                  onChange={(e) => setMaxSupply(e.target.value)}
+                  value={formData.maxSupply}
+                  onChange={handleInputChange("maxSupply")}
                   placeholder="1000000000"
-                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500 mt-1"
+                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
+                  min="0"
                 />
-                <p className="text-zinc-500 text-xs mt-1">The maximum number of tokens available</p>
+                <p className="mt-1 text-xs text-zinc-500">The maximum number of tokens available</p>
               </div>
             </div>
 
-            <div className="pt-4 space-y-2">
+            <div className="space-y-2 pt-4">
               <Button
                 type="submit"
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                className="w-full bg-purple-600 text-white hover:bg-purple-700"
                 disabled={isPending || isCreatingToken}
               >
                 {isPending || isCreatingToken ? (
                   <div className="flex items-center">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Creating token...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Token...
                   </div>
                 ) : (
-                  "Create token"
+                  "Create Token"
                 )}
               </Button>
-
               <Button
                 type="button"
                 variant="outline"
                 className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
                 disabled={isPending || isCreatingToken}
               >
-                Create on testnet for FREE
+                Create on Testnet for FREE
               </Button>
             </div>
 
-            <div className="flex items-center justify-between text-sm pt-2">
+            <div className="flex items-center justify-between pt-2 text-sm">
               <div className="text-zinc-400">
                 Price: <span className="text-teal-400">0.01 SUI</span>
               </div>
-              <Button variant="link" className="text-purple-400 p-0 h-auto">
-                Activate promocode
+              <Button variant="link" className="h-auto p-0 text-purple-400">
+                Activate Promocode
               </Button>
             </div>
           </form>
         </div>
 
         <div className="mt-8">
-          <h3 className="text-white font-medium mb-4 text-center">Other templates</h3>
+          <h3 className="mb-4 text-center font-medium text-white">Other Templates</h3>
           <div className="grid grid-cols-2 gap-4">
             <div
-              className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 cursor-pointer hover:border-teal-500 transition-colors"
+              className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 p-4 transition-colors hover:border-teal-500"
               onClick={() => onSwitchTemplate("regulated")}
             >
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-fuchsia-900/50 flex items-center justify-center mr-2">
+              <div className="mb-2 flex items-center">
+                <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-fuchsia-900/50">
                   <span className="text-lg">😎</span>
                 </div>
                 <div>
-                  <div className="text-white text-sm font-medium">Regulated token</div>
-                  <div className="text-teal-400 text-xs">Price: 0.02 SUI</div>
+                  <div className="text-sm font-medium text-white">Regulated Token</div>
+                  <div className="text-xs text-teal-400">Price: 0.02 SUI</div>
                 </div>
               </div>
-              <div className="text-purple-400 text-xs hover:text-purple-300">Switch to this template</div>
+              <div className="text-xs text-purple-400 hover:text-purple-300">Switch to this template</div>
             </div>
-            <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 "  onClick={() => onSwitchTemplate("closed-loop")}>
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-900/50 flex items-center justify-center mr-2">
+            <div
+              className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 p-4 transition-colors hover:border-teal-500"
+              onClick={() => onSwitchTemplate("closed-loop")}
+            >
+              <div className="mb-2 flex items-center">
+                <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-900/50">
                   <span className="text-lg">🚀</span>
                 </div>
                 <div>
-                  <div className="text-white text-sm font-medium">Closed-loop token</div>
-                  <div className="text-teal-400 text-xs">Price: 0.05 SUI</div>
+                  <div className="text-sm font-medium text-white">Closed-Loop Token</div>
+                  <div className="text-xs text-teal-400">Price: 0.05 SUI</div>
                 </div>
               </div>
-                  <div className="text-purple-400 text-xs hover:text-purple-300">Switch to this template</div>
+              <div className="text-xs text-purple-400 hover:text-purple-300">Switch to this template</div>
             </div>
           </div>
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

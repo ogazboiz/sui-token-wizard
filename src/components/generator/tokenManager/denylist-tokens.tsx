@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
+import { deriveCoinType, getDenyList } from "@/components/hooks/getData"
 // import { useNetworkVariables } from "@/components/utils/networkConfig"
 
 interface DenylistTokensProps {
@@ -39,12 +40,27 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     decimal: string
     newPkgId: string
     txId: string
+    metadata: string
     treasuryCap: string
     denyCap: string
     features?: {
       denylist?: boolean
     }
   } | null>(null)
+
+  let derivedCoinType: string | undefined;
+  // let denylist: string[] | undefined;
+
+  if (tokenData) {
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
+      console.log("Derived coin type:", result);
+    });
+
+    // getMetadataField(suiClient, tokenData.metadata || "").then((result) => {
+    //   console.log("Metadata:", result);
+    // });
+  }
 
   // Denylist state
   const [addressToAdd, setAddressToAdd] = useState('')
@@ -59,19 +75,41 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
   useEffect(() => {
     // Check localStorage for token data when component mounts
     const savedTokenData = localStorage.getItem('tokenData')
+    let denylist: string[] | undefined;
     if (savedTokenData) {
       const parsedData = JSON.parse(savedTokenData)
       setTokenData(parsedData)
 
-      // dummy addresses
-      setDenylistedAddresses([
-        "0x1234...5678",
-        "0xabcd...ef01"
-      ])
+      // // dummy addresses
+      // setDenylistedAddresses([
+      //   "0x1234...5678",
+      //   "0xabcd...ef01"
+      // ])
+
+      getDenyList(suiClient, '0x403').then((result) => {
+        let denylist: string[] = [];
+
+        // If fields.id is an array of objects
+        if (Array.isArray(result.lists.fields.id)) {
+          denylist = result.lists.fields.id.map((item: { id: string }) => item.id);
+        }
+        // If fields.id is a single object
+        else if (result.lists.fields.id && typeof result.lists.fields.id === "object" && result.lists.fields.id.id) {
+          denylist = [result.lists.fields.id.id];
+        }
+        // If fields.id is a string (unlikely, but just in case)
+        else if (typeof result.lists.fields.id === "string") {
+          denylist = [result.lists.fields.id];
+        }
+
+        setDenylistedAddresses(denylist);
+      });
+
+      setDenylistedAddresses(denylist || [])
 
       setTokenLoaded(true)
     }
-  }, [])
+  }, [suiClient])
 
   // Handle adding address to denylist
   const handleAddToDenylist = async (e: React.FormEvent) => {
@@ -88,9 +126,20 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
+    const name = tx.moveCall({
+      target: `${derivedCoinType}::get_name`,
+      arguments: [
+        tx.object(tokenData.metadata),
+        // tx.object(tokenData.denyCap),
+        // tx.pure.address(addressToAdd),
+      ],
+    })
+
+    console.log("Name:", name);
+
     // Call the add_deny_list function on the regulated_coin contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::p_regulated_coin::add_deny_list`,
+      target: `${derivedCoinType}::add_deny_list`,
       arguments: [
         tx.object('0x403'),
         tx.object(tokenData.denyCap),
@@ -151,7 +200,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
 
     // Call the remove_deny_list function on the regulated_coin contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::p_regulated_coin::remove_deny_list`,
+      target: `${derivedCoinType}::remove_deny_list`,
       arguments: [
         tx.object('0x403'),
         tx.object(tokenData.denyCap),

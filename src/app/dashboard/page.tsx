@@ -14,7 +14,7 @@ export default function DashboardPage() {
           </div>
         }
       >
-        <Dashboard />
+        <Dashboard network="testnet" />
       </Suspense>
       <Toaster />
     </main>

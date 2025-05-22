@@ -40,16 +40,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
   const { isConnected, isReady } = useWalletConnection()
   const [hasCreatedToken, setHasCreatedToken] = useState(false)
 
-  // Add network validation at the beginning
-  if (!network || typeof network !== 'string') {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center text-red-400">
-          Error: Invalid network parameter
-        </div>
-      </div>
-    )
-  }
 
   // Check if the user has already created a token
   useEffect(() => {
@@ -185,6 +175,17 @@ export default function TokenManager({ network }: TokenManagerProps) {
       default:
         return "Sui"
     }
+  }
+
+  // Add network validation at the beginning
+  if (!network || typeof network !== 'string') {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center text-red-400">
+          Error: Invalid network parameter
+        </div>
+      </div>
+    )
   }
 
   // Show loading state while checking wallet connection
@@ -335,7 +336,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
           )}
 
           {activeTool === "denylist" && (
-            <DenylistTokens network={network} />
+            <DenylistTokens network={network}/>
           )}
 
           {activeTool === "pausable" && (

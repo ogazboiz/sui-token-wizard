@@ -19,7 +19,7 @@ interface TemplateFeature {
   included: boolean
 }
 interface ContractTemplatesProps {
-  network?: string
+  network?: "testnet" | "devnet" | "mainnet"
   isLandingPage?: boolean
   selectedTemplate?: string | null
   onTemplateSelect?: (templateId: string | null) => void

@@ -446,7 +446,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
               </div>
               <div className="text-purple-400 text-xs hover:text-purple-300">Switch to this template</div>
             </div>
-            <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+            <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 "  onClick={() => onSwitchTemplate("closed-loop")}>
               <div className="flex items-center mb-2">
                 <div className="w-8 h-8 rounded-full bg-emerald-900/50 flex items-center justify-center mr-2">
                   <span className="text-lg">🚀</span>
@@ -456,7 +456,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                   <div className="text-teal-400 text-xs">Price: 0.05 SUI</div>
                 </div>
               </div>
-              <div className="text-zinc-500 text-xs">Coming soon</div>
+                  <div className="text-purple-400 text-xs hover:text-purple-300">Switch to this template</div>
             </div>
           </div>
         </div>

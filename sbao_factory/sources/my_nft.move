@@ -1,9 +1,8 @@
-
 //  // ===== Errors =====
 //  const ENO_NAME_PROVIDED: u64 = 0;
 //  const ENO_DESCRIPTION_PROVIDED: u64 = 1;
 //  const ENO_IMAGE_URL_PROVIDED: u64 = 2;
-    
+
 module sbao_factory::my_nft;
 
 use std::string::{utf8, String};

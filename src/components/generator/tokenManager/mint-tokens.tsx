@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
+import { deriveCoinType } from "@/components/hooks/getData"
 
 interface MintTokensProps {
   network: string
@@ -40,6 +41,15 @@ export default function MintTokens({ network }: MintTokensProps) {
     txId: string
     treasuryCap: string
   } | null>(null)
+
+  let derivedCoinType: string | undefined;
+
+  if (tokenData) {
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
+      console.log("Derived coin type:", result);
+    });
+  }
 
   // Mint state
   const [mintAmount, setMintAmount] = useState('')
@@ -78,7 +88,7 @@ export default function MintTokens({ network }: MintTokensProps) {
 
     // Call the mint function on the Coin contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::my_coin::mint`,
+      target: `${derivedCoinType}::mint`,
       arguments: [
         tx.object(tokenData.treasuryCap),
         tx.pure.u64(Number(mintAmount)),
@@ -142,7 +152,7 @@ export default function MintTokens({ network }: MintTokensProps) {
         <Terminal className="h-4 w-4 text-teal-500" />
         <AlertTitle className="text-white">No Token Found</AlertTitle>
         <AlertDescription className="text-zinc-400">
-          You haven't created any tokens yet or token data was lost. Please create a new token.
+          You haven&apos;t created any tokens yet or token data was lost. Please create a new token.
           <div className="mt-4">
             <Button
               className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -195,6 +205,24 @@ export default function MintTokens({ network }: MintTokensProps) {
                 </Button>
               </div>
             </div>
+            {coin && (
+              <div className="flex justify-between items-center mt-4">
+                <span className="text-zinc-400 text-sm">Coin ID:</span>
+                <div className="flex items-center">
+                  <span className="text-white truncate max-w-[200px]">
+                    {coin.substring(0, 6)}...{coin.substring(coin.length - 4)}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-1"
+                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${coin}`, '_blank')}
+                  >
+                    <ExternalLink className="h-3 w-3 text-zinc-400" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleMint} className="space-y-5">

@@ -6,9 +6,9 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Copy, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/components/ui/use-toast"
+// import { useToast } from "@/components/ui/use-toast"
 import { ClipLoader } from "react-spinners"
-import { useCurrentAccount } from "@mysten/dapp-kit"
+// import { useCurrentAccount } from "@mysten/dapp-kit"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, Shield, Pause } from "lucide-react"
@@ -18,8 +18,8 @@ interface TokenPageProps {
 }
 
 export default function TokenPage({ network }: TokenPageProps) {
-  const { toast } = useToast()
-  const account = useCurrentAccount()
+  // const { toast } = useToast()
+  // const account = useCurrentAccount()
 
   // Token data state
   const [tokenData, setTokenData] = useState<{
@@ -29,7 +29,9 @@ export default function TokenPage({ network }: TokenPageProps) {
     decimal: string
     newPkgId: string
     txId: string
+    owner: string
     treasuryCap: string
+    metadata: string
     denyCap?: string
     type?: string
     features?: {
@@ -52,17 +54,17 @@ export default function TokenPage({ network }: TokenPageProps) {
     }
   }, [])
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      toast({
-        title: "Copied!",
-        description: "Value copied to clipboard",
-      })
-    } catch (err) {
-      console.error("Failed to copy:", err)
-    }
-  }
+  // const copyToClipboard = async (text: string) => {
+  //   try {
+  //     await navigator.clipboard.writeText(text)
+  //     toast({
+  //       title: "Copied!",
+  //       description: "Value copied to clipboard",
+  //     })
+  //   } catch (err) {
+  //     console.error("Failed to copy:", err)
+  //   }
+  // }
 
   // Render loading state if token data isn't loaded yet
   if (!tokenLoaded) {
@@ -106,7 +108,7 @@ export default function TokenPage({ network }: TokenPageProps) {
       {/* Token Info Card */}
       <Card className="bg-zinc-900 border-zinc-800 text-white">
         <CardHeader className="pb-3">
-          <CardTitle className="text-xl font-bold flex items-center">
+          <CardTitle className="text-xl font-bold flex flex-col">
             <span className="bg-gradient-to-r from-teal-400 to-teal-500 bg-clip-text text-transparent capitalize">
               {tokenData?.name} ({tokenData?.symbol})
             </span>
@@ -126,6 +128,21 @@ export default function TokenPage({ network }: TokenPageProps) {
               value={tokenData?.treasuryCap || ""}
               isCopyable
               explorer={`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <InfoCard
+              label="Owner"
+              value={tokenData?.owner || ""}
+              isCopyable
+              explorer={`https://suiscan.xyz/${network}/object/${tokenData?.owner}`}
+            />
+            <InfoCard
+              label="Metadata"
+              value={tokenData?.metadata || ""}
+              isCopyable
+              explorer={`https://suiscan.xyz/${network}/object/${tokenData?.metadata}`}
             />
           </div>
 
@@ -174,7 +191,7 @@ export default function TokenPage({ network }: TokenPageProps) {
 
             <ActionCard
               title="Burn Tokens"
-              description="Burn tokens to reduce the total supply"
+              description="Burn tokens to reduce the total supply of tokens"
               icon={<Flame className="h-8 w-8 text-orange-400" />}
               buttonText="Burn Tokens"
               buttonVariant="custom"

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
+import { deriveCoinType } from "@/components/hooks/getData"
 
 interface BurnTokensProps {
   network: string
@@ -39,6 +40,15 @@ export default function BurnTokens({ network }: BurnTokensProps) {
     txId: string
     treasuryCap: string
   } | null>(null)
+
+    let derivedCoinType: string | undefined;
+  
+    if (tokenData) {
+      deriveCoinType(suiClient, tokenData).then((result) => {
+        derivedCoinType = result;
+        console.log("Derived coin type:", result);
+      });
+    }
 
   // Burn state
   const [treasuryCap, setTreasuryCap] = useState('')
@@ -78,7 +88,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
 
     // Call the burn function on the Coin contract
     tx.moveCall({
-      target: `${tokenData.newPkgId}::my_coin::burn`,
+      target: `${derivedCoinType}::burn`,
       arguments: [
         tx.object(tokenData.treasuryCap),
         tx.object(burnCoin),
@@ -162,7 +172,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
             Burn {tokenData?.symbol} Tokens
           </CardTitle>
           <CardDescription className="text-zinc-400">
-            Burn tokens to reduce the total supply
+            Burn tokens to reduce the total supply of tokens
           </CardDescription>
         </CardHeader>
         <CardContent>

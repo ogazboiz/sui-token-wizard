@@ -1,7 +1,10 @@
 module sbao_factory::my_coin;
 
-use sui::coin::{Self, Coin, TreasuryCap};
+use std::ascii;
+use std::string;
+use sui::coin::{Self, Coin, TreasuryCap, CoinMetadata};
 use sui::event;
+use sui::url::Url;
 
 #[test_only]
 use sui::test_scenario;
@@ -49,6 +52,62 @@ public entry fun burn(treasury_cap: &mut TreasuryCap<MY_COIN>, coin: Coin<MY_COI
     let amount = coin::value(&coin);
     coin::burn(treasury_cap, coin);
     event::emit(BurnEvent { amount });
+}
+
+public entry fun get_decimals(metadata: &CoinMetadata<MY_COIN>): u8 {
+    coin::get_decimals(metadata)
+}
+
+public entry fun get_name(metadata: &CoinMetadata<MY_COIN>): string::String {
+    coin::get_name(metadata)
+}
+
+public entry fun get_symbol(metadata: &CoinMetadata<MY_COIN>): ascii::String {
+    coin::get_symbol(metadata)
+}
+
+public entry fun get_description(metadata: &CoinMetadata<MY_COIN>): string::String {
+    coin::get_description(metadata)
+}
+
+public entry fun get_supply(treasury_cap: &TreasuryCap<MY_COIN>): u64 {
+    coin::total_supply(treasury_cap)
+}
+
+public entry fun get_icon_url(metadata: &CoinMetadata<MY_COIN>): Option<Url> {
+    coin::get_icon_url(metadata)
+}
+
+public entry fun update_name(
+    treasury_cap: &TreasuryCap<MY_COIN>,
+    metadata: &mut CoinMetadata<MY_COIN>,
+    name: string::String,
+) {
+    coin::update_name(treasury_cap, metadata, name)
+}
+
+public entry fun update_symbol(
+    treasury_cap: &TreasuryCap<MY_COIN>,
+    metadata: &mut CoinMetadata<MY_COIN>,
+    symbol: ascii::String,
+) {
+    coin::update_symbol(treasury_cap, metadata, symbol)
+}
+
+public entry fun update_description(
+    treasury_cap: &TreasuryCap<MY_COIN>,
+    metadata: &mut CoinMetadata<MY_COIN>,
+    description: string::String,
+) {
+    coin::update_description(treasury_cap, metadata, description)
+}
+
+public entry fun update_icon_url(
+    treasury_cap: &TreasuryCap<MY_COIN>,
+    metadata: &mut CoinMetadata<MY_COIN>,
+    icon_url: ascii::String,
+) {
+    coin::update_icon_url(treasury_cap, metadata, icon_url)
 }
 
 #[test]

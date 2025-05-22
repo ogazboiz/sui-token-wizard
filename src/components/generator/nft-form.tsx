@@ -144,6 +144,7 @@ export default function NftForm({ network }: NftFormProps) {
               description: `Your ${collectionName} NFT collection has been deployed to the ${getNetworkName()} blockchain.`,
               variant: "default",
             });
+            setIsSubmitting(false);
 
             // Redirect to dashboard
             // router.push("/dashboard");

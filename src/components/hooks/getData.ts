@@ -63,17 +63,48 @@ export async function deriveCoinType(
     }
 }
 
-export async function deriveNftType(
+export async function deriveFullCoinType(
     suiClient: SuiClient,
     tokenData: TokenData,
 ): Promise<string> {
-    // This function is identical to deriveCoinType, so we can reuse it
-    return deriveCoinType(suiClient, tokenData);
+    const { newPkgId, symbol } = tokenData;
+
+    if (!newPkgId || !symbol) {
+        throw new Error("newPkgId and symbol are required in tokenData");
+    }
+
+    const normalizedPkgId = normalizeSuiAddress(newPkgId);
+
+    try {
+        const packageObject = await suiClient.getObject({
+            id: normalizedPkgId,
+            options: { showContent: true },
+        });
+
+        if (packageObject.data?.content?.dataType !== "package") {
+            throw new Error("Specified ID is not a valid package");
+        }
+
+        const disassembled = packageObject.data?.content?.disassembled;
+        if (!disassembled || typeof disassembled !== "object") {
+            throw new Error("Package disassembly data not available");
+        }
+
+        const moduleNames = Object.keys(disassembled);
+        if (moduleNames.length === 0) {
+            throw new Error("No modules found in package");
+        }
+
+        const moduleName = moduleNames[0];
+        return `${normalizedPkgId}::${moduleName}::${moduleName.toUpperCase()}`;
+    } catch (err) {
+        throw new Error(`Failed to derive coinType: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
 }
 
- export async function getMetadataField(suiClient: SuiClient, objectId: string) {
+export async function getMetadataField(suiClient: SuiClient, coinType: string) {
     const object = await suiClient.getCoinMetadata({
-        coinType: objectId
+        coinType: coinType,
     });
 
     if (!object) {
@@ -134,13 +165,13 @@ async function getAllTokensByOwner(suiClient: SuiClient, address: string) {
 }
 
 // Hooks
-export const useGetPackageMetadata = (packageId: string) => {
+export const useGetMetadataField = (coinType: string) => {
     const suiClient = useSuiClient();
 
     return useQuery({
-        queryKey: ["packageMetadata", packageId],
-        queryFn: () => getMetadataField(suiClient, packageId),
-        enabled: !!packageId,
+        queryKey: ["packageMetadata", coinType],
+        queryFn: () => getMetadataField(suiClient, coinType),
+        enabled: !!coinType,
     });
 };
 

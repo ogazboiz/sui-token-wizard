@@ -50,7 +50,6 @@ export default function NftForm({ network }: NftFormProps) {
   const {
     mutate: signAndExecute,
     isSuccess,
-    isPending,
   } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
 

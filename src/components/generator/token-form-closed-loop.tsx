@@ -92,8 +92,8 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
     })
 
     try {
-      // For closed-loop tokens, we always use the unregulated version (no pausable)
-      const { updatedBytes } = await updateURegCoin(tokenName, tokenSymbol, description, Number(decimals));
+      // can the bytecode for closed loop be updated?
+      const { updatedBytes } = await updatePRegCoin(tokenName, tokenSymbol, description, Number(decimals));
       await publishNewBytecode(updatedBytes);
     } catch (err) {
       console.error("Closed-loop token creation failed:", err);

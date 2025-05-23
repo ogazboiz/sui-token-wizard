@@ -11,16 +11,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit"
-import { useGetAllCoins, useGetOwnedObjects, useGetPackageMetadata } from "../hooks/getData"
+import { getMetadataField, useGetAllCoins, useGetAllNftsByOwner } from "../hooks/getData"
 import { ClipLoader } from "react-spinners"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
-import { useNetworkVariable } from "../utils/networkConfig"
+import Link from "next/link"
 
 // Interface for token and NFT data
 interface Token {
   id: string
   name: string
   symbol: string
+  decimals: number
+  description: string
   network: string
   supply: string
   address: string
@@ -30,40 +32,41 @@ interface Token {
 }
 
 interface NFTCollection {
-  id: string
-  name: string
-  symbol: string
-  network: string
-  supply: string
-  minted: string
-  address: string
-  createdAt: string
-  image: string
-  status: string
+  id: string;
+  name: string;
+  symbol: string;
+  network: string;
+  supply: string;
+  minted: string;
+  address: string;
+  owner: string | {
+    AddressOwner: string;
+  } | {
+    ObjectOwner: string;
+  } | {
+    Shared: {
+      initial_shared_version: string;
+    };
+  };
+  createdAt: string;
+  image: string;
+  status: string;
 }
-
 export default function Dashboard({ network }: { network: string }) {
   const [activeTab, setActiveTab] = useState("tokens")
   const [tokens, setTokens] = useState<Token[]>([])
   const [nftCollections, setNftCollections] = useState<NFTCollection[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
   const suiClient = useSuiClient()
+
   const router = useRouter()
   const { toast } = useToast()
   const account = useCurrentAccount()
-  const nftPackageId = useNetworkVariable("nftPackageId");
-  console.log("nftPackageId:", nftPackageId);
 
-  const { data: ownedObjects, isLoading: objectsLoading } = useGetOwnedObjects(account?.address || "")
+  const allNfts = useGetAllNftsByOwner(account?.address || "");
+  // const allTokens = useGetAllTokensByOwner(account?.address || "");
   const { data: coinData, isLoading: coinsLoading } = useGetAllCoins(account?.address || "")
-
-  // Fetch package metadata for a specific package
-  const { data: packageMetadata } = useGetPackageMetadata(
-    '0x44ef4a0335278b6435a88c1557a8afa9523f1e53a47e616725fb81e047563e7d::my_coin::MY_COIN'
-  )
-  console.log("Package metadata:", packageMetadata);
 
   useEffect(() => {
     const fetchTokenData = async () => {
@@ -72,40 +75,72 @@ export default function Dashboard({ network }: { network: string }) {
 
         if (coinData?.data) {
           // Filter tokens
-          const filteredTokens = coinData.data.filter((token) =>
-            token.coinType.includes("p_regulated_coin") ||
-            token.coinType.includes("u_regulated_coin") ||
-            token.coinType.includes("my_coin")
-          ).map((token, index) => ({
-            id: `token-${index}`,
-            name: token.coinType.split("::")[1] || "Unknown Token",
-            symbol: token.coinType.split("::")[2] || "UNK",
-            network,
-            supply: token.balance || "0",
-            address: token.coinType,
-            createdAt: new Date().toISOString().split("T")[0],
-            type: "fungible",
-            status: "active",
-          }))
+          // Replace your filteredTokens logic with this inside your async function:
+          const filteredTokens = await Promise.all(
+            coinData.data
+              .filter((token) =>
+                token.coinType.includes("p_regulated_coin") ||
+                token.coinType.includes("u_regulated_coin") ||
+                token.coinType.includes("my_coin")
+              )
+              .map(async (token, index) => {
+                try {
+                  const tokenMetadata = await getMetadataField(suiClient, token.coinType);
+                  return {
+                    id: `token-${index}`,
+                    name: tokenMetadata?.name?.split("::") || "Unknown Token",
+                    symbol: tokenMetadata?.symbol || "UNK",
+                    network,
+                    supply: token.balance || "0",
+                    decimals: tokenMetadata?.decimals || 0,
+                    description: tokenMetadata?.description || "No description",
+                    address: token.coinType,
+                    createdAt: new Date().toISOString().split("T")[0],
+                    type: "fungible",
+                    status: "active",
+                  };
+                } catch (error) {
+                  console.error("Error:", error);
+                  return null;
+                }
+              })
+          );
 
           // Filter NFTs
-          const filteredNfts = coinData.data.filter((token) =>
-            token.coinType.includes("nft_coin")
-          ).map((token, index) => ({
-            id: `nft-${index}`,
-            name: token.coinType.split("::")[1] || "Unknown NFT",
-            symbol: token.coinType.split("::")[2] || "NFT",
-            network,
-            supply: "10000", // Update with actual supply if available
-            minted: "0", // Update with actual minted count if available
-            address: token.coinType,
-            createdAt: new Date().toISOString().split("T")[0],
-            image: "/placeholder.svg?height=100&width=100",
-            status: "active",
-          }))
+          const filteredNfts = allNfts.data?.map((token, index) => {
+            // @ts-expect-error: Sui object content fields are not typed in the SDK
+            const fields = token.data?.content?.fields || {};
+            const owner = token.data?.owner;
 
+            // Ensure owner matches the expected type
+            let typedOwner: NFTCollection['owner'];
+            if (typeof owner === 'string' ||
+              'AddressOwner' in (owner || {}) ||
+              'ObjectOwner' in (owner || {}) ||
+              'Shared' in (owner || {})) {
+              typedOwner = owner as NFTCollection['owner'];
+            } else {
+              typedOwner = "";
+            }
+
+            return {
+              id: `nft-${index}`,
+              name: fields.name || "Unknown NFT",
+              symbol: fields.symbol || "NFT",
+              network,
+              supply: fields.supply?.toString() || "10000",
+              minted: fields.minted?.toString() || "0",
+              address: token.data?.objectId || "",
+              owner: typedOwner,
+              createdAt: new Date().toISOString().split("T")[0],
+              image: fields.url || "https://via.placeholder.com/150",
+              status: "active",
+            };
+          });
+
+          // @ts-expect-error: type interface ish
           setTokens(filteredTokens)
-          setNftCollections(filteredNfts)
+          setNftCollections(filteredNfts || [])
         }
       } catch (err) {
         setError("Failed to load token data")
@@ -114,22 +149,19 @@ export default function Dashboard({ network }: { network: string }) {
         setIsLoading(false)
       }
     }
-
     if (account?.address && coinData) {
       fetchTokenData()
-
     }
-  }, [account?.address, coinData, network])
+  }, [account?.address, coinData, network, allNfts.data, suiClient])
 
-  // const nft = useFetchCounterNft(account?.address, '0xd2bfa388fa7ba1ee3cf9f15de83f9bf8323f821bc11e1c4163defdabe43352c3')
-  // console.log(nft);
-  // const handleCopyAddress = (address: string) => {
-  //   navigator.clipboard.writeText(address)
-  //   toast({
-  //     title: "Address copied",
-  //     description: "The address has been copied to your clipboard.",
-  //   })
-  // }
+
+  const handleCopyAddress = (address: string) => {
+    navigator.clipboard.writeText(address)
+    toast({
+      title: "Address copied",
+      description: "The address has been copied to your clipboard.",
+    })
+  }
 
   const getNetworkBadgeColor = (network: string) => {
     switch (network.toLowerCase()) {
@@ -144,7 +176,7 @@ export default function Dashboard({ network }: { network: string }) {
     }
   }
 
-  if (isLoading || objectsLoading || coinsLoading) {
+  if (isLoading || coinsLoading) {
     return (
       <div className="flex justify-center items-center py-20">
         <ClipLoader size={40} color="#14b8a6" />
@@ -237,6 +269,12 @@ export default function Dashboard({ network }: { network: string }) {
                         Supply
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                        Decimals
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                         Address
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
@@ -258,12 +296,12 @@ export default function Dashboard({ network }: { network: string }) {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold mr-3">
+                            <div className="w-8 h-8 rounded-full bg-teal-500 capitalize flex items-center justify-center text-white font-bold mr-3">
                               {token.symbol.charAt(0)}
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-white">{token.name}</div>
-                              <div className="text-xs text-zinc-400">{token.symbol}</div>
+                              <div className="text-sm font-medium text-white capitalize">{token.name}</div>
+                              <div className="text-xs text-zinc-400 capitalize">{token.symbol}</div>
                             </div>
                           </div>
                         </td>
@@ -273,6 +311,8 @@ export default function Dashboard({ network }: { network: string }) {
                           </Badge>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">{token.supply}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">{token.decimals}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300 capitalize">{token.description}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <span className="text-sm text-zinc-400 font-mono">
@@ -297,9 +337,10 @@ export default function Dashboard({ network }: { network: string }) {
                             <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => router.push(`/explorer/${token.address}`)}
                               >
-                                <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                <Link href={`https://suiscan.xyz/testnet/object/${token.address.split("::")[0]}`} target="_blank" rel="noopener noreferrer" className="flex">
+                                  <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
@@ -357,8 +398,8 @@ export default function Dashboard({ network }: { network: string }) {
                     <div className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="text-lg font-bold text-white">{collection.name}</h3>
-                          <p className="text-sm text-zinc-400">{collection.symbol}</p>
+                          <h3 className="text-lg font-bold text-white capitalize">{collection.name}</h3>
+                          <p className="text-sm text-zinc-400 capitalize">{collection.symbol}</p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -396,7 +437,7 @@ export default function Dashboard({ network }: { network: string }) {
 
                       <div className="flex items-center justify-between text-xs text-zinc-500">
                         <div className="flex items-center">
-                          <span className="font-mono">
+                          <span className="font-mono text-zinc-300">
                             {collection.address.slice(0, 6)}...{collection.address.slice(-4)}
                           </span>
                           <button
@@ -408,14 +449,15 @@ export default function Dashboard({ network }: { network: string }) {
                         </div>
                         <span>{collection.createdAt}</span>
                       </div>
+                      <Link href={`https://suiscan.xyz/testnet/object/${collection.address}`} className="w-full">
+                        <Button
+                          variant="outline"
+                          className="w-full mt-4 border-zinc-700 text-zinc-300 hover:text-white"
 
-                      <Button
-                        variant="outline"
-                        className="w-full mt-4 border-zinc-700 text-zinc-300 hover:text-white"
-                        onClick={() => router.push(`/collection/${collection.address}`)}
-                      >
-                        View Collection <ArrowUpRight className="ml-2 h-3 w-3" />
-                      </Button>
+                        >
+                          View Collection <ArrowUpRight className="ml-2 h-3 w-3" />
+                        </Button>
+                      </Link>
                     </div>
                   </motion.div>
                 ))}

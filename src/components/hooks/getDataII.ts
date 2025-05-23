@@ -1,7 +1,51 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSuiClient } from "@mysten/dapp-kit";
-import { SuiClient, SuiObjectData } from "@mysten/sui/client";
+import { CoinMetadata, SuiClient, SuiObjectData } from "@mysten/sui/client";
 import { normalizeSuiAddress } from "@mysten/sui/utils";
+
+interface UseCoinMetadataParams {
+  coinType: string;
+}
+
+interface UseCoinMetadataResult {
+  data: CoinMetadata | null | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  isError: boolean;
+  refetch: () => void;
+}
+interface UseDenyListParams {
+  denyCap: string;
+  coinType: string;
+}
+
+interface UseDenyListResult {
+  data: string[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  isError: boolean;
+  refetch: () => void;
+}
+
+interface TokenData {
+  newPkgId: string;
+  symbol: string;
+  name?: string;
+  description?: string;
+  decimal?: string;
+  txId?: string;
+  owner?: string;
+  treasuryCap?: string;
+  metadata?: string;
+  denyCap?: string;
+  type?: string;
+  features?: {
+    burnable?: boolean;
+    mintable?: boolean;
+    pausable?: boolean;
+    denylist?: boolean;
+  };
+}
 
 interface CoinBalance {
   coinType: string;
@@ -16,6 +60,19 @@ interface UseUserCoinsParams {
 
 interface UseUserCoinsResult {
   data: CoinBalance[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  isError: boolean;
+  refetch: () => void;
+}
+
+interface UseCoinMetadataParams {
+  coinType: string;
+  tokenData?: TokenData | null;
+}
+
+interface UseCoinMetadataResult {
+  data: CoinMetadata | null | undefined;
   isLoading: boolean;
   error: Error | null;
   isError: boolean;

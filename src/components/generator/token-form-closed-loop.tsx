@@ -2,7 +2,7 @@
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, HelpCircle, Flame, Shield, Pause, Loader2, Users, Lock } from "lucide-react"
+import { ArrowLeft, HelpCircle, Flame, Shield, Loader2, Users, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -40,7 +40,6 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
   const [description, setDescription] = useState("")
   const [burnable, setBurnable] = useState(true)
   const [mintable, setMintable] = useState(true)
-  const [pausable, setPausable] = useState(true)
   const [denylist, setDenylist] = useState(true)
   const [allowlist, setAllowlist] = useState(true)
   const [transferRestrictions, setTransferRestrictions] = useState(true)
@@ -83,7 +82,6 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
       tokenSymbol,
       description,
       decimals: Number(decimals),
-      pausable,
       allowlist,
       transferRestrictions
     });
@@ -94,13 +92,9 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
     })
 
     try {
-      if (pausable) {
-        const { updatedBytes } = await updatePRegCoin(tokenName, tokenSymbol, description, Number(decimals));
-        await publishNewBytecode(updatedBytes);
-      } else {
-        const { updatedBytes } = await updateURegCoin(tokenName, tokenSymbol, description, Number(decimals));
-        await publishNewBytecode(updatedBytes);
-      }
+      // For closed-loop tokens, we always use the unregulated version (no pausable)
+      const { updatedBytes } = await updateURegCoin(tokenName, tokenSymbol, description, Number(decimals));
+      await publishNewBytecode(updatedBytes);
     } catch (err) {
       console.error("Closed-loop token creation failed:", err);
       setIsCreatingToken(false)
@@ -191,7 +185,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
               features: {
                 burnable,
                 mintable,
-                pausable,
+                pausable: false, // Always false for closed-loop
                 denylist,
                 allowlist,
                 transferRestrictions
@@ -461,26 +455,6 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                       id="mintable"
                       checked={mintable}
                       onCheckedChange={setMintable}
-                      className="data-[state=checked]:bg-emerald-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <Pause className="h-4 w-4 text-blue-400 mr-2" />
-                        <Label htmlFor="pausable" className="text-zinc-300 cursor-pointer">
-                          Pausable
-                        </Label>
-                      </div>
-                      <p className="text-zinc-500 text-xs mt-1 ml-6">
-                        Emergency pause functionality for ecosystem protection
-                      </p>
-                    </div>
-                    <Switch
-                      id="pausable"
-                      checked={pausable}
-                      onCheckedChange={setPausable}
                       className="data-[state=checked]:bg-emerald-500"
                     />
                   </div>

@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText, Loader2, Pause } from "lucide-react"
+import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText, Loader2, Pause, ScrollText, Droplets } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
@@ -17,6 +17,8 @@ import MintTokens from "./tokenManager/mint-tokens"
 import BurnTokens from "./tokenManager/burn-tokens"
 import DenylistTokens from "./tokenManager/denylist-tokens"
 import PausableTokens from "./tokenManager/pausable-tokens"
+import PolicyTokens from "./tokenManager/policy-tokens"
+import ActionRequests from "./tokenManager/new-request"
 
 interface TokenManagerProps {
   network: string
@@ -30,6 +32,8 @@ interface Tool {
   isActive?: boolean
   comingSoon?: boolean
   route?: string
+  showOnlyForClosedLoop?: boolean
+  requiresPolicy?: boolean
 }
 
 export default function TokenManager({ network }: TokenManagerProps) {
@@ -39,13 +43,35 @@ export default function TokenManager({ network }: TokenManagerProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const { isConnected, isReady } = useWalletConnection()
   const [hasCreatedToken, setHasCreatedToken] = useState(false)
+  const [isClosedLoopToken, setIsClosedLoopToken] = useState(false)
+  const [hasPolicyCreated, setHasPolicyCreated] = useState(false)
 
+  // Add network validation at the beginning
+  if (!network || typeof network !== 'string') {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center text-red-400">
+          Error: Invalid network parameter
+        </div>
+      </div>
+    )
+  }
 
-  // Check if the user has already created a token
+  // Check if the user has already created a token and its type
   useEffect(() => {
     if (typeof window !== "undefined") {
       const tokenData = localStorage.getItem('tokenData')
-      setHasCreatedToken(!!tokenData)
+      if (tokenData) {
+        const parsedTokenData = JSON.parse(tokenData)
+        setHasCreatedToken(true)
+        setIsClosedLoopToken(parsedTokenData.type === "closed-loop")
+        
+        // Check if policy exists for closed-loop tokens
+        if (parsedTokenData.type === "closed-loop") {
+          const policyData = localStorage.getItem('tokenPolicy')
+          setHasPolicyCreated(!!policyData)
+        }
+      }
     }
   }, [])
 
@@ -68,6 +94,27 @@ export default function TokenManager({ network }: TokenManagerProps) {
       route: `/generator/${network}/token`,
     },
     {
+      id: "policy",
+      name: "Token Policy",
+      icon: <ScrollText className="w-5 h-5" />,
+      isActive: activeTool === "policy",
+      isNew: hasCreatedToken && isClosedLoopToken,
+      comingSoon: !hasCreatedToken || !isClosedLoopToken,
+      route: `/generator/${network}/policy`,
+      showOnlyForClosedLoop: true,
+    },
+    {
+      id: "action-requests",
+      name: "Action Requests",
+      icon: <Plus className="w-5 h-5" />,
+      isActive: activeTool === "action-requests",
+      isNew: hasCreatedToken && isClosedLoopToken && hasPolicyCreated,
+      comingSoon: !hasCreatedToken || !isClosedLoopToken || !hasPolicyCreated,
+      route: `/generator/${network}/action-requests`,
+      showOnlyForClosedLoop: true,
+      requiresPolicy: true,
+    },
+    {
       id: "denylist",
       name: "Denylist",
       icon: <Shield className="w-5 h-5" />,
@@ -81,8 +128,8 @@ export default function TokenManager({ network }: TokenManagerProps) {
       name: "Pausable",
       icon: <Pause className="w-5 h-5" />,
       isActive: activeTool === "pausable",
-      isNew: hasCreatedToken,
-      comingSoon: !hasCreatedToken,
+      isNew: hasCreatedToken && !isClosedLoopToken,
+      comingSoon: !hasCreatedToken || isClosedLoopToken,
       route: `/generator/${network}/pausable`,
     },
     {
@@ -106,7 +153,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
     {
       id: "liquidity-pool",
       name: "Create Liquidity Pool",
-      icon: <Plus className="w-5 h-5" />,
+      icon: <Droplets className="w-5 h-5" />,
       isNew: false,
       comingSoon: true,
     },
@@ -118,11 +165,27 @@ export default function TokenManager({ network }: TokenManagerProps) {
     },
   ]
 
+  // Filter tools based on token type
+  const filteredTools = tools.filter(tool => {
+    if (tool.showOnlyForClosedLoop) {
+      return isClosedLoopToken
+    }
+    // Hide pausable for closed loop tokens
+    if (tool.id === "pausable" && isClosedLoopToken) {
+      return false
+    }
+    return true
+  })
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Check URL to determine active tool
       if (pathname.includes('/token')) {
         setActiveTool('token-page')
+      } else if (pathname.includes('/policy')) {
+        setActiveTool('policy')
+      } else if (pathname.includes('/action-requests')) {
+        setActiveTool('action-requests')
       } else if (pathname.includes('/mint')) {
         setActiveTool('mint-tokens')
       } else if (pathname.includes('/burn')) {
@@ -177,15 +240,25 @@ export default function TokenManager({ network }: TokenManagerProps) {
     }
   }
 
-  // Add network validation at the beginning
-  if (!network || typeof network !== 'string') {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center text-red-400">
-          Error: Invalid network parameter
-        </div>
-      </div>
-    )
+  const getActiveToolName = () => {
+    switch (activeTool) {
+      case "token-page":
+        return "Token Page"
+      case "policy":
+        return "Token Policy"
+      case "action-requests":
+        return "Action Requests"
+      case "mint-tokens":
+        return "Mint Tokens"
+      case "burn-tokens":
+        return "Burn Tokens"
+      case "denylist":
+        return "Denylist"
+      case "pausable":
+        return "Pausable"
+      default:
+        return "Token Creator"
+    }
   }
 
   // Show loading state while checking wallet connection
@@ -243,13 +316,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
           {getNetworkName()}
         </Link>
         <ChevronRight className="w-4 h-4 mx-1" />
-        <span className="text-white">
-          {activeTool === "token-page" ? "Token Page" :
-            activeTool === "mint-tokens" ? "Mint Tokens" :
-              activeTool === "burn-tokens" ? "Burn Tokens" :
-                activeTool === "denylist" ? "Denylist" :
-                  activeTool === "pausable" ? "Pausable" : "Token Creator"}
-        </span>
+        <span className="text-white">{getActiveToolName()}</span>
       </div>
 
       <div className="grid md:grid-cols-[300px_1fr] gap-6">
@@ -260,7 +327,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
             </h2>
           </div>
           <div className="p-2">
-            {tools.map((tool) => (
+            {filteredTools.map((tool) => (
               <button
                 key={tool.id}
                 className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
@@ -327,6 +394,14 @@ export default function TokenManager({ network }: TokenManagerProps) {
             <TokenPage network={network} />
           )}
 
+          {activeTool === "policy" && (
+            <PolicyTokens network={network} />
+          )}
+
+          {activeTool === "action-requests" && (
+            <ActionRequests network={network} />
+          )}
+
           {activeTool === "mint-tokens" && (
             <MintTokens network={network} />
           )}
@@ -336,7 +411,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
           )}
 
           {activeTool === "denylist" && (
-            <DenylistTokens network={network}/>
+            <DenylistTokens network={network} />
           )}
 
           {activeTool === "pausable" && (

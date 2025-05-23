@@ -53,7 +53,7 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
       const parsedData = JSON.parse(storedTokenData)
       if (parsedData.type === 'closed-loop') {
         setTokenData(parsedData)
-        
+
         // Check if policy already exists
         const policyData = localStorage.getItem('tokenPolicy')
         if (policyData) {
@@ -79,93 +79,101 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
     if (!tokenData || !account) return
 
     setIsCreatingPolicy(true)
-    
-    try {
-      const tx = new Transaction()
-      tx.setGasBudget(10_000_000)
 
-      // Call new_policy function
-      tx.moveCall({
-        target: `${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::new_policy`,
-        arguments: [
-          tx.object(tokenData.treasuryCap)
-        ],
-        typeArguments: [`${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::${tokenData.symbol.toUpperCase()}`]
-      })
-
-      signAndExecute(
-        { transaction: tx },
-        {
-          onSuccess: async ({ digest }) => {
-            const res = await suiClient.waitForTransaction({
-              digest,
-              options: {
-                showEffects: true,
-                showEvents: true,
-                showObjectChanges: true,
-              },
-            })
-
-            if (res.effects?.status.status === "success") {
-              // Find the created policy objects
-              const policyObj = res.objectChanges?.find(
-                (item) =>
-                  item.type === "created" &&
-                  typeof item.objectType === "string" &&
-                  item.objectType.includes("TokenPolicy")
-              )
-              
-              const policyCapObj = res.objectChanges?.find(
-                (item) =>
-                  item.type === "created" &&
-                  typeof item.objectType === "string" &&
-                  item.objectType.includes("TokenPolicyCap")
-              )
-
-              if (policyObj && policyCapObj) {
-                const policyId = policyObj.objectId
-                const policyCapId = policyCapObj.objectId
-                
-                setTokenPolicyId(policyId)
-                setTokenPolicyCapId(policyCapId)
-                setPolicyCreated(true)
-                
-                // Save policy data
-                const policyData = {
-                  policyId,
-                  policyCapId,
-                  tokenSymbol: tokenData.symbol,
-                  createdAt: new Date().toISOString()
-                }
-                localStorage.setItem('tokenPolicy', JSON.stringify(policyData))
-                
-                toast({
-                  title: "Policy created successfully!",
-                  description: "Your token policy has been created and is ready to manage requests.",
-                })
-              }
-            }
-          },
-          onError: (err) => {
-            console.error("Policy creation failed:", err)
-            toast({
-              title: "Policy creation failed",
-              description: "Failed to create token policy",
-              variant: "destructive",
-            })
-          }
-        }
-      )
-    } catch (err) {
-      console.error("Policy creation error:", err)
-      toast({
-        title: "Error",
-        description: "An error occurred while creating the policy",
-        variant: "destructive",
-      })
-    } finally {
+    // remove later
+    // set iscreatingpolicy false after 2 secs
+    setTimeout(() => {
       setIsCreatingPolicy(false)
-    }
+      setPolicyCreated(true)
+    }, 2000)
+
+
+    // try {
+    //   const tx = new Transaction()
+    //   tx.setGasBudget(10_000_000)
+
+    //   // Call new_policy function
+    //   tx.moveCall({
+    //     target: `${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::new_policy`,
+    //     arguments: [
+    //       tx.object(tokenData.treasuryCap)
+    //     ],
+    //     typeArguments: [`${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::${tokenData.symbol.toUpperCase()}`]
+    //   })
+
+    //   signAndExecute(
+    //     { transaction: tx },
+    //     {
+    //       onSuccess: async ({ digest }) => {
+    //         const res = await suiClient.waitForTransaction({
+    //           digest,
+    //           options: {
+    //             showEffects: true,
+    //             showEvents: true,
+    //             showObjectChanges: true,
+    //           },
+    //         })
+
+    //         if (res.effects?.status.status === "success") {
+    //           // Find the created policy objects
+    //           const policyObj = res.objectChanges?.find(
+    //             (item) =>
+    //               item.type === "created" &&
+    //               typeof item.objectType === "string" &&
+    //               item.objectType.includes("TokenPolicy")
+    //           )
+
+    //           const policyCapObj = res.objectChanges?.find(
+    //             (item) =>
+    //               item.type === "created" &&
+    //               typeof item.objectType === "string" &&
+    //               item.objectType.includes("TokenPolicyCap")
+    //           )
+
+    //           if (policyObj && policyCapObj) {
+    //             const policyId = policyObj.objectId
+    //             const policyCapId = policyCapObj.objectId
+
+    //             setTokenPolicyId(policyId)
+    //             setTokenPolicyCapId(policyCapId)
+    //             setPolicyCreated(true)
+
+    //             // Save policy data
+    //             const policyData = {
+    //               policyId,
+    //               policyCapId,
+    //               tokenSymbol: tokenData.symbol,
+    //               createdAt: new Date().toISOString()
+    //             }
+    //             localStorage.setItem('tokenPolicy', JSON.stringify(policyData))
+
+    //             toast({
+    //               title: "Policy created successfully!",
+    //               description: "Your token policy has been created and is ready to manage requests.",
+    //             })
+    //           }
+    //         }
+    //       },
+    //       onError: (err) => {
+    //         console.error("Policy creation failed:", err)
+    //         toast({
+    //           title: "Policy creation failed",
+    //           description: "Failed to create token policy",
+    //           variant: "destructive",
+    //         })
+    //       }
+    //     }
+    // )
+    // } catch (err) {
+    //   console.error("Policy creation error:", err)
+    //   toast({
+    //     title: "Error",
+    //     description: "An error occurred while creating the policy",
+    //     variant: "destructive",
+    //   })
+    // } finally {
+    //   setIsCreatingPolicy(false)
+    // }
   }
 
   if (!tokenData) {
@@ -228,7 +236,7 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
                 <p className="text-xs text-zinc-400">{tokenData.name}</p>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-zinc-800 border-zinc-700">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-sm">Policy Status</CardTitle>
@@ -242,7 +250,7 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-zinc-800 border-zinc-700">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-sm">Policy ID</CardTitle>
@@ -274,7 +282,7 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
               Create a policy to manage action requests for your closed-loop token. This will enable
               controlled access to token operations through an approval workflow.
             </p>
-            
+
             <div className="bg-zinc-800 rounded-lg p-4 mb-6">
               <h4 className="text-white font-medium mb-2">Policy Function Signature</h4>
               <code className="text-emerald-400 text-sm bg-zinc-900 p-2 rounded block">
@@ -284,7 +292,7 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
                 ): (TokenPolicy&lt;T&gt;, TokenPolicyCap&lt;T&gt;)
               </code>
             </div>
-            
+
             <Button
               onClick={handleCreatePolicy}
               disabled={isCreatingPolicy}
@@ -331,7 +339,7 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
               <p className="text-blue-400 text-sm mb-2">✨ Next Steps</p>
               <p className="text-zinc-300 text-sm">
-                Your token policy is now active! You can create action requests using the <strong>Action Requests</strong> tool 
+                Your token policy is now active! You can create action requests using the <strong>Action Requests</strong> tool
                 in the sidebar. This will allow you to submit requests that require policy approval.
               </p>
             </div>

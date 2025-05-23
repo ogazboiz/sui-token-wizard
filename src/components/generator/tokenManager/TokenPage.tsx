@@ -15,6 +15,8 @@ import { Transaction } from "@mysten/sui/transactions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, Shield, Pause, ScrollText, Plus } from "lucide-react"
+import { deriveCoinType, deriveFullCoinType, getMetadataField } from "@/components/hooks/getData"
+import { CoinMetadata } from "@mysten/sui/client"
 
 interface TokenPageProps {
   network: string
@@ -48,12 +50,42 @@ export default function TokenPage({ network }: TokenPageProps) {
   const { toast } = useToast()
   const account = useCurrentAccount()
   const suiClient = useSuiClient()
-  const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
-  // Token data state
   const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [tokenLoaded, setTokenLoaded] = useState(false)
-  
+  const [metadata, setMetadata] = useState<CoinMetadata | null>(null)
+
+  let derivedCoinType: string | undefined;
+
+  if (tokenData) {
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
+      console.log("Derived coin type:", result);
+    });
+  }
+
+  useEffect(() => {
+    if (!tokenData) return;
+
+    const fetchMetadata = async () => {
+      try {
+        const derivedFullCoinType = await deriveFullCoinType(suiClient, tokenData);
+        console.log("Derived coin type:", derivedFullCoinType);
+
+        const metadata = await getMetadataField(suiClient, derivedFullCoinType);
+        console.log("Metadata:", metadata);
+        setMetadata(metadata);
+      } catch (err) {
+        console.error("Error fetching metadata:", err);
+      }
+    };
+
+    fetchMetadata();
+  }, [tokenData, suiClient]);
+
+
+
   // Modal and edit state
   const [showEditModal, setShowEditModal] = useState(false)
   const [editMode, setEditMode] = useState<EditMode>(null)
@@ -99,10 +131,10 @@ export default function TokenPage({ network }: TokenPageProps) {
 
   const openEditModal = (mode: EditMode) => {
     if (!tokenData) return
-    
+
     setEditMode(mode)
     setShowEditModal(true)
-    
+
     if (mode === 'name') {
       setEditValue(tokenData.name)
     } else if (mode === 'symbol') {
@@ -147,20 +179,15 @@ export default function TokenPage({ network }: TokenPageProps) {
       const tx = new Transaction()
       tx.setGasBudget(10_000_000)
 
-      // Prepare updated values - only change the specific field
-      const updatedName = editMode === 'name' ? editValue : tokenData.name
-      const updatedSymbol = editMode === 'symbol' ? editValue : tokenData.symbol
-      const updatedDescription = editMode === 'description' ? editValue : tokenData.description
+      // const updatedValue = editValue;
 
       tx.moveCall({
-        target: `${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::update_metadata`,
+        target: `${derivedCoinType}::update_${editMode}`,
         arguments: [
+          tx.object(tokenData.treasuryCap),
           tx.object(tokenData.metadata),
-          tx.pure.string(updatedName),
-          tx.pure.string(updatedSymbol),
-          tx.pure.string(updatedDescription),
+          tx.pure.string(editValue),
         ],
-        typeArguments: [`${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::${tokenData.symbol.toUpperCase()}`]
       })
 
       signAndExecute(
@@ -179,15 +206,13 @@ export default function TokenPage({ network }: TokenPageProps) {
             if (res.effects?.status.status === "success") {
               const updatedTokenData = {
                 ...tokenData,
-                name: updatedName,
-                symbol: updatedSymbol,
-                description: updatedDescription
+                [editMode]: editValue,
               }
-              
+
               setTokenData(updatedTokenData)
               localStorage.setItem('tokenData', JSON.stringify(updatedTokenData))
               closeEditModal()
-              
+
               toast({
                 title: "Token updated successfully!",
                 description: `Token ${editMode} has been updated.`,
@@ -235,14 +260,13 @@ export default function TokenPage({ network }: TokenPageProps) {
       tx.setGasBudget(10_000_000)
 
       tx.moveCall({
-        target: `${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::update_metadata`,
+        target: `${derivedCoinType}::update_metadata`,
         arguments: [
           tx.object(tokenData.metadata),
           tx.pure.string(editForm.name),
           tx.pure.string(editForm.symbol),
           tx.pure.string(editForm.description),
         ],
-        typeArguments: [`${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::${tokenData.symbol.toUpperCase()}`]
       })
 
       signAndExecute(
@@ -265,11 +289,11 @@ export default function TokenPage({ network }: TokenPageProps) {
                 symbol: editForm.symbol,
                 description: editForm.description
               }
-              
+
               setTokenData(updatedTokenData)
               localStorage.setItem('tokenData', JSON.stringify(updatedTokenData))
               closeEditModal()
-              
+
               toast({
                 title: "Token updated successfully!",
                 description: "All token information has been updated.",
@@ -359,11 +383,11 @@ export default function TokenPage({ network }: TokenPageProps) {
               <div className="flex-1">
                 <CardTitle className="text-xl font-bold flex flex-col">
                   <span className="bg-gradient-to-r from-teal-400 to-teal-500 bg-clip-text text-transparent capitalize">
-                    {tokenData?.name} ({tokenData?.symbol})
+                    {metadata?.name} ({metadata?.symbol})
                   </span>
                 </CardTitle>
-                <CardDescription className="text-zinc-400 capitalize">{tokenData?.description}</CardDescription>
-                
+                <CardDescription className="text-zinc-400 capitalize">{metadata?.description}</CardDescription>
+
                 {/* Token Type Badge */}
                 <div className="mt-3">
                   {tokenData?.type === "closed-loop" && (
@@ -383,7 +407,7 @@ export default function TokenPage({ network }: TokenPageProps) {
                   )}
                 </div>
               </div>
-              
+
               {/* Edit Button with Dropdown Options */}
               {canEdit() && (
                 <div className="relative">
@@ -442,7 +466,7 @@ export default function TokenPage({ network }: TokenPageProps) {
               </div>
             )}
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <InfoCard
@@ -471,7 +495,7 @@ export default function TokenPage({ network }: TokenPageProps) {
               />
               <InfoCard
                 label="Metadata"
-                value={tokenData?.metadata || ""}
+                value={metadata?.id || ""}
                 isCopyable
                 explorer={`https://suiscan.xyz/${network}/object/${tokenData?.metadata}`}
                 onCopy={copyToClipboard}
@@ -479,7 +503,7 @@ export default function TokenPage({ network }: TokenPageProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <InfoCard label="Decimals" value={tokenData?.decimal || "9"} />
+              <InfoCard label="Decimals" value={String(metadata?.decimals )|| "9"} />
               <InfoCard
                 label="Transaction"
                 value={tokenData?.txId || ""}
@@ -552,7 +576,7 @@ export default function TokenPage({ network }: TokenPageProps) {
                     buttonVariant="secondary"
                     href={`/generator/${network}/policy`}
                   />
-                  
+
                   <ActionCard
                     title="Action Requests"
                     description="Submit and manage action requests requiring approval"
@@ -635,7 +659,7 @@ export default function TokenPage({ network }: TokenPageProps) {
                     <Input
                       id="modal-name"
                       value={editForm.name}
-                      onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                       className="bg-zinc-800 border-zinc-700 text-white mt-1"
                       placeholder="Enter token name"
                     />
@@ -645,7 +669,7 @@ export default function TokenPage({ network }: TokenPageProps) {
                     <Input
                       id="modal-symbol"
                       value={editForm.symbol}
-                      onChange={(e) => setEditForm({...editForm, symbol: e.target.value})}
+                      onChange={(e) => setEditForm({ ...editForm, symbol: e.target.value })}
                       className="bg-zinc-800 border-zinc-700 text-white mt-1"
                       placeholder="Enter token symbol"
                     />
@@ -655,7 +679,7 @@ export default function TokenPage({ network }: TokenPageProps) {
                     <Input
                       id="modal-description"
                       value={editForm.description}
-                      onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                       className="bg-zinc-800 border-zinc-700 text-white mt-1"
                       placeholder="Enter token description"
                     />
@@ -664,8 +688,8 @@ export default function TokenPage({ network }: TokenPageProps) {
               ) : (
                 <div>
                   <Label htmlFor="modal-single" className="text-zinc-300 text-sm pb-2">
-                    {editMode === 'name' ? 'Token Name*' : 
-                     editMode === 'symbol' ? 'Token Symbol*' : 'Description*'}
+                    {editMode === 'name' ? 'Token Name*' :
+                      editMode === 'symbol' ? 'Token Symbol*' : 'Description*'}
                   </Label>
                   <Input
                     id="modal-single"

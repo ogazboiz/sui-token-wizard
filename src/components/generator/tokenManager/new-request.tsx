@@ -45,7 +45,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
 
   const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [hasPolicyCreated, setHasPolicyCreated] = useState(false)
-  
+
   // New request form
   const [requestName, setRequestName] = useState("")
   const [requestAmount, setRequestAmount] = useState("")
@@ -53,7 +53,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
   const [requestDescription, setRequestDescription] = useState("")
   const [requestType, setRequestType] = useState("")
   const [isCreatingRequest, setIsCreatingRequest] = useState(false)
-  
+
   // Requests list
   const [requests, setRequests] = useState<PolicyRequest[]>([])
 
@@ -64,11 +64,11 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
       const parsedData = JSON.parse(storedTokenData)
       if (parsedData.type === 'closed-loop') {
         setTokenData(parsedData)
-        
+
         // Check if policy exists
         const policyData = localStorage.getItem('tokenPolicy')
         setHasPolicyCreated(!!policyData)
-        
+
         // Load existing requests
         const savedRequests = localStorage.getItem('actionRequests')
         if (savedRequests) {
@@ -89,7 +89,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
 
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!requestName || !requestAmount || !requestRecipient || !tokenData) {
       toast({
         title: "Missing fields",
@@ -141,20 +141,20 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                 createdAt: new Date().toISOString(),
                 description: requestDescription
               }
-              
+
               const updatedRequests = [newRequest, ...requests]
               setRequests(updatedRequests)
-              
+
               // Save to localStorage
               localStorage.setItem('actionRequests', JSON.stringify(updatedRequests))
-              
+
               // Clear form
               setRequestName("")
               setRequestAmount("")
               setRequestRecipient("")
               setRequestDescription("")
               setRequestType("")
-              
+
               toast({
                 title: "Request created successfully!",
                 description: "Your action request has been submitted for approval.",
@@ -184,12 +184,12 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
   }
 
   const handleApproveRequest = (requestId: string) => {
-    const updatedRequests = requests.map(req => 
+    const updatedRequests = requests.map(req =>
       req.id === requestId ? { ...req, status: 'approved' as const } : req
     )
     setRequests(updatedRequests)
     localStorage.setItem('actionRequests', JSON.stringify(updatedRequests))
-    
+
     toast({
       title: "Request approved",
       description: "The action request has been approved.",
@@ -197,12 +197,12 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
   }
 
   const handleRejectRequest = (requestId: string) => {
-    const updatedRequests = requests.map(req => 
+    const updatedRequests = requests.map(req =>
       req.id === requestId ? { ...req, status: 'rejected' as const } : req
     )
     setRequests(updatedRequests)
     localStorage.setItem('actionRequests', JSON.stringify(updatedRequests))
-    
+
     toast({
       title: "Request rejected",
       description: "The action request has been rejected.",
@@ -235,19 +235,19 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
     )
   }
 
-  if (!hasPolicyCreated) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <Alert className="bg-zinc-900 border-zinc-800">
-          <AlertCircle className="h-4 w-4 text-orange-500" />
-          <AlertDescription className="text-zinc-400">
-            You need to create a token policy first before creating action requests.
-            Please go to the Token Policy section to create one.
-          </AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
+  // if (!hasPolicyCreated) {
+  //   return (
+  //     <div className="container mx-auto px-4 py-6">
+  //       <Alert className="bg-zinc-900 border-zinc-800">
+  //         <AlertCircle className="h-4 w-4 text-orange-500" />
+  //         <AlertDescription className="text-zinc-400">
+  //           You need to create a token policy first before creating action requests.
+  //           Please go to the Token Policy section to create one.
+  //         </AlertDescription>
+  //       </Alert>
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="space-y-6">
@@ -283,7 +283,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                 <p className="text-xs text-zinc-400">All time</p>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-zinc-800 border-zinc-700">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-sm">Pending</CardTitle>
@@ -295,7 +295,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                 <p className="text-xs text-zinc-400">Awaiting approval</p>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-zinc-800 border-zinc-700">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-sm">Approved</CardTitle>
@@ -324,7 +324,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
             Submit a new action request using the new_request function
           </p>
         </div>
-        
+
         <div className="p-6">
           <div className="bg-zinc-800 rounded-lg p-4 mb-6">
             <h4 className="text-white font-medium mb-2">Function Signature</h4>
@@ -359,7 +359,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <Label htmlFor="requestName" className="text-zinc-300">
                   Request Name*
@@ -373,7 +373,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="requestAmount" className="text-zinc-300">
@@ -388,7 +388,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-blue-500 mt-1"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="requestRecipient" className="text-zinc-300">
                   Recipient Address*
@@ -402,7 +402,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                 />
               </div>
             </div>
-            
+
             <div>
               <Label htmlFor="requestDescription" className="text-zinc-300">
                 Description (Optional)
@@ -416,7 +416,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                 rows={3}
               />
             </div>
-            
+
             <Button
               type="submit"
               disabled={isCreatingRequest}
@@ -451,7 +451,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
             View and manage your submitted action requests
           </p>
         </div>
-        
+
         <div className="p-6">
           {requests.length === 0 ? (
             <div className="text-center text-zinc-400 py-8">
@@ -483,18 +483,17 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                         </div>
                       </div>
                       <div className="flex items-center text-xs text-zinc-500">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium mr-2 ${
-                          request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                          request.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                          'bg-red-500/20 text-red-400'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium mr-2 ${request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            request.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                              'bg-red-500/20 text-red-400'
+                          }`}>
                           {request.status}
                         </span>
                         <Clock className="h-3 w-3 mr-1" />
                         <span>{new Date(request.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    
+
                     {request.status === 'pending' && (
                       <div className="flex items-center space-x-2">
                         <Button

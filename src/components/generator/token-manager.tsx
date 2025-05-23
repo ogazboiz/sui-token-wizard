@@ -65,7 +65,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
         const parsedTokenData = JSON.parse(tokenData)
         setHasCreatedToken(true)
         setIsClosedLoopToken(parsedTokenData.type === "closed-loop")
-        
+
         // Check if policy exists for closed-loop tokens
         if (parsedTokenData.type === "closed-loop") {
           const policyData = localStorage.getItem('tokenPolicy')
@@ -109,7 +109,8 @@ export default function TokenManager({ network }: TokenManagerProps) {
       icon: <Plus className="w-5 h-5" />,
       isActive: activeTool === "action-requests",
       isNew: hasCreatedToken && isClosedLoopToken && hasPolicyCreated,
-      comingSoon: !hasCreatedToken || !isClosedLoopToken || !hasPolicyCreated,
+      comingSoon: !hasCreatedToken || !isClosedLoopToken,
+      // || !hasPolicyCreated,
       route: `/generator/${network}/action-requests`,
       showOnlyForClosedLoop: true,
       requiresPolicy: true,

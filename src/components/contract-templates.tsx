@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,7 +22,7 @@ interface ContractTemplatesProps {
   isLandingPage?: boolean
   selectedTemplate?: string | null
   onTemplateSelect?: (templateId: string | null) => void
-  onTokenCreated?: (tokenData: any) => void
+  onTokenCreated?: (tokenData: { name: string; symbol: string; supply: number; [key: string]: unknown }) => void
 }
 interface ContractTemplate {
   id: string

@@ -110,6 +110,22 @@ public entry fun update_icon_url(
     coin::update_icon_url(treasury_cap, metadata, icon_url)
 }
 
+public entry fun update_metadata(
+    treasury_cap: &TreasuryCap<MY_COIN>,
+    metadata: &mut CoinMetadata<MY_COIN>,
+    name: string::String,
+    symbol: ascii::String,
+    description: string::String,
+    icon_url: Option<ascii::String>,
+) {
+    coin::update_name(treasury_cap, metadata, name);
+    coin::update_symbol(treasury_cap, metadata, symbol);
+    coin::update_description(treasury_cap, metadata, description);
+    if (option::is_some(&icon_url)) {
+        coin::update_icon_url(treasury_cap, metadata, option::destroy_some(icon_url));
+    }
+}
+
 #[test]
 public fun test_mint() {
     let user = @0xA;

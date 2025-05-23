@@ -15,7 +15,8 @@ import { Transaction } from "@mysten/sui/transactions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, Shield, Pause, ScrollText, Plus } from "lucide-react"
-import { deriveFullCoinType, getMetadataField } from "@/components/hooks/getData"
+import { deriveCoinType, deriveFullCoinType, getMetadataField } from "@/components/hooks/getData"
+import { CoinMetadata } from "@mysten/sui/client"
 
 interface TokenPageProps {
   network: string
@@ -51,25 +52,37 @@ export default function TokenPage({ network }: TokenPageProps) {
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
-  // reuse useDeriveCoinType later properly everywhere after localstorage is removed
-
-  // Token data state
   const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [tokenLoaded, setTokenLoaded] = useState(false)
+  const [metadata, setMetadata] = useState<CoinMetadata | null>(null)
 
-  let derivedFullCoinType: string | undefined;
+  let derivedCoinType: string | undefined;
 
   if (tokenData) {
-    deriveFullCoinType(suiClient, tokenData).then((result) => {
-      derivedFullCoinType = result;
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
       console.log("Derived coin type:", result);
     });
-
-    //if you put the string literall here, it works
-    getMetadataField(suiClient, derivedFullCoinType?.toString() || "").then((metadata) => {
-      console.log("Metadata:", metadata);
-    });
   }
+
+  useEffect(() => {
+    if (!tokenData) return;
+
+    const fetchMetadata = async () => {
+      try {
+        const derivedFullCoinType = await deriveFullCoinType(suiClient, tokenData);
+        console.log("Derived coin type:", derivedFullCoinType);
+
+        const metadata = await getMetadataField(suiClient, derivedFullCoinType);
+        console.log("Metadata:", metadata);
+        setMetadata(metadata);
+      } catch (err) {
+        console.error("Error fetching metadata:", err);
+      }
+    };
+
+    fetchMetadata();
+  }, [tokenData, suiClient]);
 
 
 
@@ -166,20 +179,15 @@ export default function TokenPage({ network }: TokenPageProps) {
       const tx = new Transaction()
       tx.setGasBudget(10_000_000)
 
-      // Prepare updated values - only change the specific field
-      const updatedName = editMode === 'name' ? editValue : tokenData.name
-      const updatedSymbol = editMode === 'symbol' ? editValue : tokenData.symbol
-      const updatedDescription = editMode === 'description' ? editValue : tokenData.description
+      // const updatedValue = editValue;
 
       tx.moveCall({
-        target: `${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::update_metadata`,
+        target: `${derivedCoinType}::update_${editMode}`,
         arguments: [
+          tx.object(tokenData.treasuryCap),
           tx.object(tokenData.metadata),
-          tx.pure.string(updatedName),
-          tx.pure.string(updatedSymbol),
-          tx.pure.string(updatedDescription),
+          tx.pure.string(editValue),
         ],
-        typeArguments: [`${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::${tokenData.symbol.toUpperCase()}`]
       })
 
       signAndExecute(
@@ -198,9 +206,7 @@ export default function TokenPage({ network }: TokenPageProps) {
             if (res.effects?.status.status === "success") {
               const updatedTokenData = {
                 ...tokenData,
-                name: updatedName,
-                symbol: updatedSymbol,
-                description: updatedDescription
+                [editMode]: editValue,
               }
 
               setTokenData(updatedTokenData)
@@ -254,14 +260,13 @@ export default function TokenPage({ network }: TokenPageProps) {
       tx.setGasBudget(10_000_000)
 
       tx.moveCall({
-        target: `${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::update_metadata`,
+        target: `${derivedCoinType}::update_metadata`,
         arguments: [
           tx.object(tokenData.metadata),
           tx.pure.string(editForm.name),
           tx.pure.string(editForm.symbol),
           tx.pure.string(editForm.description),
         ],
-        typeArguments: [`${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::${tokenData.symbol.toUpperCase()}`]
       })
 
       signAndExecute(
@@ -378,10 +383,10 @@ export default function TokenPage({ network }: TokenPageProps) {
               <div className="flex-1">
                 <CardTitle className="text-xl font-bold flex flex-col">
                   <span className="bg-gradient-to-r from-teal-400 to-teal-500 bg-clip-text text-transparent capitalize">
-                    {tokenData?.name} ({tokenData?.symbol})
+                    {metadata?.name} ({metadata?.symbol})
                   </span>
                 </CardTitle>
-                <CardDescription className="text-zinc-400 capitalize">{tokenData?.description}</CardDescription>
+                <CardDescription className="text-zinc-400 capitalize">{metadata?.description}</CardDescription>
 
                 {/* Token Type Badge */}
                 <div className="mt-3">
@@ -490,7 +495,7 @@ export default function TokenPage({ network }: TokenPageProps) {
               />
               <InfoCard
                 label="Metadata"
-                value={tokenData?.metadata || ""}
+                value={metadata?.id || ""}
                 isCopyable
                 explorer={`https://suiscan.xyz/${network}/object/${tokenData?.metadata}`}
                 onCopy={copyToClipboard}
@@ -498,7 +503,7 @@ export default function TokenPage({ network }: TokenPageProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <InfoCard label="Decimals" value={tokenData?.decimal || "9"} />
+              <InfoCard label="Decimals" value={String(metadata?.decimals )|| "9"} />
               <InfoCard
                 label="Transaction"
                 value={tokenData?.txId || ""}

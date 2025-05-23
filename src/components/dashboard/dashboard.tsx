@@ -20,7 +20,7 @@ export default function Dashboard({ network }: { network: string }) {
   const [activeTab, setActiveTab] = useState("tokens")
   const [tokens, setTokens] = useState<Token[]>([])
   const [nftCollections, setNftCollections] = useState<NFTCollection[]>([])
-  const [isLoading, `setIsLoading`] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const suiClient = useSuiClient()
 
@@ -35,7 +35,7 @@ export default function Dashboard({ network }: { network: string }) {
   useEffect(() => {
     const fetchTokenData = async () => {
       try {
-        `setIsLoading`(true)
+        setIsLoading(true)
 
         if (coinData?.data) {
           // Filter tokens
@@ -110,7 +110,7 @@ export default function Dashboard({ network }: { network: string }) {
         setError("Failed to load token data")
         console.error("Error fetching token data:", err)
       } finally {
-        `setIsLoading`(false)
+        setIsLoading(false)
       }
     }
     if (account?.address && coinData) {

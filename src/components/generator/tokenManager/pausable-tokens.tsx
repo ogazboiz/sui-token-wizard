@@ -53,7 +53,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
   let derivedCoinType: string | undefined;
 
   if (tokenData) {
-    deriveCoinType(suiClient, tokenData).then((result) => {
+    deriveCoinType(suiClient, tokenData.newPkgId).then((result) => {
       derivedCoinType = result;
       console.log("Derived coin type:", result);
     });

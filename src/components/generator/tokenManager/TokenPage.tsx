@@ -15,33 +15,11 @@ import { Transaction } from "@mysten/sui/transactions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, Shield, Pause, ScrollText, Plus } from "lucide-react"
-import { deriveCoinType, deriveFullCoinType, getMetadataField, Token, useGetAllCoins } from "@/components/hooks/getData"
+import { getMetadataField, getTokenData, Token, TokenData, useGetAllCoins } from "@/components/hooks/getData"
 import { CoinMetadata } from "@mysten/sui/client"
 
 interface TokenPageProps {
   network: string
-}
-
-interface TokenData {
-  name: string
-  symbol: string
-  description: string
-  decimal: string
-  newPkgId: string
-  txId: string
-  owner: string
-  treasuryCap: string
-  metadata: string
-  denyCap?: string
-  type?: string
-  features?: {
-    burnable?: boolean
-    mintable?: boolean
-    pausable?: boolean
-    denylist?: boolean
-    allowlist?: boolean
-    transferRestrictions?: boolean
-  }
 }
 
 type EditMode = 'name' | 'symbol' | 'description' | 'all' | null
@@ -53,21 +31,22 @@ export default function TokenPage({ network }: TokenPageProps) {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
   const [isLoading, setIsLoading] = useState(false)
-  const [tokens, setTokens] = useState<Token[]>([])
-  const [tokenData, setTokenData] = useState<TokenData | null>(null)
+  const [token, setToken] = useState<Token>()
   const [tokenLoaded, setTokenLoaded] = useState(false)
   const [metadata, setMetadata] = useState<CoinMetadata | null>(null)
+  const [targetModule, setTargetModule] = useState("")
+  const [moduleName, setModuleName] = useState("")
+  const [packageId, setPackageId] = useState("")
+  const [tokenData, setTokenData] = useState<TokenData | null>(null)
 
   const { data: coinData, isLoading: coinsLoading } = useGetAllCoins(account?.address || "")
-
+    ;
   useEffect(() => {
-    const fetchTokenData = async () => {
+    const fetchToken = async () => {
       try {
         setIsLoading(true)
 
         if (coinData?.data) {
-          // Filter tokens
-          // Replace your filteredTokens logic with this inside your async function:
           const filteredTokens = await Promise.all(
             coinData.data
               .filter((token) =>
@@ -97,10 +76,18 @@ export default function TokenPage({ network }: TokenPageProps) {
                 }
               })
           );
-
+          setTokenLoaded(true)
           // @ts-expect-error: type interface ish
-          setTokens(filteredTokens);
-          console.log("Filtered tokens:", filteredTokens);
+          setToken(filteredTokens[0]);
+          const tgtMod = filteredTokens[0]?.address.split("::").slice(0, 2).join("::");
+          const modName = filteredTokens[0]?.address.split("::")[1];
+          const pkgId = filteredTokens[0]?.address.split("::")[0];
+          setTargetModule(tgtMod || "");
+          setModuleName(modName || "");
+          setPackageId(pkgId || "");
+          // console.log("Module name:", modName);
+          // console.log("Target module:", tgtMod);
+          // console.log("Filtered tokens:", filteredTokens[0]);
         }
       } catch (error) {
         console.error("Error:", error);
@@ -109,29 +96,19 @@ export default function TokenPage({ network }: TokenPageProps) {
       }
     };
     if (account?.address && coinData) {
-      fetchTokenData()
+      fetchToken()
     }
   }, [account?.address, coinData, network, suiClient])
 
-
-  let derivedCoinType: string | undefined;
-
-  if (tokenData) {
-    deriveCoinType(suiClient, tokenData.newPkgId).then((result) => {
-      derivedCoinType = result;
-      console.log("Derived coin type:", result);
-    });
-  }
-
   useEffect(() => {
-    if (!tokenData) return;
-
+    if (!token) return;
+    // console.log(packageId, account?.address, token.address);
+    getTokenData(suiClient, packageId, account?.address || "", token.address).then((data) => {
+      setTokenData(data);
+    });
     const fetchMetadata = async () => {
       try {
-        const derivedFullCoinType = await deriveFullCoinType(suiClient, tokenData.newPkgId);
-        console.log("Derived coin type:", derivedFullCoinType);
-
-        const metadata = await getMetadataField(suiClient, derivedFullCoinType);
+        const metadata = await getMetadataField(suiClient, token?.address);
         console.log("Metadata:", metadata);
         setMetadata(metadata);
       } catch (err) {
@@ -140,7 +117,7 @@ export default function TokenPage({ network }: TokenPageProps) {
     };
 
     fetchMetadata();
-  }, [tokenData, suiClient]);
+  }, [token, suiClient, packageId, account?.address]);
 
   // Modal and edit state
   const [showEditModal, setShowEditModal] = useState(false)
@@ -152,21 +129,6 @@ export default function TokenPage({ network }: TokenPageProps) {
     description: ""
   })
   const [isUpdating, setIsUpdating] = useState(false)
-
-  useEffect(() => {
-    // Check localStorage for token data when component mounts
-    const savedTokenData = localStorage.getItem("tokenData")
-    if (savedTokenData) {
-      const parsedData = JSON.parse(savedTokenData)
-      setTokenData(parsedData)
-      setEditForm({
-        name: parsedData.name || "",
-        symbol: parsedData.symbol || "",
-        description: parsedData.description || ""
-      })
-      setTokenLoaded(true)
-    }
-  }, [])
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -186,22 +148,22 @@ export default function TokenPage({ network }: TokenPageProps) {
   }
 
   const openEditModal = (mode: EditMode) => {
-    if (!tokenData) return
+    if (!token) return
 
     setEditMode(mode)
     setShowEditModal(true)
 
     if (mode === 'name') {
-      setEditValue(tokenData.name)
+      setEditValue(token.name)
     } else if (mode === 'symbol') {
-      setEditValue(tokenData.symbol)
+      setEditValue(token.symbol)
     } else if (mode === 'description') {
-      setEditValue(tokenData.description)
+      setEditValue(token.description)
     } else if (mode === 'all') {
       setEditForm({
-        name: tokenData.name,
-        symbol: tokenData.symbol,
-        description: tokenData.description
+        name: token.name,
+        symbol: token.symbol,
+        description: token.description
       })
     }
   }
@@ -211,14 +173,14 @@ export default function TokenPage({ network }: TokenPageProps) {
     setEditMode(null)
     setEditValue("")
     setEditForm({
-      name: tokenData?.name || "",
-      symbol: tokenData?.symbol || "",
-      description: tokenData?.description || ""
+      name: token?.name || "",
+      symbol: token?.symbol || "",
+      description: token?.description || ""
     })
   }
 
   const handleSingleFieldSave = async () => {
-    if (!tokenData || !account || !editMode || editMode === 'all') return
+    if (!token || !account || !editMode || editMode === 'all') return
 
     if (!editValue.trim()) {
       toast({
@@ -238,10 +200,10 @@ export default function TokenPage({ network }: TokenPageProps) {
       // const updatedValue = editValue;
 
       tx.moveCall({
-        target: `${derivedCoinType}::update_${editMode}`,
+        target: `${token?.address}::update_${editMode}`,
         arguments: [
-          tx.object(tokenData.treasuryCap),
-          tx.object(tokenData.metadata),
+          tx.object(tokenData?.treasuryCap || ""),
+          tx.object(metadata?.id || ""),
           tx.pure.string(editValue),
         ],
       })
@@ -260,13 +222,13 @@ export default function TokenPage({ network }: TokenPageProps) {
             })
 
             if (res.effects?.status.status === "success") {
-              const updatedTokenData = {
-                ...tokenData,
+              const updatedToken = {
+                ...token,
                 [editMode]: editValue,
               }
 
-              setTokenData(updatedTokenData)
-              localStorage.setItem('tokenData', JSON.stringify(updatedTokenData))
+              setToken(updatedToken)
+              localStorage.setItem('token', JSON.stringify(updatedToken))
               closeEditModal()
 
               toast({
@@ -298,7 +260,7 @@ export default function TokenPage({ network }: TokenPageProps) {
   }
 
   const handleAllFieldsSave = async () => {
-    if (!tokenData || !account) return
+    if (!token || !account) return
 
     if (!editForm.name.trim() || !editForm.symbol.trim() || !editForm.description.trim()) {
       toast({
@@ -316,9 +278,9 @@ export default function TokenPage({ network }: TokenPageProps) {
       tx.setGasBudget(10_000_000)
 
       tx.moveCall({
-        target: `${derivedCoinType}::update_metadata`,
+        target: `${targetModule}::update_metadata`,
         arguments: [
-          tx.object(tokenData.metadata),
+          tx.object(metadata?.id || ""),
           tx.pure.string(editForm.name),
           tx.pure.string(editForm.symbol),
           tx.pure.string(editForm.description),
@@ -339,15 +301,15 @@ export default function TokenPage({ network }: TokenPageProps) {
             })
 
             if (res.effects?.status.status === "success") {
-              const updatedTokenData = {
-                ...tokenData,
+              const updatedToken = {
+                ...token,
                 name: editForm.name,
                 symbol: editForm.symbol,
                 description: editForm.description
               }
 
-              setTokenData(updatedTokenData)
-              localStorage.setItem('tokenData', JSON.stringify(updatedTokenData))
+              setToken(updatedToken)
+              localStorage.setItem('token', JSON.stringify(updatedToken))
               closeEditModal()
 
               toast({
@@ -378,8 +340,23 @@ export default function TokenPage({ network }: TokenPageProps) {
     }
   }
 
+  const getTokenType = (module: string) => {
+    if (module === "my_coin") return "standard";
+    if (module.includes("regulated")) return "regulated";
+    if (module.includes("token")) return "closed-loop";
+    return "Unknown";
+  }
+
+  const isPausable = (module: string) => {
+    return module.includes("p_reg")
+  }
+
+  const isRegulated = (module: string) => {
+    return module.includes("reg")
+  }
+
   const canEdit = () => {
-    return tokenData && tokenData.type !== "closed-loop"
+    return token && getTokenType(moduleName) !== "closed-loop"
   }
 
   const getModalTitle = () => {
@@ -412,7 +389,7 @@ export default function TokenPage({ network }: TokenPageProps) {
   }
 
   // Render no token found message if no token data is available
-  if (tokenLoaded && !tokenData) {
+  if (tokenLoaded && !token) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
         <Terminal className="h-4 w-4 text-teal-500" />
@@ -448,24 +425,24 @@ export default function TokenPage({ network }: TokenPageProps) {
               <div className="flex-1">
                 <CardTitle className="text-xl font-bold flex flex-col">
                   <span className="bg-gradient-to-r from-teal-400 to-teal-500 bg-clip-text text-transparent capitalize">
-                    {metadata?.name} ({metadata?.symbol})
+                    {token?.name} ({token?.symbol})
                   </span>
                 </CardTitle>
-                <CardDescription className="text-zinc-400 capitalize">{metadata?.description}</CardDescription>
+                <CardDescription className="text-zinc-400 capitalize">{token?.description}</CardDescription>
 
                 {/* Token Type Badge */}
                 <div className="mt-3">
-                  {tokenData?.type === "closed-loop" && (
+                  {getTokenType(moduleName) === "closed-loop" && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">
                       Closed-Loop Token
                     </span>
                   )}
-                  {tokenData?.type === "regulated" && (
+                  {getTokenType(moduleName) === "regulated" && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400">
                       Regulated Token
                     </span>
                   )}
-                  {(!tokenData?.type || tokenData?.type === "standard") && (
+                  {(!getTokenType(moduleName) || getTokenType(moduleName) === "standard") && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
                       Standard Token
                     </span>
@@ -523,7 +500,7 @@ export default function TokenPage({ network }: TokenPageProps) {
             )}
 
             {/* Notice for closed-loop tokens */}
-            {tokenData?.type === "closed-loop" && (
+            {getTokenType(moduleName) === "closed-loop" && (
               <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
                 <p className="text-emerald-400 text-sm">
                   ℹ️ Closed-loop tokens have immutable metadata. Name, symbol, and description cannot be changed after creation.
@@ -536,9 +513,9 @@ export default function TokenPage({ network }: TokenPageProps) {
             <div className="grid grid-cols-2 gap-4">
               <InfoCard
                 label="Package ID"
-                value={tokenData?.newPkgId || ""}
+                value={token?.address.split("::")[0] || ""}
                 isCopyable
-                explorer={`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`}
+                explorer={`https://suiscan.xyz/${network}/object/${token?.address.split("::")[0]}`}
                 onCopy={copyToClipboard}
               />
               <InfoCard
@@ -553,16 +530,16 @@ export default function TokenPage({ network }: TokenPageProps) {
             <div className="grid grid-cols-2 gap-4">
               <InfoCard
                 label="Owner"
-                value={tokenData?.owner || ""}
+                value={account?.address || ""}
                 isCopyable
-                explorer={`https://suiscan.xyz/${network}/object/${tokenData?.owner}`}
+                explorer={`https://suiscan.xyz/${network}/object/${account?.address}`}
                 onCopy={copyToClipboard}
               />
               <InfoCard
                 label="Metadata"
-                value={metadata?.id || ""}
+                value={metadata?.id || "metadata"}
                 isCopyable
-                explorer={`https://suiscan.xyz/${network}/object/${tokenData?.metadata}`}
+                explorer={`https://suiscan.xyz/${network}/object/${metadata?.id}`}
                 onCopy={copyToClipboard}
               />
             </div>
@@ -571,27 +548,27 @@ export default function TokenPage({ network }: TokenPageProps) {
               <InfoCard label="Decimals" value={String(metadata?.decimals) || "9"} />
               <InfoCard
                 label="Transaction"
-                value={tokenData?.txId || ""}
+                value={tokenData?.txId || "txId"}
                 isCopyable
                 explorer={`https://suiscan.xyz/${network}/tx/${tokenData?.txId}`}
                 onCopy={copyToClipboard}
               />
             </div>
 
-            {(tokenData?.type === "regulated" || tokenData?.type === "closed-loop") && tokenData.features && (
+            {(getTokenType(moduleName) === "regulated" || getTokenType(moduleName) === "closed-loop") && (
               <div className="mt-4 border-t border-zinc-800 pt-4">
                 <h3 className="text-sm font-medium mb-3">Token Features</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <FeatureItem name="Mintable" enabled={tokenData.features?.mintable || false} />
-                  <FeatureItem name="Burnable" enabled={tokenData.features?.burnable || false} />
-                  {tokenData.type !== "closed-loop" && (
-                    <FeatureItem name="Pausable" enabled={tokenData.features?.pausable || false} />
+                  <FeatureItem name="Mintable" enabled={true} />
+                  <FeatureItem name="Burnable" enabled={true} />
+                  {getTokenType(moduleName) !== "closed-loop" && (
+                    <FeatureItem name="Pausable" enabled={isPausable(moduleName)} />
                   )}
-                  <FeatureItem name="Denylist" enabled={tokenData.features?.denylist || false} />
-                  {tokenData.type === "closed-loop" && (
+                  <FeatureItem name="Denylist" enabled={isRegulated(moduleName)} />
+                  {getTokenType(moduleName) === "closed-loop" && (
                     <>
-                      <FeatureItem name="Allowlist" enabled={tokenData.features?.allowlist || false} />
-                      <FeatureItem name="Transfer Restrictions" enabled={tokenData.features?.transferRestrictions || false} />
+                      <FeatureItem name="Allowlist" enabled={true} />
+                      <FeatureItem name="Transfer Restrictions" enabled={true} />
                     </>
                   )}
                 </div>
@@ -605,7 +582,7 @@ export default function TokenPage({ network }: TokenPageProps) {
           <CardHeader>
             <CardTitle className="text-xl">Token Management</CardTitle>
             <CardDescription className="text-zinc-400">
-              Manage your {tokenData?.name} token with the following operations
+              Manage your {token?.name} token with the following operations
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -631,7 +608,7 @@ export default function TokenPage({ network }: TokenPageProps) {
 
             {/* Advanced Features Grid */}
             <div className="grid sm:grid-cols-2 gap-4">
-              {tokenData?.type === "closed-loop" && (
+              {getTokenType(moduleName) === "closed-loop" && (
                 <>
                   <ActionCard
                     title="Token Policy"
@@ -653,9 +630,9 @@ export default function TokenPage({ network }: TokenPageProps) {
                 </>
               )}
 
-              {tokenData?.type === "regulated" && tokenData.features && (
+              {getTokenType(moduleName) === "regulated" && (
                 <>
-                  {tokenData.features.denylist && (
+                  {isRegulated(moduleName) && (
                     <ActionCard
                       title="Denylist Management"
                       description="Block or unblock addresses from transferring tokens"
@@ -666,7 +643,7 @@ export default function TokenPage({ network }: TokenPageProps) {
                     />
                   )}
 
-                  {tokenData.features.pausable && (
+                  {isPausable(moduleName) && (
                     <ActionCard
                       title="Pause/Unpause"
                       description="Control token transfers in case of emergency"

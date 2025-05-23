@@ -71,7 +71,7 @@ export default function FaqSection() {
             transition={{ delay: index * 0.1 }}
           >
             <button
-              className="w-full px-6 py-4 text-left flex justify-between items-center"
+              className="w-full cursor-pointer px-6 py-4 text-left flex justify-between items-center"
               onClick={() => toggleFaq(index)}
             >
               <span className="font-medium text-white">{item.question}</span>

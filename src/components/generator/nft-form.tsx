@@ -187,7 +187,7 @@ export default function NftForm({ network }: NftFormProps) {
         <div className="max-w-2xl mx-auto">
           <Button
             variant="ghost"
-            className="mb-6 text-zinc-400 hover:text-white"
+            className="mb-6 text-zinc-400 cursor-pointer hover:text-white"
             onClick={() => router.push("/nft/generate")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to networks
@@ -201,7 +201,7 @@ export default function NftForm({ network }: NftFormProps) {
               <div className="mt-4 flex justify-center">
                 <ConnectButton
                   connectText="Connect Wallet to Continue"
-                  className="bg-purple-500 hover:bg-purple-600 text-white"
+                  className="bg-purple-500 cursor-pointer hover:bg-purple-600 text-white"
                 />
               </div>
             </AlertDescription>
@@ -216,7 +216,7 @@ export default function NftForm({ network }: NftFormProps) {
       <div className="max-w-2xl mx-auto">
         <Button
           variant="ghost"
-          className="mb-6 text-zinc-400 hover:text-white"
+          className="mb-6 text-zinc-400 cursor-pointer hover:text-white"
           onClick={() => router.push("/nft/generate")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to networks
@@ -344,7 +344,7 @@ export default function NftForm({ network }: NftFormProps) {
                     variant="outline"
                     size="sm"
                     onClick={handleAddAttribute}
-                    className="text-purple-400 border-purple-400 hover:bg-purple-400/10"
+                    className="text-purple-400 cursor-pointer border-purple-400 hover:bg-purple-400/10"
                   >
                     <Plus className="h-4 w-4 mr-1" /> Add Attribute
                   </Button>
@@ -374,7 +374,7 @@ export default function NftForm({ network }: NftFormProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemoveAttribute(index)}
-                        className="text-zinc-400 hover:text-red-400"
+                        className="text-zinc-400 cursor-pointer hover:text-red-400"
                         disabled={attributes.length === 1}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -442,7 +442,7 @@ export default function NftForm({ network }: NftFormProps) {
             <Button
               type="submit"
               onClick={handleSubmit}
-              className="w-full bg-purple-500 hover:bg-purple-600 text-white py-6 h-auto text-lg"
+              className="w-full bg-purple-500 cursor-pointer hover:bg-purple-600 text-white py-6 h-auto text-lg"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

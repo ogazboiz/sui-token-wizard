@@ -169,7 +169,7 @@ export default function BlogSection() {
         {/* Navigation Buttons - Always visible */}
         <button
           onClick={handlePrev}
-          className="absolute left-2 md:-left-4 top-1/2 -translate-y-1/2 z-20 bg-zinc-800/80 hover:bg-zinc-700 rounded-full p-2 text-white transition-colors shadow-lg"
+          className="absolute cursor-pointer left-2 md:-left-4 top-1/2 -translate-y-1/2 z-20 bg-zinc-800/80 hover:bg-zinc-700 rounded-full p-2 text-white transition-colors shadow-lg"
           aria-label="Previous slide"
         >
           <ChevronLeft size={24} />
@@ -177,7 +177,7 @@ export default function BlogSection() {
         
         <button
           onClick={handleNext}
-          className="absolute right-2 md:-right-4 top-1/2 -translate-y-1/2 z-20 bg-zinc-800/80 hover:bg-zinc-700 rounded-full p-2 text-white transition-colors shadow-lg"
+          className="absolute right-2 cursor-pointer md:-right-4 top-1/2 -translate-y-1/2 z-20 bg-zinc-800/80 hover:bg-zinc-700 rounded-full p-2 text-white transition-colors shadow-lg"
           aria-label="Next slide"
         >
           <ChevronRight size={24} />

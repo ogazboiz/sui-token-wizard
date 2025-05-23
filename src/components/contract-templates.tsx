@@ -172,7 +172,7 @@ export default function ContractTemplates({
                 <div className="mt-4 flex justify-center">
                   <ConnectButton
                     connectText="Connect Wallet"
-                    className="bg-teal-500 hover:bg-teal-600 text-white"
+                    className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white"
                   />
                 </div>
               </AlertDescription>
@@ -244,7 +244,7 @@ export default function ContractTemplates({
               </div>
               <Button
                 onClick={() => handleTemplateClick(template.id)}
-                className={`w-full ${
+                className={`w-full cursor-pointer ${
                   template.id === "regulated"
                     ? "bg-teal-500 hover:bg-teal-600 text-white"
                     : template.id === "closed-loop"

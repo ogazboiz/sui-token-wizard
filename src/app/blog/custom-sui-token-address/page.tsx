@@ -294,7 +294,7 @@ export default function BlogPost() {
                     </h3>
                     <p className="text-zinc-400 m-0">Get started in minutes with our easy-to-use platform.</p>
                   </div>
-                  <Button size="lg" className="bg-purple-500 hover:bg-purple-600 text-white" asChild>
+                  <Button size="lg" className="cursor-pointer bg-purple-500 hover:bg-purple-600 text-white" asChild>
                     <Link href="/generator/mainnet" className="flex items-center">
                       Get Started
                       <ArrowRight className="ml-2 h-4 w-4" />

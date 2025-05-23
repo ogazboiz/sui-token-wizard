@@ -102,7 +102,7 @@ export default function TokenForm({ network }: TokenFormProps) {
       <div className="max-w-2xl mx-auto">
         <Button
           variant="ghost"
-          className="mb-6 text-zinc-400 hover:text-white"
+          className="mb-6 text-zinc-400 cursor-pointer hover:text-white"
           onClick={() => router.push("/generate")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to networks
@@ -264,7 +264,7 @@ export default function TokenForm({ network }: TokenFormProps) {
             <div className="pt-4">
               <Button
                 type="submit"
-                className="w-full bg-teal-500 hover:bg-teal-600 text-white py-6 h-auto text-lg"
+                className="w-full bg-teal-500 hover:bg-teal-600 cursor-pointer text-white py-6 h-auto text-lg"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (

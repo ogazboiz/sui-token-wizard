@@ -232,7 +232,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
     >
       <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
+          <Button variant="ghost" size="icon" onClick={onBack} className="mr-2 cursor-pointer">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h2 className="text-xl font-bold text-white">Create token on {getNetworkName()}</h2>
@@ -525,7 +525,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
             <div className="pt-4 space-y-2">
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white"
                 disabled={isPending || isCreatingToken}
               >
                 {isPending || isCreatingToken ? (
@@ -540,7 +540,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
               <Button
                 type="button"
                 variant="outline"
-                className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                className="w-full border-zinc-700 cursor-pointer text-zinc-300 hover:bg-zinc-800 hover:text-white"
                 disabled={isPending || isCreatingToken}
               >
                 Create on testnet for FREE
@@ -551,7 +551,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
               <div className="text-zinc-400">
                 Price: <span className="text-emerald-400">0.05 SUI</span>
               </div>
-              <Button variant="link" className="text-emerald-400 p-0 h-auto">
+              <Button variant="link" className="text-emerald-400 cursor-pointer p-0 h-auto">
                 Activate promocode
               </Button>
             </div>

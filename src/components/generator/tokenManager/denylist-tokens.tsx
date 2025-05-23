@@ -273,7 +273,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
           You haven&apos;t created any tokens yet or token data was lost. Please create a new token.
           <div className="mt-4">
             <Button
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white"
               onClick={() => window.location.href = `/generator/${network}`}
             >
               Create a Token
@@ -294,7 +294,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
           The denylist feature is not available for this token. This feature is only available for regulated tokens with the denylist feature enabled.
           <div className="mt-4">
             <Button
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white"
               onClick={() => window.location.href = `/generator/${network}/token`}
             >
               Back to Token Page
@@ -337,7 +337,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 ml-1"
+                  className="h-6 w-6 ml-1 cursor-pointer "
                   onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`, '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 text-zinc-400" />
@@ -353,7 +353,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 ml-1"
+                  className="h-6 w-6 ml-1 cursor-pointer"
                   onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.denyCap}`, '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 text-zinc-400" />
@@ -386,7 +386,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
 
                 <Button
                   type="submit"
-                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  className="w-full bg-red-600 cursor-pointer hover:bg-red-700 text-white"
                   disabled={isAddPending}
                 >
                   {isAddPending ? (
@@ -428,7 +428,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
 
                 <Button
                   type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-green-600 cursor-pointer hover:bg-green-700 text-white"
                   disabled={isRemovePending}
                 >
                   {isRemovePending ? (
@@ -460,7 +460,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        className="text-red-400 cursor-pointer hover:text-red-300 hover:bg-red-900/20"
                         onClick={() => handleRemoveSpecificAddress(address)}
                       >
                         <X className="h-4 w-4 mr-1" />
@@ -481,7 +481,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
             onClick={() => window.location.href = `/generator/${network}/token`}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -491,7 +491,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
             onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`, '_blank')}
           >
             View on Explorer

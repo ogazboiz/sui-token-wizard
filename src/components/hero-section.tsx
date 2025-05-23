@@ -598,14 +598,14 @@ export default function LandingHeroSection() {
           {/* Tab switcher - repositioned for mobile */}
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 flex bg-zinc-800/80 rounded-full backdrop-blur-sm border border-zinc-700/30">
             <motion.button
-              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${activeTab === "tokens" ? "bg-teal-500/20 text-teal-400" : "text-zinc-400 hover:text-zinc-200"}`}
+              className={`px-3 cursor-pointer py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${activeTab === "tokens" ? "bg-teal-500/20 text-teal-400" : "text-zinc-400 hover:text-zinc-200"}`}
               onClick={() => setActiveTab("tokens")}
               whileTap={{ scale: 0.97 }}
             >
               Tokens
             </motion.button>
             <motion.button
-              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${activeTab === "nft" ? "bg-violet-500/20 text-violet-400" : "text-zinc-400 hover:text-zinc-200"}`}
+              className={`px-3 cursor-pointer py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${activeTab === "nft" ? "bg-violet-500/20 text-violet-400" : "text-zinc-400 hover:text-zinc-200"}`}
               onClick={() => setActiveTab("nft")}
               whileTap={{ scale: 0.97 }}
             >
@@ -696,7 +696,7 @@ export default function LandingHeroSection() {
                 <motion.div variants={buttonVariants}>
                   <Button
                     onClick={handleCreateAction}
-                    className={`${activeTab === "tokens" ? "bg-teal-500 hover:bg-teal-600" : "bg-violet-500 hover:bg-violet-600"} text-white px-4 py-2 sm:px-6 rounded-lg`}
+                    className={`cursor-pointer ${activeTab === "tokens" ? "bg-teal-500 hover:bg-teal-600" : "bg-violet-500 hover:bg-violet-600"} text-white px-4 py-2 sm:px-6 rounded-lg`}
                   >
                     <PlusCircle className="mr-2" size={18} />
                     Create {activeTab === "tokens" ? "Token" : "NFT Collection"}

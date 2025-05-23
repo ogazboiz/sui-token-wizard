@@ -242,7 +242,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
           You haven&apos;t created any tokens yet or token data was lost. Please create a new token.
           <div className="mt-4">
             <Button
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white"
               onClick={() => window.location.href = `/generator/${network}`}
             >
               Create a Token
@@ -263,7 +263,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
           The pausable feature is not available for this token. This feature is only available for regulated tokens with the pausable feature enabled.
           <div className="mt-4">
             <Button
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white"
               onClick={() => window.location.href = `/generator/${network}/token`}
             >
               Back to Token Page
@@ -307,7 +307,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 ml-1"
+                    className="h-6 w-6 ml-1 cursor-pointer"
                     onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.treasuryCap}`, '_blank')}
                   >
                     <ExternalLink className="h-3 w-3 text-zinc-400" />
@@ -325,7 +325,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 ml-1"
+                    className="h-6 w-6 ml-1 cursor-pointer"
                     onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.denyCap}`, '_blank')}
                   >
                     <ExternalLink className="h-3 w-3 text-zinc-400" />
@@ -366,7 +366,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
               <div className="flex flex-col gap-4">
                 {isPaused ? (
                   <Button
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    className="w-full bg-green-600 cursor-pointer hover:bg-green-700 text-white"
                     disabled={isPending}
                     onClick={handleUnpauseToken}
                   >
@@ -384,7 +384,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
                   </Button>
                 ) : (
                   <Button
-                    className="w-full bg-red-600 hover:bg-red-700 text-white"
+                    className="w-full bg-red-600 cursor-pointer hover:bg-red-700 text-white"
                     disabled={isPending}
                     onClick={handlePauseToken}
                   >
@@ -439,7 +439,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
             onClick={() => window.location.href = `/generator/${network}/token`}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -449,7 +449,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
+            className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
             onClick={() => tokenData?.newPkgId && window.open(`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`, '_blank')}
           >
             View on Explorer

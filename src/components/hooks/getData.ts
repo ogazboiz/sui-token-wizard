@@ -3,7 +3,44 @@ import { useSuiClient, useSuiClientQuery } from "@mysten/dapp-kit";
 import { SuiClient } from "@mysten/sui/client";
 import { normalizeSuiAddress } from "@mysten/sui/utils";
 
-interface TokenData {
+// Interface for token and NFT data
+export interface Token {
+    id: string
+    name: string
+    symbol: string
+    decimals: number
+    description: string
+    network: string
+    supply: string
+    address: string
+    createdAt: string
+    type: string
+    status: string
+}
+
+export interface NFTCollection {
+    id: string;
+    name: string;
+    symbol: string;
+    network: string;
+    supply: string;
+    minted: string;
+    address: string;
+    owner: string | {
+        AddressOwner: string;
+    } | {
+        ObjectOwner: string;
+    } | {
+        Shared: {
+            initial_shared_version: string;
+        };
+    };
+    createdAt: string;
+    image: string;
+    status: string;
+}
+
+export interface TokenData {
     newPkgId: string;
     symbol: string;
     name?: string;
@@ -26,11 +63,10 @@ interface TokenData {
 // Utility functions
 export async function deriveCoinType(
     suiClient: SuiClient,
-    tokenData: TokenData,
+    newPkgId: string,
 ): Promise<string> {
-    const { newPkgId, symbol } = tokenData;
 
-    if (!newPkgId || !symbol) {
+    if (!newPkgId) {
         throw new Error("newPkgId and symbol are required in tokenData");
     }
 
@@ -65,11 +101,10 @@ export async function deriveCoinType(
 
 export async function deriveFullCoinType(
     suiClient: SuiClient,
-    tokenData: TokenData,
+    newPkgId: string,
 ): Promise<string> {
-    const { newPkgId, symbol } = tokenData;
 
-    if (!newPkgId || !symbol) {
+    if (!newPkgId) {
         throw new Error("newPkgId and symbol are required in tokenData");
     }
 

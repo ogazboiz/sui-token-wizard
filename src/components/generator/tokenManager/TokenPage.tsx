@@ -15,7 +15,7 @@ import { Transaction } from "@mysten/sui/transactions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, Shield, Pause, ScrollText, Plus } from "lucide-react"
-import { deriveCoinType, deriveFullCoinType, getMetadataField } from "@/components/hooks/getData"
+import { deriveCoinType, deriveFullCoinType, getMetadataField, Token, useGetAllCoins } from "@/components/hooks/getData"
 import { CoinMetadata } from "@mysten/sui/client"
 
 interface TokenPageProps {
@@ -52,14 +52,72 @@ export default function TokenPage({ network }: TokenPageProps) {
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
+  const [isLoading, setIsLoading] = useState(false)
+  const [tokens, setTokens] = useState<Token[]>([])
   const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [tokenLoaded, setTokenLoaded] = useState(false)
   const [metadata, setMetadata] = useState<CoinMetadata | null>(null)
 
+  const { data: coinData, isLoading: coinsLoading } = useGetAllCoins(account?.address || "")
+
+  useEffect(() => {
+    const fetchTokenData = async () => {
+      try {
+        setIsLoading(true)
+
+        if (coinData?.data) {
+          // Filter tokens
+          // Replace your filteredTokens logic with this inside your async function:
+          const filteredTokens = await Promise.all(
+            coinData.data
+              .filter((token) =>
+                token.coinType.includes("p_regulated_coin") ||
+                token.coinType.includes("u_regulated_coin") ||
+                token.coinType.includes("my_coin")
+              )
+              .map(async (token, index) => {
+                try {
+                  const tokenMetadata = await getMetadataField(suiClient, token.coinType);
+                  return {
+                    id: `token-${index}`,
+                    name: tokenMetadata?.name?.split("::") || "Unknown Token",
+                    symbol: tokenMetadata?.symbol || "UNK",
+                    network,
+                    supply: token.balance || "0",
+                    decimals: tokenMetadata?.decimals || 0,
+                    description: tokenMetadata?.description || "No description",
+                    address: token.coinType,
+                    createdAt: new Date().toISOString().split("T")[0],
+                    type: "fungible",
+                    status: "active",
+                  };
+                } catch (error) {
+                  console.error("Error:", error);
+                  return null;
+                }
+              })
+          );
+
+          // @ts-expect-error: type interface ish
+          setTokens(filteredTokens);
+          console.log("Filtered tokens:", filteredTokens);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (account?.address && coinData) {
+      fetchTokenData()
+    }
+  }, [account?.address, coinData, network, suiClient])
+
+
   let derivedCoinType: string | undefined;
 
   if (tokenData) {
-    deriveCoinType(suiClient, tokenData).then((result) => {
+    deriveCoinType(suiClient, tokenData.newPkgId).then((result) => {
       derivedCoinType = result;
       console.log("Derived coin type:", result);
     });
@@ -70,7 +128,7 @@ export default function TokenPage({ network }: TokenPageProps) {
 
     const fetchMetadata = async () => {
       try {
-        const derivedFullCoinType = await deriveFullCoinType(suiClient, tokenData);
+        const derivedFullCoinType = await deriveFullCoinType(suiClient, tokenData.newPkgId);
         console.log("Derived coin type:", derivedFullCoinType);
 
         const metadata = await getMetadataField(suiClient, derivedFullCoinType);
@@ -83,8 +141,6 @@ export default function TokenPage({ network }: TokenPageProps) {
 
     fetchMetadata();
   }, [tokenData, suiClient]);
-
-
 
   // Modal and edit state
   const [showEditModal, setShowEditModal] = useState(false)
@@ -336,6 +392,15 @@ export default function TokenPage({ network }: TokenPageProps) {
     }
   }
 
+  if (isLoading || coinsLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <ClipLoader size={40} color="#14b8a6" />
+        <span className="ml-4 text-zinc-300">Loading token data...</span>
+      </div>
+    )
+  }
+
   // Render loading state if token data isn't loaded yet
   if (!tokenLoaded) {
     return (
@@ -503,7 +568,7 @@ export default function TokenPage({ network }: TokenPageProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <InfoCard label="Decimals" value={String(metadata?.decimals )|| "9"} />
+              <InfoCard label="Decimals" value={String(metadata?.decimals) || "9"} />
               <InfoCard
                 label="Transaction"
                 value={tokenData?.txId || ""}

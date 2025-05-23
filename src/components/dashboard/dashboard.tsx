@@ -11,52 +11,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit"
-import { getMetadataField, useGetAllCoins, useGetAllNftsByOwner } from "../hooks/getData"
+import { getMetadataField, NFTCollection, Token, useGetAllCoins, useGetAllNftsByOwner } from "../hooks/getData"
 import { ClipLoader } from "react-spinners"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import Link from "next/link"
 
-// Interface for token and NFT data
-interface Token {
-  id: string
-  name: string
-  symbol: string
-  decimals: number
-  description: string
-  network: string
-  supply: string
-  address: string
-  createdAt: string
-  type: string
-  status: string
-}
-
-interface NFTCollection {
-  id: string;
-  name: string;
-  symbol: string;
-  network: string;
-  supply: string;
-  minted: string;
-  address: string;
-  owner: string | {
-    AddressOwner: string;
-  } | {
-    ObjectOwner: string;
-  } | {
-    Shared: {
-      initial_shared_version: string;
-    };
-  };
-  createdAt: string;
-  image: string;
-  status: string;
-}
 export default function Dashboard({ network }: { network: string }) {
   const [activeTab, setActiveTab] = useState("tokens")
   const [tokens, setTokens] = useState<Token[]>([])
   const [nftCollections, setNftCollections] = useState<NFTCollection[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, `setIsLoading`] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const suiClient = useSuiClient()
 
@@ -71,7 +35,7 @@ export default function Dashboard({ network }: { network: string }) {
   useEffect(() => {
     const fetchTokenData = async () => {
       try {
-        setIsLoading(true)
+        `setIsLoading`(true)
 
         if (coinData?.data) {
           // Filter tokens
@@ -146,7 +110,7 @@ export default function Dashboard({ network }: { network: string }) {
         setError("Failed to load token data")
         console.error("Error fetching token data:", err)
       } finally {
-        setIsLoading(false)
+        `setIsLoading`(false)
       }
     }
     if (account?.address && coinData) {

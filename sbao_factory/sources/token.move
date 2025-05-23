@@ -47,6 +47,22 @@ fun init(otw: TOKEN, ctx: &mut TxContext) {
     transfer::public_transfer(policy_cap, tx_context::sender(ctx));
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+public fun mint(treasury_cap: &mut TreasuryCap<TOKEN>, amount: u64, ctx: &mut TxContext): Token<TOKEN> {
+    token::mint(treasury_cap, amount, ctx)
+}
 //create ext func for ->
 //mint
 //transfer (requires confirmation)

@@ -67,8 +67,8 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
   };
 
   const validateForm = () => {
-    const { tokenName, tokenSymbol, description, decimals, initialSupply, maxSupply } = formData;
-    if (!tokenName || !tokenSymbol || !description || !decimals || !initialSupply || !maxSupply) {
+    const { tokenName, tokenSymbol, description, decimals } = formData;
+    if (!tokenName || !tokenSymbol || !description || !decimals) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -321,7 +321,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                 <p className="mt-1 text-xs text-zinc-500">A brief description of your token&#39;s purpose</p>
               </div>
 
-              <div>
+              {/* <div>
                 <Label htmlFor="initialSupply" className="flex items-center text-zinc-300">
                   Initial Supply*
                   <TooltipProvider>
@@ -371,7 +371,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                   min="0"
                 />
                 <p className="mt-1 text-xs text-zinc-500">The maximum number of tokens available</p>
-              </div>
+              </div> */}
             </div>
 
             <div className="space-y-2 pt-4">

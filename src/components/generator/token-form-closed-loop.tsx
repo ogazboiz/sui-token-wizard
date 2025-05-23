@@ -66,14 +66,14 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!tokenName || !tokenSymbol || !decimals || !description || !initialSupply || !maxSupply) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      })
-      return
-    }
+    // if (!tokenName || !tokenSymbol || !decimals || !description || !initialSupply || !maxSupply) {
+    //   toast({
+    //     title: "Missing fields",
+    //     description: "Please fill in all required fields",
+    //     variant: "destructive",
+    //   })
+    //   return
+    // }
 
     // Set creating state
     setIsCreatingToken(true)
@@ -91,19 +91,61 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
       description: "Your advanced token is being created. Please wait...",
     })
 
-    try {
-      // can the bytecode for closed loop be updated?
-      const { updatedBytes } = await updatePRegCoin(tokenName, tokenSymbol, description, Number(decimals));
-      await publishNewBytecode(updatedBytes);
-    } catch (err) {
-      console.error("Closed-loop token creation failed:", err);
-      setIsCreatingToken(false)
-      toast({
-        title: "Token creation failed",
-        description: "An error occurred while creating your token",
-        variant: "destructive",
-      })
+    // ...existing code...
+    // Create token data object to save
+    const tokenData = {
+      name: tokenName || "Demo Token",
+      symbol: tokenSymbol || "DEMO",
+      description: description || `Demo - Closed-Loop Token`,
+      decimal: decimals || 3,
+      newPkgId: "0xpkgId",
+      txId: "0xtxId",
+      treasuryCap: "0xtrCap",
+      denyCap,
+      type: "closed-loop",
+      features: {
+        burnable,
+        mintable,
+        pausable: false, // Always false for closed-loop
+        denylist,
+        allowlist,
+        transferRestrictions
+      }
     }
+
+    // Save token data to localStorage
+    localStorage.setItem('tokenData', JSON.stringify(tokenData))
+
+    // Save token data to localStorage
+    localStorage.setItem('tokenData', JSON.stringify(tokenData))
+    // ...existing code...
+
+    setTimeout(() => {
+      toast({
+        title: "Token created successfully!",
+        description: "Your closed-loop token has been created and is ready to use.",
+      })
+    }, 2000)
+
+    // Redirect to token page
+    setTimeout(() => {
+      router.push(`/generator/${network}/token`)
+    }, 1000)
+
+
+    // try {
+    //   // can the bytecode for closed loop be updated?
+    //   const { updatedBytes } = await updatePRegCoin(tokenName, tokenSymbol, description, Number(decimals));
+    //   await publishNewBytecode(updatedBytes);
+    // } catch (err) {
+    //   console.error("Closed-loop token creation failed:", err);
+    //   setIsCreatingToken(false)
+    //   toast({
+    //     title: "Token creation failed",
+    //     description: "An error occurred while creating your token",
+    //     variant: "destructive",
+    //   })
+    // }
   }
 
   const publishNewBytecode = async (updatedBytes: Uint8Array) => {

@@ -3,19 +3,6 @@ import { useSuiClient, useSuiClientQuery } from "@mysten/dapp-kit";
 import { SuiClient } from "@mysten/sui/client";
 import { normalizeSuiAddress } from "@mysten/sui/utils";
 
-// Interfaces
-interface NFT {
-    data: {
-        type: string;
-        display?: {
-            data: Record<string, string> | null;
-        };
-        objectId: string;
-        version: string;
-        digest: string;
-    };
-}
-
 interface TokenData {
     newPkgId: string;
     symbol: string;

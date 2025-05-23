@@ -14,6 +14,7 @@ import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit"
 import { getMetadataField, useGetAllCoins, useGetAllNftsByOwner } from "../hooks/getData"
 import { ClipLoader } from "react-spinners"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
+import Link from "next/link"
 
 // Interface for token and NFT data
 interface Token {
@@ -336,9 +337,10 @@ export default function Dashboard({ network }: { network: string }) {
                             <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => router.push(`/explorer/${token.address}`)}
                               >
-                                <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                <Link href={`https://suiscan.xyz/testnet/object/${token.address.split("::")[0]}`} target="_blank" rel="noopener noreferrer" className="flex">
+                                  <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
@@ -447,14 +449,15 @@ export default function Dashboard({ network }: { network: string }) {
                         </div>
                         <span>{collection.createdAt}</span>
                       </div>
+                      <Link href={`https://suiscan.xyz/testnet/object/${collection.address}`} className="w-full">
+                        <Button
+                          variant="outline"
+                          className="w-full mt-4 border-zinc-700 text-zinc-300 hover:text-white"
 
-                      <Button
-                        variant="outline"
-                        className="w-full mt-4 border-zinc-700 text-zinc-300 hover:text-white"
-                        onClick={() => router.push(`/collection/${collection.address}`)}
-                      >
-                        View Collection <ArrowUpRight className="ml-2 h-3 w-3" />
-                      </Button>
+                        >
+                          View Collection <ArrowUpRight className="ml-2 h-3 w-3" />
+                        </Button>
+                      </Link>
                     </div>
                   </motion.div>
                 ))}

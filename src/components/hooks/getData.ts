@@ -1,18 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSuiClient, useSuiClientQuery } from "@mysten/dapp-kit";
-import { CoinMetadata, SuiClient } from "@mysten/sui/client";
+import { SuiClient } from "@mysten/sui/client";
 import { normalizeSuiAddress } from "@mysten/sui/utils";
 
-interface UseCoinMetadataParams {
-    coinType: string;
-}
-
-interface UseCoinMetadataResult {
-    data: CoinMetadata | null | undefined;
-    isLoading: boolean;
-    error: Error | null;
-    isError: boolean;
-    refetch: () => void;
+// Interfaces
+interface NFT {
+    data: {
+        type: string;
+        display?: {
+            data: Record<string, string> | null;
+        };
+        objectId: string;
+        version: string;
+        digest: string;
+    };
 }
 
 interface TokenData {
@@ -35,32 +36,7 @@ interface TokenData {
     };
 }
 
-interface UseCoinMetadataParams {
-    coinType: string;
-    tokenData?: TokenData | null;
-}
-
-interface UseCoinMetadataResult {
-    data: CoinMetadata | null | undefined;
-    isLoading: boolean;
-    error: Error | null;
-    isError: boolean;
-    refetch: () => void;
-}
-
-interface UseDenyListParams {
-    denyCap: string;
-    coinType: string;
-}
-
-interface UseDenyListResult {
-    data: string[] | undefined;
-    isLoading: boolean;
-    error: Error | null;
-    isError: boolean;
-    refetch: () => void;
-}
-
+// Utility functions
 export async function deriveCoinType(
     suiClient: SuiClient,
     tokenData: TokenData,
@@ -74,7 +50,6 @@ export async function deriveCoinType(
     const normalizedPkgId = normalizeSuiAddress(newPkgId);
 
     try {
-        // Query the package to get its modules
         const packageObject = await suiClient.getObject({
             id: normalizedPkgId,
             options: { showContent: true },
@@ -85,152 +60,142 @@ export async function deriveCoinType(
         }
 
         const disassembled = packageObject.data?.content?.disassembled;
-        let disassembledModuleName;
-        if (disassembled && typeof disassembled === "object") {
-            const moduleNames = Object.keys(disassembled); // ['u_regulated_coin', ...]
-            // console.log("Module names:", moduleNames);
-            disassembledModuleName = moduleNames[0];
+        if (!disassembled || typeof disassembled !== "object") {
+            throw new Error("Package disassembly data not available");
         }
 
-        // Construct the coinType
-        return `${normalizedPkgId}::${disassembledModuleName}`;
+        const moduleNames = Object.keys(disassembled);
+        if (moduleNames.length === 0) {
+            throw new Error("No modules found in package");
+        }
+
+        const moduleName = moduleNames[0];
+        return `${normalizedPkgId}::${moduleName}`;
     } catch (err) {
         throw new Error(`Failed to derive coinType: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
 }
 
-// async function getPackageMetadata(packageId: string) {
-//   const response = await client.getObject({
-//     id: packageId,
-//     options: { showContent: true },
-//   });
-
-//   // The content field contains the MovePackage metadata
-//   return response.data?.content;
-// }
-
-export const useGetPackageMetadata = (packageId: string) => {
-    const suiClient = useSuiClient();
-    return useQuery({
-        queryKey: ["packageMetadata", packageId],
-        queryFn: async () => {
-            const metadata = await getMetadataField(suiClient, packageId);
-            return metadata;
-        }
-    });
+export async function deriveNftType(
+    suiClient: SuiClient,
+    tokenData: TokenData,
+): Promise<string> {
+    // This function is identical to deriveCoinType, so we can reuse it
+    return deriveCoinType(suiClient, tokenData);
 }
 
+ export async function getMetadataField(suiClient: SuiClient, objectId: string) {
+    const object = await suiClient.getCoinMetadata({
+        coinType: objectId
+    });
 
-export async function getMetadataField(suiClient: SuiClient, objectId: string) {
-    const object = await suiClient.getObject({ id: objectId, options: { showContent: true } });
-    if (!object.data) {
+    if (!object) {
         throw new Error("Object not found");
     }
-    // @ts-expect-error: Sui object content fields are not typed in the SDK
-    return object.data?.content?.fields;
+
+    return object;
 }
 
 export async function getDenyList(suiClient: SuiClient, denyCapId: string) {
-    const object = await suiClient.getObject({ id: denyCapId, options: { showContent: true } });
+    const object = await suiClient.getObject({
+        id: denyCapId,
+        options: { showContent: true }
+    });
+
     // @ts-expect-error: Sui object content fields are not typed in the SDK
     return object.data?.content?.fields;
 }
 
-// async function getAllCoins(suiClient: SuiClient, address: string) {
-//     const coins = await suiClient.getAllCoins({ owner: address });
-//     return coins.data;
-// }
+async function getAllNftsByOwner(suiClient: SuiClient, address: string) {
+    const response = await suiClient.getOwnedObjects({
+        owner: address,
+        options: {
+            showType: true,
+            showDisplay: true,
+            showContent: true,
+        },
+    });
+
+    // Filter out objects that are NFTs (not coins or other system objects)
+    // NFTs typically have custom types that don't start with "0x2::" (system modules)
+    return response.data.filter((item) => {
+        if (!item.data?.type) return false;
+        const type = item.data.type;
+        const isNFT = type.includes('nft::');
+
+        return isNFT;
+    });
+}
+
+async function getAllTokensByOwner(suiClient: SuiClient, address: string) {
+    const response = await suiClient.getOwnedObjects({
+        owner: address,
+        options: {
+            showType: true,
+            showDisplay: true,
+            showContent: true,
+        },
+    });
+
+    return response.data.filter((item) => {
+        if (!item.data?.type) return false;
+        const type = item.data.type;
+        const isCoin = type.startsWith('0x2::coin::Coin<');
+
+        return isCoin;
+    });
+}
+
+// Hooks
+export const useGetPackageMetadata = (packageId: string) => {
+    const suiClient = useSuiClient();
+
+    return useQuery({
+        queryKey: ["packageMetadata", packageId],
+        queryFn: () => getMetadataField(suiClient, packageId),
+        enabled: !!packageId,
+    });
+};
 
 export const useGetAllCoins = (address: string) => {
     const suiClient = useSuiClient();
 
     return useQuery({
-        queryKey: ['allCoins', address],
-        queryFn: async () => {
-            const coins = await suiClient.getAllCoins({
-                owner: address
-            });
-            return coins;
-        }
+        queryKey: ["allCoins", address],
+        queryFn: () => suiClient.getAllCoins({ owner: address }),
+        enabled: !!address,
     });
-}
+};
 
-async function getNftsByOwner(suiClient: SuiClient, address: string, nftType: string) {
-  const response = await suiClient.getOwnedObjects({
-    owner: address,
-    options: {
-      showType: true,
-      showDisplay: true,
-    },
-  });
+export const useGetAllNftsByOwner = (address: string) => {
+    const suiClient = useSuiClient();
 
-  // Filter objects by the NFT type
-  const nfts = response.data.filter(
-    (item) => item.data?.type === nftType
-  );
-
-  return nfts;
-}
-
-export const useGetNftsByOwner = (address: string, nftType: string) => {
-  const suiClient = useSuiClient();
-
-  return useQuery({
-    queryKey: ['nftsByOwner', address, nftType],
-    queryFn: async () => {
-      const nfts = await getNftsByOwner(suiClient, address, nftType);
-      return nfts;
-    }
-  });
-}
-
-// export function useFetchCounterNft(address: string, packageId: string) {
-
-//     // if (!account) {
-//     //     return { data: [] };
-//     // }
-
-//     const { data, isLoading, isError, error, refetch } = useSuiClientQuery(
-//         'getOwnedObjects',
-//         {
-//             owner: address,
-//             limit: 1,
-//             filter: {
-//                 MatchAll: [
-//                     {
-//                         StructType: `${packageId}::counter_nft::Counter`,
-//                     },
-//                     {
-//                         AddressOwner: address,
-//                     },
-//                 ],
-//             },
-//             options: {
-//                 showOwner: true,
-//                 showType: true,
-//             },
-//         },
-//         { queryKey: ['CounterNFT'] },
-//     );
-
-//     return {
-//         data: data && data.data.length > 0 ? data?.data : [],
-//         isLoading,
-//         isError,
-//         error,
-//         refetch,
-//     };
-// }
+    return useQuery({
+        queryKey: ["allNftsByOwner", address],
+        queryFn: () => getAllNftsByOwner(suiClient, address),
+        enabled: !!address,
+    });
+};
 
 
-export const useGetObjects = (account: string) => {
+export const useGetAllTokensByOwner = (address: string) => {
+    const suiClient = useSuiClient();
+
+    return useQuery({
+        queryKey: ["allTokensByOwner", address],
+        queryFn: () => getAllTokensByOwner(suiClient, address),
+        enabled: !!address,
+    });
+};
+
+export const useGetObjects = (account: { address: string }) => {
     const { data, isPending, error } = useSuiClientQuery(
         "getOwnedObjects",
         {
-            owner: account?.address as string,
+            owner: account?.address,
         },
         {
-            enabled: !!account,
+            enabled: !!account?.address,
         },
     );
 
@@ -239,21 +204,19 @@ export const useGetObjects = (account: string) => {
         isPending,
         error,
     };
-}
-
+};
 
 export const useGetTransactions = (address: string) => {
     const suiClient = useSuiClient();
+
     return useQuery({
-        queryKey: ['transactions', address],
-        queryFn: async () => {
-            const transactions = await suiClient.queryTransactionBlocks({
-                filter: {
-                    FromAddress: address
-                }
-            });
-            return transactions;
-        }
+        queryKey: ["transactions", address],
+        queryFn: () => suiClient.queryTransactionBlocks({
+            filter: {
+                FromAddress: address,
+            },
+        }),
+        enabled: !!address,
     });
 };
 
@@ -261,13 +224,9 @@ export const useGetBalance = (address: string) => {
     const suiClient = useSuiClient();
 
     return useQuery({
-        queryKey: ['balance', address],
-        queryFn: async () => {
-            const balance = await suiClient.getBalance({
-                owner: address
-            });
-            return balance;
-        }
+        queryKey: ["balance", address],
+        queryFn: () => suiClient.getBalance({ owner: address }),
+        enabled: !!address,
     });
 };
 
@@ -275,27 +234,18 @@ export const useGetOwnedObjects = (address: string) => {
     const suiClient = useSuiClient();
 
     return useQuery({
-        queryKey: ['objects', address],
-        queryFn: async () => {
-            const objects = await suiClient.getOwnedObjects({
-                owner: address
-            });
-            return objects;
-        }
+        queryKey: ["ownedObjects", address],
+        queryFn: () => suiClient.getOwnedObjects({ owner: address }),
+        enabled: !!address,
     });
 };
 
+export const useGetObject = (objectId: string) => {
+    const suiClient = useSuiClient();
 
-// export const useGetObject = (objectId: string) => {
-//     const suiClient = useSuiClient();
-
-//     return useQuery({
-//         queryKey: ['object', objectId],
-//         queryFn: async () => {
-//             const object = await suiClient.getObject({
-//                 id: objectId
-//             });
-//             return object;
-//         }
-//     });
-// };
+    return useQuery({
+        queryKey: ["object", objectId],
+        queryFn: () => suiClient.getObject({ id: objectId }),
+        enabled: !!objectId,
+    });
+};

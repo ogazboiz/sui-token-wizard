@@ -1,39 +1,204 @@
-import type { Metadata } from "next"
-import Link from "next/link"
 import { ArrowLeft, Calendar, Clock, User, ArrowRight, CheckCircle, AlertTriangle, Code } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import Navbar from "@/components/navbar"
+import Link from "next/link"
 
-export const metadata: Metadata = {
-  title: "How to Create a Custom Sui Token Address with a Prefix or Suffix | Sui Token Creator",
-  description:
-    "Learn how to create custom Sui token addresses with specific prefixes or suffixes to make your token more recognizable and branded.",
+// Custom SVG Components
+const HeroImage = () => (
+  <svg viewBox="0 0 1000 500" className="w-full h-full" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="heroGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{stopColor:"#ab47bc", stopOpacity:1}} />
+        <stop offset="50%" style={{stopColor:"#8e24aa", stopOpacity:1}} />
+        <stop offset="100%" style={{stopColor:"#6a1b9a", stopOpacity:1}} />
+      </linearGradient>
+      <linearGradient id="heroGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style={{stopColor:"#4fc3f7", stopOpacity:1}} />
+        <stop offset="100%" style={{stopColor:"#29b6f6", stopOpacity:1}} />
+      </linearGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feMerge> 
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#4fc3f7"/>
+      </marker>
+    </defs>
+    
+    {/* Background */}
+    <rect width="1000" height="500" fill="url(#heroGrad1)"/>
+    
+    {/* Geometric background pattern */}
+    <g opacity="0.1">
+      <circle cx="100" cy="100" r="50" fill="white"/>
+      <circle cx="900" cy="400" r="60" fill="white"/>
+      <circle cx="800" cy="80" r="30" fill="white"/>
+      <polygon points="200,300 250,250 300,300 250,350" fill="white"/>
+    </g>
+    
+    {/* Main content area */}
+    <rect x="100" y="150" width="800" height="200" rx="20" fill="white" opacity="0.95"/>
+    
+    {/* Title */}
+    <text x="500" y="100" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="36" fontWeight="bold" fill="white">Custom Token Address Creation</text>
+    
+    {/* Address examples */}
+    <g>
+      {/* Before arrow */}
+      <text x="150" y="200" fontFamily="Arial, sans-serif" fontSize="14" fontWeight="bold" fill="#8e24aa">Standard Address:</text>
+      <rect x="150" y="210" width="300" height="30" rx="15" fill="#f5f5f5" stroke="#8e24aa" strokeWidth="1"/>
+      <text x="300" y="230" textAnchor="middle" fontFamily="monospace" fontSize="10" fill="#666">0x3a7f8b2c9d4e5f6a8b9c0d1e2f3g4h5i...</text>
+      
+      {/* Arrow */}
+      <path d="M 480 225 L 520 225" stroke="#4fc3f7" strokeWidth="4" fill="none" markerEnd="url(#arrowhead)"/>
+      <text x="500" y="245" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="12" fontWeight="bold" fill="#4fc3f7">CUSTOMIZE</text>
+      
+      {/* After arrow */}
+      <text x="550" y="200" fontFamily="Arial, sans-serif" fontSize="14" fontWeight="bold" fill="#8e24aa">Custom Address:</text>
+      <rect x="550" y="210" width="300" height="30" rx="15" fill="url(#heroGrad2)" opacity="0.9"/>
+      <text x="700" y="230" textAnchor="middle" fontFamily="monospace" fontSize="10" fill="white" fontWeight="bold">0xCUSTOM...TOKEN</text>
+      
+      {/* Highlight custom parts */}
+      <rect x="565" y="215" width="60" height="20" rx="10" fill="#ff6b6b" opacity="0.8"/>
+      <text x="595" y="227" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="8" fontWeight="bold" fill="white">PREFIX</text>
+      
+      <rect x="780" y="215" width="55" height="20" rx="10" fill="#4ecdc4" opacity="0.8"/>
+      <text x="807" y="227" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="8" fontWeight="bold" fill="white">SUFFIX</text>
+    </g>
+    
+    {/* Bottom elements */}
+    <text x="500" y="290" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="16" fill="#8e24aa" fontWeight="bold">✨ Brand Recognition • 🔒 Trust Building • 🚀 Marketing Advantage</text>
+    
+    {/* Floating elements */}
+    <g filter="url(#glow)">
+      <circle cx="150" cy="350" r="8" fill="#4fc3f7" opacity="0.8"/>
+      <circle cx="850" cy="350" r="6" fill="#ff6b6b" opacity="0.8"/>
+      <circle cx="300" cy="400" r="5" fill="#4ecdc4" opacity="0.8"/>
+      <circle cx="700" cy="380" r="7" fill="#ab47bc" opacity="0.8"/>
+    </g>
+    
+    {/* SUI branding */}
+    <circle cx="50" cy="50" r="25" fill="white" opacity="0.9"/>
+    <text x="50" y="58" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="16" fontWeight="bold" fill="#8e24aa">SUI</text>
+  </svg>
+)
+
+const ContentImage = () => (
+  <svg viewBox="0 0 300 300" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="contentGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{stopColor:"#667eea", stopOpacity:1}} />
+        <stop offset="100%" style={{stopColor:"#764ba2", stopOpacity:1}} />
+      </linearGradient>
+      <linearGradient id="contentGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{stopColor:"#f093fb", stopOpacity:1}} />
+        <stop offset="100%" style={{stopColor:"#f5576c", stopOpacity:1}} />
+      </linearGradient>
+    </defs>
+    
+    {/* Background */}
+    <rect width="300" height="300" fill="url(#contentGrad1)"/>
+    
+    {/* Title */}
+    <text x="150" y="30" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="16" fontWeight="bold" fill="white">Address Patterns</text>
+    
+    {/* Pattern examples */}
+    {/* Pattern 1 */}
+    <rect x="20" y="50" width="260" height="35" rx="17" fill="white" opacity="0.9"/>
+    <text x="30" y="65" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="bold" fill="#667eea">Brand Prefix:</text>
+    <text x="150" y="75" textAnchor="middle" fontFamily="monospace" fontSize="9" fill="#333">0xMOON...a7f8b2c9d</text>
+    <rect x="40" y="68" width="35" height="12" rx="6" fill="#ff6b6b" opacity="0.8"/>
+    <text x="57" y="76" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="7" fontWeight="bold" fill="white">MOON</text>
+    
+    {/* Pattern 2 */}
+    <rect x="20" y="95" width="260" height="35" rx="17" fill="white" opacity="0.9"/>
+    <text x="30" y="110" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="bold" fill="#667eea">Repeating:</text>
+    <text x="150" y="120" textAnchor="middle" fontFamily="monospace" fontSize="9" fill="#333">0x888...888</text>
+    <rect x="40" y="113" width="25" height="12" rx="6" fill="#4ecdc4" opacity="0.8"/>
+    <text x="52" y="121" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="7" fontWeight="bold" fill="white">888</text>
+    <rect x="210" y="113" width="25" height="12" rx="6" fill="#4ecdc4" opacity="0.8"/>
+    <text x="222" y="121" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="7" fontWeight="bold" fill="white">888</text>
+    
+    {/* Pattern 3 */}
+    <rect x="20" y="140" width="260" height="35" rx="17" fill="white" opacity="0.9"/>
+    <text x="30" y="155" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="bold" fill="#667eea">Lucky Numbers:</text>
+    <text x="150" y="165" textAnchor="middle" fontFamily="monospace" fontSize="9" fill="#333">0x...420...69...</text>
+    <rect x="90" y="158" width="25" height="12" rx="6" fill="#ffd700" opacity="0.8"/>
+    <text x="102" y="166" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="7" fontWeight="bold" fill="white">420</text>
+    <rect x="180" y="158" width="20" height="12" rx="6" fill="#ffd700" opacity="0.8"/>
+    <text x="190" y="166" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="7" fontWeight="bold" fill="white">69</text>
+    
+    {/* Pattern 4 */}
+    <rect x="20" y="185" width="260" height="35" rx="17" fill="white" opacity="0.9"/>
+    <text x="30" y="200" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="bold" fill="#667eea">Custom Suffix:</text>
+    <text x="150" y="210" textAnchor="middle" fontFamily="monospace" fontSize="9" fill="#333">0x3a7f...TOKEN</text>
+    <rect x="210" y="203" width="40" height="12" rx="6" fill="#ab47bc" opacity="0.8"/>
+    <text x="230" y="211" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="7" fontWeight="bold" fill="white">TOKEN</text>
+    
+    {/* Central decorative element */}
+    <circle cx="150" cy="250" r="25" fill="url(#contentGrad2)" opacity="0.8"/>
+    <text x="150" y="256" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="12" fontWeight="bold" fill="white">0x</text>
+    
+    {/* Surrounding smaller circles */}
+    <circle cx="100" cy="250" r="8" fill="white" opacity="0.7"/>
+    <circle cx="200" cy="250" r="8" fill="white" opacity="0.7"/>
+    <circle cx="150" cy="200" r="6" fill="white" opacity="0.6"/>
+    <circle cx="150" cy="300" r="6" fill="white" opacity="0.6"/>
+    
+    {/* Bottom text */}
+    <text x="150" y="285" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="10" fill="white" opacity="0.8">Endless Possibilities</text>
+  </svg>
+)
+
+const Badge = ({ children, className = "" }) => (
+  <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${className}`}>
+    {children}
+  </span>
+)
+
+const Button = ({ children, size = "default", className = "", asChild, ...props }) => {
+  const sizeClasses = {
+    default: "px-4 py-2",
+    lg: "px-6 py-3 text-lg"
+  }
+  
+  if (asChild && props.children) {
+    return React.cloneElement(props.children, {
+      className: `inline-flex items-center justify-center rounded-md font-medium transition-colors ${sizeClasses[size]} ${className}`,
+      ...props
+    })
+  }
+  
+  return (
+    <button 
+      className={`inline-flex items-center justify-center rounded-md font-medium transition-colors ${sizeClasses[size]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  )
 }
 
 export default function BlogPost() {
   return (
     <div className="min-h-screen bg-zinc-950">
-      <Navbar />
-
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <Link href="/" className="inline-flex items-center text-teal-400 hover:text-teal-300 mb-6 transition-colors">
+        <Link href="/" className="mb-4">
+          <button className="inline-flex items-center text-teal-400 hover:text-teal-300 mb-6 transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to home
-          </Link>
+          </button>
+        </Link>
+          {/* Blog post container */}
 
           <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-xl overflow-hidden border border-zinc-800 shadow-xl">
             {/* Hero Image */}
             <div className="relative h-64 md:h-80 overflow-hidden">
-              <div
-                className="absolute inset-0 bg-center bg-cover"
-                style={{
-                  backgroundImage: "url('/placeholder.svg?height=500&width=1000')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              />
+              <div className="absolute inset-0">
+                <HeroImage />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/80 to-transparent" />
 
               {/* Floating badges */}
@@ -81,48 +246,44 @@ export default function BlogPost() {
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
                       Why Custom Token Addresses Matter
                     </h2>
-                    <p>
+                    <p className="text-zinc-300">
                       On the Sui blockchain, creating tokens with custom addresses is possible through a technique known
                       as "vanity addresses." These addresses can help with:
                     </p>
                     <ul className="space-y-2 my-6">
                       <li className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-purple-400 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>
+                        <span className="text-zinc-300">
                           <strong className="text-white">Brand recognition</strong> - Makes your token instantly
                           identifiable
                         </span>
                       </li>
                       <li className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-purple-400 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>
+                        <span className="text-zinc-300">
                           <strong className="text-white">Trust building</strong> - Shows attention to detail and
                           professionalism
                         </span>
                       </li>
                       <li className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-purple-400 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>
+                        <span className="text-zinc-300">
                           <strong className="text-white">Marketing advantage</strong> - Creates talking points and
                           memorability
                         </span>
                       </li>
                       <li className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-purple-400 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>
+                        <span className="text-zinc-300">
                           <strong className="text-white">Scam prevention</strong> - Helps users identify official tokens
                         </span>
                       </li>
                     </ul>
                   </div>
                   <div className="md:col-span-2 relative h-48 md:h-auto rounded-xl overflow-hidden bg-zinc-800">
-                    <div
-                      className="absolute inset-0 bg-center bg-cover"
-                      style={{
-                        backgroundImage: "url('/placeholder.svg?height=300&width=300')",
-                        backgroundSize: "cover",
-                      }}
-                    />
+                    <div className="absolute inset-0">
+                      <ContentImage />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent opacity-60" />
                   </div>
                 </div>
@@ -130,7 +291,7 @@ export default function BlogPost() {
                 <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent my-10" />
 
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Understanding Sui Token Addresses</h2>
-                <p>
+                <p className="text-zinc-300">
                   Before diving into the process of creating custom addresses, it's important to understand how Sui
                   token addresses work. Unlike some other blockchains, Sui uses object IDs as addresses, which are
                   32-byte (64 character) hexadecimal strings. These addresses typically start with "0x" followed by 64
@@ -248,32 +409,32 @@ export default function BlogPost() {
                 </div>
 
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Security Considerations</h2>
-                <p>When using custom addresses, always prioritize security:</p>
+                <p className="text-zinc-300">When using custom addresses, always prioritize security:</p>
                 <ul className="space-y-2 my-6">
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
+                    <span className="text-zinc-300">
                       <strong className="text-white">Never share your private key or seed phrase</strong> with anyone,
                       including tools that generate vanity addresses
                     </span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
+                    <span className="text-zinc-300">
                       <strong className="text-white">Use trusted tools</strong> for generating vanity addresses,
                       preferably open-source and audited ones
                     </span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
+                    <span className="text-zinc-300">
                       <strong className="text-white">Consider the trade-off</strong> between a perfect address and
                       security - sometimes a simpler pattern is safer
                     </span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
+                    <span className="text-zinc-300">
                       <strong className="text-white">Always verify the final address</strong> before making it public or
                       using it for important transactions
                     </span>
@@ -281,7 +442,7 @@ export default function BlogPost() {
                 </ul>
 
                 <h2 className="text-2xl md:text-3xl font-bold text-white mt-10 mb-6">Conclusion</h2>
-                <p>
+                <p className="text-zinc-300">
                   Creating a token with a custom address on the Sui Network can significantly enhance your project's
                   branding and recognition. Whether you use our platform's built-in feature or a specialized vanity
                   address generator, a memorable address can be a valuable asset for your token project.
@@ -294,11 +455,11 @@ export default function BlogPost() {
                     </h3>
                     <p className="text-zinc-400 m-0">Get started in minutes with our easy-to-use platform.</p>
                   </div>
-                  <Button size="lg" className="cursor-pointer bg-purple-500 hover:bg-purple-600 text-white" asChild>
-                    <Link href="/generator/mainnet" className="flex items-center">
+                  <Button size="lg" className="cursor-pointer bg-purple-500 hover:bg-purple-600 text-white">
+                    <div className="flex items-center">
                       Get Started
                       <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
+                    </div>
                   </Button>
                 </div>
               </div>

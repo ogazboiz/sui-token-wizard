@@ -202,7 +202,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
     >
       <div className="flex items-center justify-between border-b border-zinc-800 p-6">
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
+          <Button variant="ghost" size="icon" onClick={onBack} className="mr-2 cursor-pointer">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h2 className="text-xl font-bold text-white">Create Token on {getNetworkName()}</h2>
@@ -377,7 +377,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
             <div className="space-y-2 pt-4">
               <Button
                 type="submit"
-                className="w-full bg-purple-600 text-white hover:bg-purple-700"
+                className="w-full bg-purple-600 cursor-pointer text-white hover:bg-purple-700"
                 disabled={isPending || isCreatingToken}
               >
                 {isPending || isCreatingToken ? (
@@ -392,7 +392,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
               <Button
                 type="button"
                 variant="outline"
-                className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                className="w-full cursor-pointer border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
                 disabled={isPending || isCreatingToken}
               >
                 Create on Testnet for FREE
@@ -403,7 +403,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
               <div className="text-zinc-400">
                 Price: <span className="text-teal-400">0.01 SUI</span>
               </div>
-              <Button variant="link" className="h-auto p-0 text-purple-400">
+              <Button variant="link" className="h-auto cursor-pointer p-0 text-purple-400">
                 Activate Promocode
               </Button>
             </div>

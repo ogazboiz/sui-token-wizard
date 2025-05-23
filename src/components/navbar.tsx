@@ -130,7 +130,7 @@ export default function Navbar() {
             >
               <Button 
                 variant="ghost" 
-                className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+                className="text-zinc-300 cursor-pointer hover:text-white hover:bg-zinc-800"
                 onClick={() => setOpenDropdown(openDropdown === 'create' ? null : 'create')}
               >
                 Create <ChevronDown size={16} className="ml-1" />
@@ -142,13 +142,13 @@ export default function Navbar() {
                 }`}
               >
                 <button
-                  className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"
+                  className="w-full px-3 py-2  text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"
                   onClick={handleFungibleTokenClick}
                 >
                   Fungible Token
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"
+                  className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"
                   onClick={handleNftCollectionClick}
                 >
                   NFT Collection
@@ -164,7 +164,7 @@ export default function Navbar() {
             >
               <Button 
                 variant="ghost" 
-                className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+                className="text-zinc-300 cursor-pointer hover:text-white hover:bg-zinc-800"
                 onClick={() => setOpenDropdown(openDropdown === 'tools' ? null : 'tools')}
               >
                 Tools <ChevronDown size={16} className="ml-1" />
@@ -175,10 +175,10 @@ export default function Navbar() {
                   openDropdown === 'tools' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                 }`}
               >
-                <button className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
                   Explorer
                 </button>
-                <button className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
                   Gas Estimator
                 </button>
               </div>
@@ -192,7 +192,7 @@ export default function Navbar() {
             >
               <Button 
                 variant="ghost" 
-                className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+                className="text-zinc-300 cursor-pointer hover:text-white hover:bg-zinc-800"
                 onClick={() => setOpenDropdown(openDropdown === 'docs' ? null : 'docs')}
               >
                 Docs <ChevronDown size={16} className="ml-1" />
@@ -203,10 +203,10 @@ export default function Navbar() {
                   openDropdown === 'docs' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                 }`}
               >
-                <button className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
                   Getting Started
                 </button>
-                <button className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
                   API Reference
                 </button>
               </div>
@@ -214,7 +214,7 @@ export default function Navbar() {
 
             <Button
               variant="ghost"
-              className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+              className="text-zinc-300 cursor-pointer hover:text-white hover:bg-zinc-800"
               onClick={handleDashboardClick}
             >
               <User size={16} className="mr-2" /> Dashboard
@@ -230,7 +230,7 @@ export default function Navbar() {
                 onMouseLeave={handleMouseLeave}
               >
                 <Button 
-                  className="bg-zinc-800 hover:bg-zinc-700 text-white border-0 flex items-center gap-2"
+                  className="bg-zinc-800 cursor-pointer hover:bg-zinc-700 text-white border-0 flex items-center gap-2"
                   onClick={() => setOpenDropdown(openDropdown === 'wallet' ? null : 'wallet')}
                 >
                   <Wallet size={16} />
@@ -251,7 +251,7 @@ export default function Navbar() {
                       </div>
                       <button 
                         onClick={copyToClipboard} 
-                        className="p-1 rounded hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors duration-150"
+                        className="p-1 rounded cursor-pointer hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors duration-150"
                         title="Copy address"
                       >
                         {copySuccess ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
@@ -260,17 +260,17 @@ export default function Navbar() {
                   </div>
                   
                   <button 
-                    className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"
+                    className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"
                     onClick={handleDashboardClick}
                   >
                     My Tokens
                   </button>
-                  <button className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                  <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
                     Transaction History
                   </button>
                   <div className="border-t border-zinc-700 mt-1"></div>
                   <button 
-                    className="w-full px-3 py-2 text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"
+                    className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"
                     onClick={() => disconnect()}
                   >
                     Disconnect
@@ -280,11 +280,11 @@ export default function Navbar() {
             ) : (
               <ConnectButton 
                 connectText={typeof window !== 'undefined' && window.innerWidth < 640 ? "Connect" : "Connect Wallet"}
-                className="bg-teal-500 hover:bg-teal-600 text-white border-0"
+                className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white border-0"
               />
             )
           ) : (
-            <Button className="bg-teal-500 hover:bg-teal-600 text-white border-0" disabled>
+            <Button className="bg-teal-500  hover:bg-teal-600 text-white border-0" disabled>
               Loading...
             </Button>
           )}

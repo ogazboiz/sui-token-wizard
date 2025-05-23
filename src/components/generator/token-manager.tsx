@@ -5,11 +5,11 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText, Loader2, Pause, ScrollText, Droplets } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import {  } from "@/components/ui/"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
 import ContractTemplates from "@/components/contract-templates"
-import { ConnectButton } from "@mysten/dapp-kit"
+import { Connect } from "@mysten/dapp-kit"
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
 import { useRouter, usePathname } from "next/navigation"
 import TokenPage from "./tokenManager/TokenPage"
@@ -293,7 +293,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
             <AlertDescription className="text-zinc-400">
               You need to connect your wallet to create or manage tokens on {getNetworkName()}.
               <div className="mt-4 flex justify-center">
-                <ConnectButton
+                <Connect
                   connectText="Connect Wallet to Continue"
                   className="bg-teal-500 hover:bg-teal-600 text-white"
                 />
@@ -328,7 +328,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
           </div>
           <div className="p-2">
             {filteredTools.map((tool) => (
-              <button
+              <
                 key={tool.id}
                 className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
                   } ${tool.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
@@ -345,13 +345,13 @@ export default function TokenManager({ network }: TokenManagerProps) {
                   )}
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-50" />
-              </button>
+              </>
             ))}
           </div>
           <div className="p-4 mt-4 border-t border-zinc-800">
-            <Button variant="outline" className="w-full text-zinc-400 border-zinc-700 hover:text-white">
+            < variant="outline" className="w-full text-zinc-400 border-zinc-700 hover:text-white">
               Need other tools? Contact us
-            </Button>
+            </>
           </div>
         </div>
 

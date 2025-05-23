@@ -288,7 +288,7 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
             <Button
               onClick={handleCreatePolicy}
               disabled={isCreatingPolicy}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 cursor-pointer hover:bg-emerald-700 text-white"
             >
               {isCreatingPolicy ? (
                 <div className="flex items-center">

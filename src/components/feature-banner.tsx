@@ -29,7 +29,7 @@ export default function FeatureBanner() {
 
         <button
           onClick={() => setIsVisible(false)}
-          className="ml-4 text-zinc-400 hover:text-white transition-colors"
+          className="ml-4 cursor-pointer text-zinc-400 hover:text-white transition-colors"
           aria-label="Close banner"
         >
           <X size={18} />

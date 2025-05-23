@@ -102,7 +102,7 @@ export default function TokenModal({ isOpen, onClose }: TokenModalProps) {
               variant="ghost"
               size="icon"
               onClick={handleClose}
-              className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+              className="text-zinc-400 cursor-pointer hover:text-white hover:bg-zinc-800"
             >
               <X size={18} />
             </Button>
@@ -212,7 +212,7 @@ export default function TokenModal({ isOpen, onClose }: TokenModalProps) {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full bg-teal-500 hover:bg-teal-600 text-white mt-6">
+                <Button type="submit" className="w-full bg-teal-500 cursor-pointer hover:bg-teal-600 text-white mt-6">
                   Create Token
                 </Button>
               </form>
@@ -238,7 +238,7 @@ export default function TokenModal({ isOpen, onClose }: TokenModalProps) {
                 </div>
                 <h3 className="mt-6 text-xl font-medium text-white">Something went wrong</h3>
                 <p className="mt-2 text-zinc-400 text-center">We couldn&apos;t create your token. Please try again.</p>
-                <Button onClick={resetForm} className="mt-6 bg-zinc-800 hover:bg-zinc-700 text-white">
+                <Button onClick={resetForm} className="mt-6 bg-zinc-800 cursor-pointer hover:bg-zinc-700 text-white">
                   Try Again
                 </Button>
               </div>
@@ -259,7 +259,7 @@ export default function TokenModal({ isOpen, onClose }: TokenModalProps) {
                     <span className="text-teal-400 font-mono text-sm">0x1a2b...3c4d</span>
                   </div>
                 </div>
-                <Button onClick={handleClose} className="mt-6 bg-teal-500 hover:bg-teal-600 text-white">
+                <Button onClick={handleClose} className="mt-6 cursor-pointer bg-teal-500 hover:bg-teal-600 text-white">
                   Close
                 </Button>
               </div>

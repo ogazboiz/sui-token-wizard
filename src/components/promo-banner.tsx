@@ -35,7 +35,7 @@ export default function PromoBanner() {
 
         <button
           onClick={() => setIsVisible(false)}
-          className="ml-4 text-zinc-400 hover:text-white transition-colors"
+          className="ml-4 text-zinc-400 cursor-pointer hover:text-white transition-colors"
           aria-label="Close banner"
         >
           <X size={18} />

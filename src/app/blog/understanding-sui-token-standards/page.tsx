@@ -502,7 +502,7 @@ public fun mint_nft(
                     <h3 className="text-xl font-bold text-white mb-2">Ready to create your own token on Sui?</h3>
                     <p className="text-zinc-400 m-0">Get started in minutes with our easy-to-use platform.</p>
                   </div>
-                  <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white" asChild>
+                  <Button size="lg" className="bg-amber-500 cursor-pointer hover:bg-amber-600 text-white" asChild>
                     <Link href="/generator/mainnet" className="flex items-center">
                       Get Started
                       <ArrowRight className="ml-2 h-4 w-4" />

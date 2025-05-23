@@ -44,13 +44,13 @@ export default function EcosystemSection() {
       <p className="text-zinc-400 mt-4 mb-10">Connect with wallets or explore transactions seamlessly</p>
 
       <div className="flex justify-center gap-6">
-        <button onClick={() => setOpenType("wallets")} className="flex flex-col items-center gap-2">
+        <button onClick={() => setOpenType("wallets")} className="flex flex-col cursor-pointer items-center gap-2">
           <motion.div whileHover={{ scale: 1.1 }} className="bg-teal-500 text-white p-4 rounded-full">
             <Wallet size={28} />
           </motion.div>
           <span className="text-sm text-white">Wallets</span>
         </button>
-        <button onClick={() => setOpenType("explorers")} className="flex flex-col items-center gap-2">
+        <button onClick={() => setOpenType("explorers")} className="flex flex-col cursor-pointer items-center gap-2">
           <motion.div whileHover={{ scale: 1.1 }} className="bg-teal-500 text-white p-4 rounded-full">
             <Compass size={28} />
           </motion.div>

@@ -194,7 +194,7 @@ export default function Dashboard({ network }: { network: string }) {
           {error}. Please try again or contact support.
           <div className="mt-4">
             <Button
-              className="bg-teal-500 hover:bg-teal-600 text-white"
+              className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white"
               onClick={() => router.push(`/generator/${network}`)}
             >
               Create a Token
@@ -215,7 +215,7 @@ export default function Dashboard({ network }: { network: string }) {
         <div className="flex gap-3">
           <Button
             variant="outline"
-            className="border-zinc-700 text-zinc-300 hover:text-white"
+            className="border-zinc-700 text-zinc-300 cursor-pointer hover:text-white"
             onClick={() => router.push("/generate")}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -223,7 +223,7 @@ export default function Dashboard({ network }: { network: string }) {
           </Button>
           <Button
             variant="outline"
-            className="border-zinc-700 text-zinc-300 hover:text-white"
+            className="border-zinc-700 text-zinc-300 cursor-pointer hover:text-white"
             onClick={() => router.push("/nft/generate")}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -238,7 +238,7 @@ export default function Dashboard({ network }: { network: string }) {
             <TabsList className="flex h-14 bg-transparent border-b border-zinc-800">
               <TabsTrigger
                 value="tokens"
-                className="flex-1 h-full data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-teal-500 data-[state=active]:shadow-none rounded-none"
+                className="flex-1 h-full  data-[state=active]:border-b-2 data-[state=active]:border-teal-500 data-[state=active]:shadow-none rounded-none"
               >
                 <Coins className="mr-2 h-4 w-4" />
                 Tokens
@@ -319,7 +319,7 @@ export default function Dashboard({ network }: { network: string }) {
                               {token.address.slice(0, 6)}...{token.address.slice(-4)}
                             </span>
                             <button
-                              className="ml-2 text-zinc-500 hover:text-zinc-300"
+                              className="ml-2 text-zinc-500 cursor-pointer hover:text-zinc-300"
                               onClick={() => handleCopyAddress(token.address)}
                             >
                               <Copy size={14} />
@@ -330,7 +330,7 @@ export default function Dashboard({ network }: { network: string }) {
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
+                              <Button variant="ghost" size="icon" className="text-zinc-400 cursor-pointer hover:text-white">
                                 <MoreHorizontal size={16} />
                               </Button>
                             </DropdownMenuTrigger>
@@ -363,7 +363,7 @@ export default function Dashboard({ network }: { network: string }) {
                 <p className="text-zinc-400 text-center max-w-md mb-6">
                   You haven&apos;t created any tokens yet. Create your first token to get started.
                 </p>
-                <Button onClick={() => router.push("/generate")} className="bg-teal-500 hover:bg-teal-600 text-white">
+                <Button onClick={() => router.push("/generate")} className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white">
                   Create Token
                 </Button>
               </div>
@@ -403,7 +403,7 @@ export default function Dashboard({ network }: { network: string }) {
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white h-8 w-8">
+                            <Button variant="ghost" size="icon" className="text-zinc-400 cursor-pointer hover:text-white h-8 w-8">
                               <MoreHorizontal size={16} />
                             </Button>
                           </DropdownMenuTrigger>
@@ -441,7 +441,7 @@ export default function Dashboard({ network }: { network: string }) {
                             {collection.address.slice(0, 6)}...{collection.address.slice(-4)}
                           </span>
                           <button
-                            className="ml-1 text-zinc-500 hover:text-zinc-300"
+                            className="ml-1 text-zinc-500 cursor-pointer hover:text-zinc-300"
                             onClick={() => handleCopyAddress(collection.address)}
                           >
                             <Copy size={12} />
@@ -449,6 +449,8 @@ export default function Dashboard({ network }: { network: string }) {
                         </div>
                         <span>{collection.createdAt}</span>
                       </div>
+
+                    
                       <Link href={`https://suiscan.xyz/testnet/object/${collection.address}`} className="w-full">
                         <Button
                           variant="outline"
@@ -471,7 +473,7 @@ export default function Dashboard({ network }: { network: string }) {
                 </p>
                 <Button
                   onClick={() => router.push("/nft/generate")}
-                  className="bg-purple-500 hover:bg-purple-600 text-white"
+                  className="bg-purple-500 hover:bg-purple-600 cursor-pointer text-white"
                 >
                   Create NFT Collection
                 </Button>

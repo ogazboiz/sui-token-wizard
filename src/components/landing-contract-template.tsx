@@ -186,7 +186,7 @@ export default function LandingContractTemplates() {
 
               <Button
                 onClick={handleTemplateClick}
-                className={`w-full mt-auto ${
+                className={`w-full mt-auto cursor-pointer ${
                   template.id === "essential"
                     ? "bg-teal-500 hover:bg-teal-600 text-white"
                     : "bg-zinc-700 hover:bg-zinc-600 text-white"

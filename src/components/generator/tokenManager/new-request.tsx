@@ -420,7 +420,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
             <Button
               type="submit"
               disabled={isCreatingRequest}
-              className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+              className="bg-blue-600 hover:bg-blue-700 cursor-pointer text-white w-full"
             >
               {isCreatingRequest ? (
                 <div className="flex items-center">
@@ -501,7 +501,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => handleApproveRequest(request.id)}
-                          className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white"
+                          className="text-green-400 cursor-pointer border-green-400 hover:bg-green-400 hover:text-white"
                         >
                           <Check className="h-3 w-3 mr-1" />
                           Approve
@@ -510,7 +510,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => handleRejectRequest(request.id)}
-                          className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
+                          className="text-red-400 cursor-pointer border-red-400 hover:bg-red-400 hover:text-white"
                         >
                           <X className="h-3 w-3 mr-1" />
                           Reject

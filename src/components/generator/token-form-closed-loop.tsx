@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/components/ui/use-toast"
 import { Coins } from "@/components/ui/icons"
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
-import { useUpdatePRegCoin, useUpdateURegCoin } from "../hooks/updateCoin"
+import { useUpdateToken } from "../hooks/updateCoin"
 import { Transaction } from "@mysten/sui/transactions"
 import { normalizeSuiObjectId } from "@mysten/sui.js/utils"
 import { useRouter } from "next/navigation"
@@ -26,8 +26,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
   const router = useRouter()
   const { toast } = useToast()
   const suiClient = useSuiClient();
-  const updatePRegCoin = useUpdatePRegCoin;
-  const updateURegCoin = useUpdateURegCoin;
+  const updateToken = useUpdateToken;
   const account = useCurrentAccount();
   const { mutate: signAndExecute, isSuccess, isPending } = useSignAndExecuteTransaction();
 
@@ -66,14 +65,14 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // if (!tokenName || !tokenSymbol || !decimals || !description || !initialSupply || !maxSupply) {
-    //   toast({
-    //     title: "Missing fields",
-    //     description: "Please fill in all required fields",
-    //     variant: "destructive",
-    //   })
-    //   return
-    // }
+    if (!tokenName || !tokenSymbol || !decimals || !description) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      })
+      return
+    }
 
     // Set creating state
     setIsCreatingToken(true)
@@ -91,61 +90,19 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
       description: "Your advanced token is being created. Please wait...",
     })
 
-    // ...existing code...
-    // Create token data object to save
-    const tokenData = {
-      name: tokenName || "Demo Token",
-      symbol: tokenSymbol || "DEMO",
-      description: description || `Demo - Closed-Loop Token`,
-      decimal: decimals || 3,
-      newPkgId: "0xpkgId",
-      txId: "0xtxId",
-      treasuryCap: "0xtrCap",
-      denyCap,
-      type: "closed-loop",
-      features: {
-        burnable,
-        mintable,
-        pausable: false, // Always false for closed-loop
-        denylist,
-        allowlist,
-        transferRestrictions
-      }
-    }
-
-    // Save token data to localStorage
-    localStorage.setItem('tokenData', JSON.stringify(tokenData))
-
-    // Save token data to localStorage
-    localStorage.setItem('tokenData', JSON.stringify(tokenData))
-    // ...existing code...
-
-    setTimeout(() => {
+    try {
+      // can the bytecode for closed loop be updated?
+      const { updatedBytes } = await updateToken(tokenName, tokenSymbol, description, Number(decimals));
+      await publishNewBytecode(updatedBytes);
+    } catch (err) {
+      console.error("Closed-loop token creation failed:", err);
+      setIsCreatingToken(false)
       toast({
-        title: "Token created successfully!",
-        description: "Your closed-loop token has been created and is ready to use.",
+        title: "Token creation failed",
+        description: "An error occurred while creating your token",
+        variant: "destructive",
       })
-    }, 2000)
-
-    // Redirect to token page
-    setTimeout(() => {
-      router.push(`/generator/${network}/token`)
-    }, 1000)
-
-
-    // try {
-    //   // can the bytecode for closed loop be updated?
-    //   const { updatedBytes } = await updatePRegCoin(tokenName, tokenSymbol, description, Number(decimals));
-    //   await publishNewBytecode(updatedBytes);
-    // } catch (err) {
-    //   console.error("Closed-loop token creation failed:", err);
-    //   setIsCreatingToken(false)
-    //   toast({
-    //     title: "Token creation failed",
-    //     description: "An error occurred while creating your token",
-    //     variant: "destructive",
-    //   })
-    // }
+    }
   }
 
   const publishNewBytecode = async (updatedBytes: Uint8Array) => {
@@ -228,7 +185,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                 burnable,
                 mintable,
                 pausable: false, // Always false for closed-loop
-                denylist,
+                denylist: false, // Always false for closed-loop
                 allowlist,
                 transferRestrictions
               }
@@ -404,7 +361,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                 </p>
               </div>
 
-              <div>
+              {/* <div>
                 <Label htmlFor="initialSupply" className="text-zinc-300 flex items-center">
                   Initial supply*
                   <TooltipProvider>
@@ -456,7 +413,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                   className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-emerald-500 mt-1"
                 />
                 <p className="text-zinc-500 text-xs mt-1">Maximum ecosystem capacity</p>
-              </div>
+              </div> */}
 
               <div className="border-t border-zinc-700 pt-4">
                 <h4 className="text-white font-medium mb-3">Closed-Loop Features</h4>

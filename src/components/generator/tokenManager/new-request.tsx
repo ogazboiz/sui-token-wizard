@@ -139,7 +139,9 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
               },
             })
 
-            if (res.effects?.status.status === "success") {
+            console.log("Transaction result:", res);
+
+            if (res.effects?.status.status !== "success") {
               // Add to local requests list
               const newRequest: PolicyRequest = {
                 id: digest,
@@ -244,19 +246,19 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
     )
   }
 
-  // if (!hasPolicyCreated) {
-  //   return (
-  //     <div className="container mx-auto px-4 py-6">
-  //       <Alert className="bg-zinc-900 border-zinc-800">
-  //         <AlertCircle className="h-4 w-4 text-orange-500" />
-  //         <AlertDescription className="text-zinc-400">
-  //           You need to create a token policy first before creating action requests.
-  //           Please go to the Token Policy section to create one.
-  //         </AlertDescription>
-  //       </Alert>
-  //     </div>
-  //   )
-  // }
+  if (!hasPolicyCreated) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <Alert className="bg-zinc-900 border-zinc-800">
+          <AlertCircle className="h-4 w-4 text-orange-500" />
+          <AlertDescription className="text-zinc-400">
+            You need to create a token policy first before creating action requests.
+            Please go to the Token Policy section to create one.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

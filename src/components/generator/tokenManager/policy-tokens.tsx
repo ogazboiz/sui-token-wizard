@@ -242,8 +242,8 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
                 <CardTitle className="text-white text-sm">Token</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-semibold text-white">{tokenData.symbol}</p>
-                <p className="text-xs text-zinc-400">{tokenData.name}</p>
+                <p className="text-lg font-semibold text-white capitalize">{tokenData.name}</p>
+                <p className="text-xs text-zinc-400 capitalize">{tokenData.symbol}</p>
               </CardContent>
             </Card>
 

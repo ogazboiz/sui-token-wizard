@@ -20,8 +20,11 @@ A comprehensive platform for creating, managing, and deploying tokens on the Sui
 - **NFT Collections**: Create and deploy NFT collections with metadata
 - **Batch Minting**: Mint multiple NFTs in a single transaction
 - **Royalty Management**: Set creator royalties and revenue sharing
-- **Metadata Standards**: IPFS integration for decentralized metadata storage
-- **Collection Management**: Update collection info, freeze metadata, transfer ownership
+- **Metadata Standards**:  integration for decentralized metadata storage
+- **Collection Management**: Update collection info, freeze metadata
+- **Multi-Network Support**: Deploy on Mainnet, Testnet, or Devnet
+
+
 
 ### 🛠️ Token Management
 - **Mint Tokens**: Create new tokens and distribute to any address
@@ -168,7 +171,7 @@ sui-token-creator/
      description: "A unique NFT collection for my project",
      maxSupply: 10000,
      royaltyPercentage: 5,
-     baseUri: "https://ipfs.io/ipfs/..."
+     imagwUri: "https://image/avatars/..."
    }
    \`\`\`
 
@@ -206,24 +209,6 @@ await pauseToken();
 await unpauseToken();
 \`\`\`
 
-## 🧪 Testing
-
-### Running Tests
-\`\`\`bash
-# Unit tests
-npm run test
-
-# Integration tests
-npm run test:integration
-
-# E2E tests
-npm run test:e2e
-\`\`\`
-
-### Test Coverage
-\`\`\`bash
-npm run test:coverage
-\`\`\`
 
 ## 🚀 Deployment
 
@@ -233,14 +218,6 @@ npm run test:coverage
 3. Configure environment variables
 4. Deploy automatically
 
-### Docker
-\`\`\`bash
-# Build image
-docker build -t sui-token-creator .
-
-# Run container
-docker run -p 3000:3000 sui-token-creator
-\`\`\`
 
 ### Manual Deployment
 \`\`\`bash
@@ -276,9 +253,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-### Documentation
-- [Getting Started Guide](https://docs.suitokencreator.com/getting-started)
-- [FAQ](https://docs.suitokencreator.com/faq)
 
 ### Community
 - [Discord Server](https://discord.gg/suitokencreator)

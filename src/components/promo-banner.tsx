@@ -12,7 +12,7 @@ export default function PromoBanner() {
   return (
     <motion.div
       className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500/80 to-purple-500/80 p-1"
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 1, y: 0 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
@@ -35,7 +35,7 @@ export default function PromoBanner() {
 
         <button
           onClick={() => setIsVisible(false)}
-          className="ml-4 text-zinc-400 cursor-pointer hover:text-white transition-colors"
+          className="ml-4 text-zinc-400 hover:text-white transition-colors"
           aria-label="Close banner"
         >
           <X size={18} />

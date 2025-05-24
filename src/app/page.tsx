@@ -4,6 +4,7 @@ import Navbar from "@/components/navbar"
 import dynamic from 'next/dynamic'
 import { Toaster } from "@/components/ui/sonner"
 import Footer from "@/components/footer"
+import PromoBanner from "@/components/promo-banner"
 
 // Dynamic imports with SSR disabled
 const HeroSection = dynamic(() => import('@/components/hero-section'), { ssr: false })
@@ -24,6 +25,7 @@ export default function Home() {
           </div>
         }
       >
+    
         <HeroSection />
         <LandingContractTemplates/>
         <ActiveWalletsExplorers />

@@ -450,7 +450,7 @@ export default function Dashboard({ network }: { network: string }) {
                         <span>{collection.createdAt}</span>
                       </div>
 
-                    
+
                       <Link href={`https://suiscan.xyz/testnet/object/${collection.address}`} className="w-full">
                         <Button
                           variant="outline"

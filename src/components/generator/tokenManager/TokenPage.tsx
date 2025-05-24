@@ -503,7 +503,7 @@ export default function TokenPage({ network }: TokenPageProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <InfoCard label="Decimals" value={String(metadata?.decimals )|| "9"} />
+              <InfoCard label="Decimals" value={String(metadata?.decimals) || "9"} />
               <InfoCard
                 label="Transaction"
                 value={tokenData?.txId || ""}
@@ -520,9 +520,11 @@ export default function TokenPage({ network }: TokenPageProps) {
                   <FeatureItem name="Mintable" enabled={tokenData.features?.mintable || false} />
                   <FeatureItem name="Burnable" enabled={tokenData.features?.burnable || false} />
                   {tokenData.type !== "closed-loop" && (
+                  <>
                     <FeatureItem name="Pausable" enabled={tokenData.features?.pausable || false} />
+                    <FeatureItem name="Denylist" enabled={tokenData.features?.denylist || false} />
+                  </>
                   )}
-                  <FeatureItem name="Denylist" enabled={tokenData.features?.denylist || false} />
                   {tokenData.type === "closed-loop" && (
                     <>
                       <FeatureItem name="Allowlist" enabled={tokenData.features?.allowlist || false} />

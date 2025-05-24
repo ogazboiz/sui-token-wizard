@@ -54,28 +54,8 @@ public entry fun burn(treasury_cap: &mut TreasuryCap<MY_COIN>, coin: Coin<MY_COI
     event::emit(BurnEvent { amount });
 }
 
-public entry fun get_decimals(metadata: &CoinMetadata<MY_COIN>): u8 {
-    coin::get_decimals(metadata)
-}
-
-public entry fun get_name(metadata: &CoinMetadata<MY_COIN>): string::String {
-    coin::get_name(metadata)
-}
-
-public entry fun get_symbol(metadata: &CoinMetadata<MY_COIN>): ascii::String {
-    coin::get_symbol(metadata)
-}
-
-public entry fun get_description(metadata: &CoinMetadata<MY_COIN>): string::String {
-    coin::get_description(metadata)
-}
-
 public entry fun get_supply(treasury_cap: &TreasuryCap<MY_COIN>): u64 {
     coin::total_supply(treasury_cap)
-}
-
-public entry fun get_icon_url(metadata: &CoinMetadata<MY_COIN>): Option<Url> {
-    coin::get_icon_url(metadata)
 }
 
 public entry fun update_name(
@@ -124,6 +104,17 @@ public entry fun update_metadata(
     if (option::is_some(&icon_url)) {
         coin::update_icon_url(treasury_cap, metadata, option::destroy_some(icon_url));
     }
+}
+
+public entry fun get_metadata(
+    metadata: &CoinMetadata<MY_COIN>,
+): (string::String, ascii::String, string::String, u8, Option<Url>) {
+    let name = metadata.get_name();
+    let symbol = metadata.get_symbol();
+    let description = metadata.get_description();
+    let decimals = metadata.get_decimals();
+    let icon_url = metadata.get_icon_url();
+    (name, symbol, description, decimals, icon_url)
 }
 
 #[test]

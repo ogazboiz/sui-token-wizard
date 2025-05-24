@@ -126,17 +126,6 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
-    const name = tx.moveCall({
-      target: `${derivedCoinType}::get_name`,
-      arguments: [
-        tx.object(tokenData.metadata),
-        // tx.object(tokenData.denyCap),
-        // tx.pure.address(addressToAdd),
-      ],
-    })
-
-    console.log("Name:", name);
-
     // Call the add_deny_list function on the regulated_coin contract
     tx.moveCall({
       target: `${derivedCoinType}::add_deny_list`,

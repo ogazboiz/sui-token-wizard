@@ -1,6 +1,6 @@
 import { bcs, fromHEX } from '@mysten/bcs';
 import init, { deserialize, version, update_constants, update_identifiers, get_constants } from '@mysten/move-bytecode-template';
-import { coinBytecodeHex, pRegBytecodeHex, uRegBytecodeHex } from '../utils/constants';
+import { coinBytecodeHex, pRegBytecodeHex, tokenBytecodeHex, uRegBytecodeHex } from '../utils/constants';
 
 
 const encodeText = (text: string): Uint8Array =>
@@ -215,3 +215,69 @@ export const useUpdateURegCoin = async (
     }
 };
 
+export const useUpdateToken = async (
+    name: string,
+    symbol: string,
+    description: string,
+    decimals: number
+): Promise<UpdateTokenResult> => {
+    try {
+        const initialBytes = fromHEX(tokenBytecodeHex);
+
+        await init();
+
+        deserialize(initialBytes);
+        version();
+
+        // module name
+        let updatedBytes = update_identifiers(initialBytes, {
+            TEMPLATE: "TOKEN",
+            template: "token",
+        });
+
+        // decimals
+        updatedBytes = update_constants(
+            updatedBytes,
+            bcs.u8().serialize(decimals).toBytes(),
+            bcs.u8().serialize(6).toBytes(),
+            'U8',
+        );
+
+        // symbol
+        updatedBytes = update_constants(
+            updatedBytes,
+            bcs.vector(bcs.u8()).serialize(encodeText(symbol)).toBytes(),
+            bcs.vector(bcs.u8()).serialize(encodeText('SBAO')).toBytes(),
+            'Vector(U8)',
+        );
+
+        // name
+        updatedBytes = update_constants(
+            updatedBytes,
+            bcs.vector(bcs.u8()).serialize(encodeText(name)).toBytes(),
+            bcs.vector(bcs.u8()).serialize(encodeText('SBAO')).toBytes(),
+            'Vector(U8)',
+        );
+
+        // description
+        updatedBytes = update_constants(
+            updatedBytes,
+            bcs.vector(bcs.u8()).serialize(encodeText(description)).toBytes(),
+            bcs.vector(bcs.u8()).serialize(encodeText('SBAO')).toBytes(),
+            'Vector(U8)',
+        );
+
+        const constants = get_constants(initialBytes);
+        console.assert(updatedBytes !== initialBytes, 'Bytecode was not updated!');
+
+        console.log({
+            constants,
+            initialBytes,
+            updatedBytes,
+        });
+        return { constants, initialBytes, updatedBytes };
+    } catch (err) {
+        console.error('Error updating token:', err);
+        throw err;
+    }
+};

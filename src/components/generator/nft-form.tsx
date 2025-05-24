@@ -118,7 +118,7 @@ export default function NftForm({ network }: NftFormProps) {
           tx.pure.string(description),
           tx.pure.string(imageUrl),
         ],
-        target: `0xd2bfa388fa7ba1ee3cf9f15de83f9bf8323f821bc11e1c4163defdabe43352c3::my_nft::mint_to_sender`,
+        target: `0xdf941ca4f0df0a608d206becf36959f8c43c304c4cc289fb301d7915b8be9ba6::my_nft::mint_to_sender`,
       });
 
       signAndExecute(
@@ -441,7 +441,7 @@ export default function NftForm({ network }: NftFormProps) {
             <Button
               type="submit"
               onClick={handleSubmit}
-              className="w-full bg-purple-500 cursor-pointer hover:bg-purple-600 text-white py-6 h-auto text-lg"
+              className="w-full bg-purple-500 cursor-pointer hover:bg-purple-600 text-white py-3 h-auto"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

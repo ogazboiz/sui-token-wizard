@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ConnectButton } from "@mysten/dapp-kit";
 import { formatAddress } from "@mysten/sui.js/utils";
 import { useWalletConnection } from "@/components/hooks/useWalletConnection";
+import Image from "next/image";
 
 export default function Navbar() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -101,8 +102,13 @@ export default function Navbar() {
       <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4 sm:gap-8"> 
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-md bg-teal-500 flex items-center justify-center text-white font-bold text-lg sm:text-xl">
-              S
+            <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-md  flex items-center justify-center text-white font-bold text-lg sm:text-xl">
+              <Image
+                src="/tokenStudio.png"
+                alt="Sui Token Creator"
+                width={50}
+                height={50}
+              />
             </div>
             <span className="font-bold text-lg sm:text-xl text-white hidden xs:inline-block">Sui Token Creator</span>
           </Link>

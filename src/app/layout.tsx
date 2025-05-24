@@ -13,8 +13,8 @@ const varelaRound = Varela_Round({
 })
 
 export const metadata: Metadata = {
-   title: 'Sui Token Creator',
-  description: 'Create and deploy Sui tokens easily',
+   title: 'Sui Token wizard',
+  description: 'The complete no-code platform for creating and managing tokens & NFTs on Sui blockchain. Features standard, regulated, and closed-loop tokens with built-in governance, policy management, and enterprise-grade security.',
 }
 
 export default function RootLayout({

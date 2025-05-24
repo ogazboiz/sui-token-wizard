@@ -27,7 +27,7 @@ fun init(otw: TOKEN, ctx: &mut TxContext) {
 /// `Mint` is available to the holder of the `TreasuryCap` by default and hence does not need to be confirmed
 /// `transfer` action however does require a confirmation and can be confirmed with `TreasuryCap`
 #[allow(lint(self_transfer))]
-public fun mint(
+public entry fun mint(
     treasury_cap: &mut TreasuryCap<TOKEN>,
     amount: u64,
     recipient: address,
@@ -40,13 +40,13 @@ public fun mint(
     // token
 }
 
-public fun burn(treasury_cap: &mut TreasuryCap<TOKEN>, coin: Token<TOKEN>) {
+public entry fun burn(treasury_cap: &mut TreasuryCap<TOKEN>, coin: Token<TOKEN>) {
     token::burn(treasury_cap, coin);
 }
 
 /// create new policy
 #[allow(lint(self_transfer))]
-public fun new_policy(treasury_cap: &TreasuryCap<TOKEN>, ctx: &mut TxContext) {
+public entry fun new_policy(treasury_cap: &TreasuryCap<TOKEN>, ctx: &mut TxContext) {
     let (policy, policy_cap) = token::new_policy(treasury_cap, ctx);
     token::share_policy(policy);
     transfer::public_transfer(policy_cap, tx_context::sender(ctx));
@@ -63,7 +63,7 @@ public fun create_action_request(
 }
 
 /// add rule for action, constrain spend (share policy after?)
-public fun add_rule_for_action(
+public entry fun add_rule_for_action(
     policy: &mut TokenPolicy<TOKEN>,
     policy_cap: &TokenPolicyCap<TOKEN>,
     ctx: &mut TxContext,
@@ -76,7 +76,7 @@ public fun add_rule_for_action(
     );
 }
 
-public fun allow(
+public entry fun allow(
     policy: &mut TokenPolicy<TOKEN>,
     policy_cap: &TokenPolicyCap<TOKEN>,
     action: string::String,
@@ -87,7 +87,7 @@ public fun allow(
 
 /// `spend` action
 /// does require a confirmation and can be confirmed with `TreasuryCap`
-public fun spend(treasury_cap: &mut TreasuryCap<TOKEN>, token: Token<TOKEN>, ctx: &mut TxContext) {
+public entry fun spend(treasury_cap: &mut TreasuryCap<TOKEN>, token: Token<TOKEN>, ctx: &mut TxContext) {
     let request = token::spend(token, ctx);
     token::confirm_with_treasury_cap(treasury_cap, request, ctx);
 }

@@ -1,4 +1,4 @@
-# 🚀 Sui Token Creator
+# 🚀 Sui Token Wizard
 
 A comprehensive platform for creating, managing, and deploying tokens on the Sui blockchain with an intuitive interface and powerful management tools.
 

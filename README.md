@@ -55,8 +55,8 @@ A comprehensive platform for creating, managing, and deploying tokens on the Sui
 
 1. **Clone the repository**
    \`\`\`bash
-   git clone https://github.com/your-username/sui-token-creator.git
-   cd sui-token-creator
+   git clone https://github.com/ogazboiz/sui-token-wizard.git
+   cd sui-token-wizard
    \`\`\`
 
 2. **Install dependencies**
@@ -66,31 +66,21 @@ A comprehensive platform for creating, managing, and deploying tokens on the Sui
    yarn install
    \`\`\`
 
-3. **Set up environment variables**
-   \`\`\`bash
-   cp .env.example .env.local
-   \`\`\`
-   
-   Configure your environment variables:
-   \`\`\`env
-   NEXT_PUBLIC_SUI_NETWORK=testnet
-   NEXT_PUBLIC_API_URL=https://api.suitokencreator.com
-   \`\`\`
 
-4. **Run the development server**
+3. **Run the development server**
    \`\`\`bash
    npm run dev
    # or
    yarn dev
    \`\`\`
 
-5. **Open your browser**
+4. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 🏗️ Project Structure
 
 \`\`\`
-sui-token-creator/
+sui-token-wizard/
 ├── app/                    # Next.js 14 App Router
 │   ├── blog/              # Blog pages and articles
 │   ├── docs/              # Documentation pages
@@ -255,9 +245,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 
 ### Community
-- [Discord Server](https://discord.gg/suitokencreator)
-- [GitHub Discussions](https://github.com/your-username/sui-token-creator/discussions)
-- [Twitter](https://twitter.com/suitokencreator)
+- [Discord Server](https://discord.gg/suitokenwizard)
+- [GitHub Discussions](https://github.com/ogazboiz/sui-token-wizard/discussions)
+- [Twitter](https://twitter.com/suitokenwizard)
 
 ### Issues
 If you encounter any issues, please [create a GitHub issue](https://github.com/your-username/sui-token-creator/issues/new) with:
@@ -266,25 +256,7 @@ If you encounter any issues, please [create a GitHub issue](https://github.com/y
 - Expected vs actual behavior
 - Screenshots (if applicable)
 
-## 🗺️ Roadmap
 
-### Q1 2024
-- [ ] Multi-signature wallet support
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app (React Native)
-- [ ] Governance token templates
-
-### Q2 2024
-- [ ] Cross-chain bridge integration
-- [ ] DeFi protocol integrations
-- [ ] Advanced trading features
-- [ ] Enterprise dashboard
-
-### Q3 2024
-- [ ] DAO creation tools
-- [ ] NFT collection management
-- [ ] Staking mechanisms
-- [ ] Yield farming integration
 
 ## 📊 Statistics
 
@@ -305,7 +277,7 @@ If you encounter any issues, please [create a GitHub issue](https://github.com/y
 <div align="center">
   <p>Made with ❤️ by the Sui Token Creator team</p>
   <p>
-    <a href="https://suitokencreator.com">Website</a> •
+    <a href="https://sui-token-wizard.vercel.app/">Website</a> •
     <a href="https://docs.suitokencreator.com">Documentation</a> •
     <a href="https://discord.gg/suitokencreator">Discord</a> •
     <a href="https://twitter.com/suitokencreator">Twitter</a>

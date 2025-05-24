@@ -141,7 +141,7 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
 
             console.log("Transaction result:", res);
 
-            if (res.effects?.status.status !== "success") {
+            if (res.effects?.status.status === "success") {
               // Add to local requests list
               const newRequest: PolicyRequest = {
                 id: digest,

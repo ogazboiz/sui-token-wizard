@@ -95,11 +95,7 @@ export default function Dashboard({ network }: { network: string }) {
                     decimals: tokenMetadata?.decimals || 0,
                     description: tokenMetadata?.description || "No description",
                     address: token.coinType,
-                    createdAt: (() => {
-                      const d = new Date();
-                      d.setDate(d.getDate() - 1);
-                      return d.toISOString().split("T")[0];
-                    })(),
+                    createdAt: new Date().toISOString().split("T")[0],
                     type: "fungible",
                     status: "active",
                   };

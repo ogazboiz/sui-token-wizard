@@ -2,7 +2,7 @@
 
 A comprehensive platform for creating, managing, and deploying tokens on the Sui blockchain with an intuitive interface and powerful management tools.
 
-![Sui Token Creator](https://img.shields.io/badge/Sui-Token%20Creator-teal?style=for-the-badge&logo=sui)
+![Sui Token wizard](https://img.shields.io/badge/Sui-Token%20Creator-teal?style=for-the-badge&logo=sui)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.0-38B2AC?style=for-the-badge&logo=tailwind-css)

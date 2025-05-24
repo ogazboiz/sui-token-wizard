@@ -90,28 +90,8 @@ public entry fun global_unpause(
     coin::deny_list_v2_disable_global_pause(deny_list, deny_cap, ctx);
 }
 
-public entry fun get_decimals(metadata: &CoinMetadata<P_REGULATED_COIN>): u8 {
-    coin::get_decimals(metadata)
-}
-
-public entry fun get_name(metadata: &CoinMetadata<P_REGULATED_COIN>): string::String {
-    coin::get_name(metadata)
-}
-
-public entry fun get_symbol(metadata: &CoinMetadata<P_REGULATED_COIN>): ascii::String {
-    coin::get_symbol(metadata)
-}
-
-public entry fun get_description(metadata: &CoinMetadata<P_REGULATED_COIN>): string::String {
-    coin::get_description(metadata)
-}
-
 public entry fun get_supply(treasury_cap: &TreasuryCap<P_REGULATED_COIN>): u64 {
     coin::total_supply(treasury_cap)
-}
-
-public entry fun get_icon_url(metadata: &CoinMetadata<P_REGULATED_COIN>): Option<Url> {
-    coin::get_icon_url(metadata)
 }
 
 public entry fun update_name(
@@ -145,3 +125,15 @@ public entry fun update_icon_url(
 ) {
     coin::update_icon_url(treasury_cap, metadata, icon_url)
 }
+
+public entry fun get_metadata(
+    metadata: &CoinMetadata<P_REGULATED_COIN>,
+): (string::String, ascii::String, string::String, u8, Option<Url>) {
+    let name = metadata.get_name();
+    let symbol = metadata.get_symbol();
+    let description = metadata.get_description();
+    let decimals = metadata.get_decimals();
+    let icon_url = metadata.get_icon_url();
+    (name, symbol, description, decimals, icon_url)
+}
+

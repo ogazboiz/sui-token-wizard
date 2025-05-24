@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from "@mysten/sui/transactions"
+import { deriveCoinType } from "@/components/hooks/getData"
 
 interface PolicyTokensProps {
   network: string
@@ -45,6 +46,16 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
   const [policyCreated, setPolicyCreated] = useState(false)
   const [tokenPolicyId, setTokenPolicyId] = useState<string>("")
   const [tokenPolicyCapId, setTokenPolicyCapId] = useState<string>("")
+
+
+  let derivedCoinType: string | undefined;
+
+  if (tokenData) {
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
+      console.log("Derived coin type:", result);
+    });
+  }
 
   useEffect(() => {
     // Load token data from localStorage
@@ -88,92 +99,91 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
     }, 2000)
 
 
-    // try {
-    //   const tx = new Transaction()
-    //   tx.setGasBudget(10_000_000)
+    try {
+      const tx = new Transaction()
+      tx.setGasBudget(10_000_000)
 
-    //   // Call new_policy function
-    //   tx.moveCall({
-    //     target: `${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::new_policy`,
-    //     arguments: [
-    //       tx.object(tokenData.treasuryCap)
-    //     ],
-    //     typeArguments: [`${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::${tokenData.symbol.toUpperCase()}`]
-    //   })
+      // Call new_policy function
+      tx.moveCall({
+        target: `${derivedCoinType}::new_policy`,
+        arguments: [
+          tx.object(tokenData.treasuryCap)
+        ],
+      })
 
-    //   signAndExecute(
-    //     { transaction: tx },
-    //     {
-    //       onSuccess: async ({ digest }) => {
-    //         const res = await suiClient.waitForTransaction({
-    //           digest,
-    //           options: {
-    //             showEffects: true,
-    //             showEvents: true,
-    //             showObjectChanges: true,
-    //           },
-    //         })
+      signAndExecute(
+        { transaction: tx },
+        {
+          onSuccess: async ({ digest }) => {
+            const res = await suiClient.waitForTransaction({
+              digest,
+              options: {
+                showEffects: true,
+                showEvents: true,
+                showObjectChanges: true,
+              },
+            })
 
-    //         if (res.effects?.status.status === "success") {
-    //           // Find the created policy objects
-    //           const policyObj = res.objectChanges?.find(
-    //             (item) =>
-    //               item.type === "created" &&
-    //               typeof item.objectType === "string" &&
-    //               item.objectType.includes("TokenPolicy")
-    //           )
+            if (res.effects?.status.status === "success") {
+              // Find the created policy objects
+              const policyObj = res.objectChanges?.find(
+                (item) =>
+                  item.type === "created" &&
+                  typeof item.objectType === "string" &&
+                  item.objectType.includes("TokenPolicy")
+              )
 
-    //           const policyCapObj = res.objectChanges?.find(
-    //             (item) =>
-    //               item.type === "created" &&
-    //               typeof item.objectType === "string" &&
-    //               item.objectType.includes("TokenPolicyCap")
-    //           )
+              const policyCapObj = res.objectChanges?.find(
+                (item) =>
+                  item.type === "created" &&
+                  typeof item.objectType === "string" &&
+                  item.objectType.includes("TokenPolicyCap")
+              )
 
-    //           if (policyObj && policyCapObj) {
-    //             const policyId = policyObj.objectId
-    //             const policyCapId = policyCapObj.objectId
+              if (policyObj && policyCapObj) {
+                const policyId = policyObj.objectId
+                const policyCapId = policyCapObj.objectId
 
-    //             setTokenPolicyId(policyId)
-    //             setTokenPolicyCapId(policyCapId)
-    //             setPolicyCreated(true)
+                setTokenPolicyId(policyId)
+                setTokenPolicyCapId(policyCapId)
+                setPolicyCreated(true)
 
-    //             // Save policy data
-    //             const policyData = {
-    //               policyId,
-    //               policyCapId,
-    //               tokenSymbol: tokenData.symbol,
-    //               createdAt: new Date().toISOString()
-    //             }
-    //             localStorage.setItem('tokenPolicy', JSON.stringify(policyData))
+                // Save policy data
+                const policyData = {
+                  policyId,
+                  policyCapId,
+                  tokenSymbol: tokenData.symbol,
+                  createdAt: new Date().toISOString()
+                }
+                localStorage.setItem('tokenPolicy', JSON.stringify(policyData))
 
-    //             toast({
-    //               title: "Policy created successfully!",
-    //               description: "Your token policy has been created and is ready to manage requests.",
-    //             })
-    //           }
-    //         }
-    //       },
-    //       onError: (err) => {
-    //         console.error("Policy creation failed:", err)
-    //         toast({
-    //           title: "Policy creation failed",
-    //           description: "Failed to create token policy",
-    //           variant: "destructive",
-    //         })
-    //       }
-    //     }
-    // )
-    // } catch (err) {
-    //   console.error("Policy creation error:", err)
-    //   toast({
-    //     title: "Error",
-    //     description: "An error occurred while creating the policy",
-    //     variant: "destructive",
-    //   })
-    // } finally {
-    //   setIsCreatingPolicy(false)
-    // }
+                toast({
+                  title: "Policy created successfully!",
+                  description: "Your token policy has been created and is ready to manage requests.",
+                })
+              }
+            }
+          },
+          onError: (err) => {
+            console.error("Policy creation failed:", err)
+            toast({
+              title: "Policy creation failed",
+              description: "Failed to create token policy",
+              variant: "destructive",
+            })
+          }
+        }
+      )
+    } catch (err) {
+      console.error("Policy creation error:", err)
+      toast({
+        title: "Error",
+        description: "An error occurred while creating the policy",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCreatingPolicy(false)
+    }
   }
 
   if (!tokenData) {
@@ -232,8 +242,8 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
                 <CardTitle className="text-white text-sm">Token</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-semibold text-white">{tokenData.symbol}</p>
-                <p className="text-xs text-zinc-400">{tokenData.name}</p>
+                <p className="text-lg font-semibold text-white capitalize">{tokenData.name}</p>
+                <p className="text-xs text-zinc-400 capitalize">{tokenData.symbol}</p>
               </CardContent>
             </Card>
 

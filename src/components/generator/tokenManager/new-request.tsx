@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from "@mysten/sui/transactions"
+import { deriveCoinType } from "@/components/hooks/getData"
 
 interface ActionRequestsProps {
   network: string
@@ -45,6 +46,15 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
 
   const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [hasPolicyCreated, setHasPolicyCreated] = useState(false)
+
+  let derivedCoinType: string | undefined;
+
+  if (tokenData) {
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
+      console.log("Derived coin type:", result);
+    });
+  }
 
   // New request form
   const [requestName, setRequestName] = useState("")
@@ -107,14 +117,13 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
 
       // Call new_request function
       tx.moveCall({
-        target: `${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::new_request`,
+        target: `${derivedCoinType}::create_new_request`,
         arguments: [
           tx.pure.string(requestName),
           tx.pure.u64(requestAmount),
           tx.pure.option("address", requestRecipient),
-          tx.pure.option("", null), // spent_balance as None for now
+          tx.pure.option("u64", null), // spent_balance as None for now
         ],
-        typeArguments: [`${tokenData.newPkgId}::${tokenData.symbol.toLowerCase()}::${tokenData.symbol.toUpperCase()}`]
       })
 
       signAndExecute(
@@ -129,6 +138,8 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                 showObjectChanges: true,
               },
             })
+
+            console.log("Transaction result:", res);
 
             if (res.effects?.status.status === "success") {
               // Add to local requests list
@@ -235,19 +246,19 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
     )
   }
 
-  // if (!hasPolicyCreated) {
-  //   return (
-  //     <div className="container mx-auto px-4 py-6">
-  //       <Alert className="bg-zinc-900 border-zinc-800">
-  //         <AlertCircle className="h-4 w-4 text-orange-500" />
-  //         <AlertDescription className="text-zinc-400">
-  //           You need to create a token policy first before creating action requests.
-  //           Please go to the Token Policy section to create one.
-  //         </AlertDescription>
-  //       </Alert>
-  //     </div>
-  //   )
-  // }
+  if (!hasPolicyCreated) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <Alert className="bg-zinc-900 border-zinc-800">
+          <AlertCircle className="h-4 w-4 text-orange-500" />
+          <AlertDescription className="text-zinc-400">
+            You need to create a token policy first before creating action requests.
+            Please go to the Token Policy section to create one.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -484,8 +495,8 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
                       </div>
                       <div className="flex items-center text-xs text-zinc-500">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium mr-2 ${request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            request.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                              'bg-red-500/20 text-red-400'
+                          request.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                            'bg-red-500/20 text-red-400'
                           }`}>
                           {request.status}
                         </span>

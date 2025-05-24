@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/components/ui/use-toast"
 import { Coins } from "@/components/ui/icons"
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
-import { useUpdatePRegCoin, useUpdateURegCoin } from "../hooks/updateCoin"
+import { useUpdateToken } from "../hooks/updateCoin"
 import { Transaction } from "@mysten/sui/transactions"
 import { normalizeSuiObjectId } from "@mysten/sui.js/utils"
 import { useRouter } from "next/navigation"
@@ -26,8 +26,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
   const router = useRouter()
   const { toast } = useToast()
   const suiClient = useSuiClient();
-  const updatePRegCoin = useUpdatePRegCoin;
-  const updateURegCoin = useUpdateURegCoin;
+  const updateToken = useUpdateToken;
   const account = useCurrentAccount();
   const { mutate: signAndExecute, isSuccess, isPending } = useSignAndExecuteTransaction();
 
@@ -66,7 +65,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!tokenName || !tokenSymbol || !decimals || !description || !initialSupply || !maxSupply) {
+    if (!tokenName || !tokenSymbol || !decimals || !description) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -93,7 +92,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
 
     try {
       // can the bytecode for closed loop be updated?
-      const { updatedBytes } = await updatePRegCoin(tokenName, tokenSymbol, description, Number(decimals));
+      const { updatedBytes } = await updateToken(tokenName, tokenSymbol, description, Number(decimals));
       await publishNewBytecode(updatedBytes);
     } catch (err) {
       console.error("Closed-loop token creation failed:", err);
@@ -186,7 +185,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                 burnable,
                 mintable,
                 pausable: false, // Always false for closed-loop
-                denylist,
+                denylist: false, // Always false for closed-loop
                 allowlist,
                 transferRestrictions
               }
@@ -362,7 +361,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                 </p>
               </div>
 
-              <div>
+              {/* <div>
                 <Label htmlFor="initialSupply" className="text-zinc-300 flex items-center">
                   Initial supply*
                   <TooltipProvider>
@@ -414,7 +413,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                   className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-emerald-500 mt-1"
                 />
                 <p className="text-zinc-500 text-xs mt-1">Maximum ecosystem capacity</p>
-              </div>
+              </div> */}
 
               <div className="border-t border-zinc-700 pt-4">
                 <h4 className="text-white font-medium mb-3">Closed-Loop Features</h4>

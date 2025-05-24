@@ -181,10 +181,10 @@ export default function Navbar() {
                   openDropdown === 'tools' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                 }`}
               >
-                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"  onClick={() => router.push("/tools/explorer")}>
                   Explorer
                 </button>
-                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150" onClick={() => router.push("/tools/gas-estimator")}>
                   Gas Estimator
                 </button>
               </div>
@@ -207,14 +207,14 @@ export default function Navbar() {
               <div 
                 className={`absolute top-full left-0 mt-1 py-1 bg-zinc-800 border border-zinc-700 rounded-md w-40 shadow-lg transition-all duration-200 origin-top-left ${
                   openDropdown === 'docs' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-                }`}
+                } `}  onClick={() => router.push("/docs/getting-started")}
               >
                 <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
                   Getting Started
                 </button>
-                <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                {/* <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
                   API Reference
-                </button>
+                </button> */}
               </div>
             </div>
 

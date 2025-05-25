@@ -140,14 +140,14 @@ const blogPosts: BlogPost[] = [
     tags: ["Guide", "Sui", "Memes"],
     url: "/blog/custom-sui-token-address",
   },
-  {
-    id: "post-3",
-    title: "Top 5 Sui Token Projects to Watch in 2025",
-    date: "08.05.2025",
-    image: "top-projects", // Custom SVG identifier
-    tags: ["Insights", "Sui", "Projects"],
-    url: "/blog/top-sui-token-projects",
-  },
+  // {
+  //   id: "post-3",
+  //   title: "Top 5 Sui Token Projects to Watch in 2025",
+  //   date: "08.05.2025",
+  //   image: "top-projects", // Custom SVG identifier
+  //   tags: ["Insights", "Sui", "Projects"],
+  //   url: "/blog/top-sui-token-projects",
+  // },
   {
     id: "post-4",
     title: "Understanding Token Standards on Sui Blockchain",

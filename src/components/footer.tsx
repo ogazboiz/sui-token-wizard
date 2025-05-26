@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { Github, Twitter, Linkedin, Mail, ExternalLink } from "lucide-react"
+import Image from "next/image"
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -11,11 +12,16 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-md bg-teal-500 flex items-center justify-center text-white font-bold text-xl">
-                S
-              </div>
-              <span className="font-bold text-xl text-white">Sui Token Creator</span>
+            <div className="flex items-center ">
+             <Link href="/" className="flex items-center gap-2">
+                <Image
+                src="/logo2.png"
+                alt="Sui Token Wizard"
+                width={50}
+                height={120}
+              />
+          </Link>
+              <span className="font-bold text-xl text-white">Sui Token Wizard</span>
             </div>
             <p className="text-zinc-400 text-sm mb-4">
               Create and deploy custom tokens on the Sui blockchain with ease. Our simple, fast, and secure platform

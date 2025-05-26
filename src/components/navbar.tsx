@@ -99,14 +99,14 @@ export default function Navbar() {
 
   return (
     <nav className="sticky  top-0 z-50 w-full  bg-zinc-900 border-b border-zinc-800">
-      <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="container max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4 sm:gap-8"> 
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-md  flex items-center justify-center text-white font-bold text-lg sm:text-xl">
+            <div className="w-28 h-10 py-4  rounded-md  flex items-center justify-center text-white font-bold text-lg sm:text-xl">
               <Image
-                src="/tokenStudio.png"
+                src="/logo3.png"
                 alt="Sui Token Creator"
-                width={50}
+                width={100}
                 height={50}
               />
             </div>

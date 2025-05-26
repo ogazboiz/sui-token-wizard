@@ -5,16 +5,17 @@ import { motion } from "framer-motion"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Wallet, Coins, ImageIcon, ExternalLink, Copy, MoreHorizontal, PlusCircle, ArrowUpRight, Terminal } from "lucide-react"
+import { Wallet, Coins, ImageIcon, ExternalLink, Copy, MoreHorizontal, PlusCircle, ArrowUpRight, Terminal, Loader2, Flame, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit"
+import { useCurrentAccount, useSuiClient, ConnectButton } from "@mysten/dapp-kit"
 import { getMetadataField, useGetAllCoins, useGetAllNftsByOwner } from "../hooks/getData"
 import { ClipLoader } from "react-spinners"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import Link from "next/link"
+import { useWalletConnection } from "@/components/hooks/useWalletConnection"
 
 // Interface for token and NFT data
 interface Token {
@@ -29,6 +30,9 @@ interface Token {
   createdAt: string
   type: string
   status: string
+  // Minimal identifiers for hybrid approach
+  coinType: string
+  packageId: string
 }
 
 interface NFTCollection {
@@ -51,7 +55,60 @@ interface NFTCollection {
   createdAt: string;
   image: string;
   status: string;
+  // Minimal identifiers for hybrid approach
+  objectId: string;
+  type?: string;
 }
+
+// Hybrid storage manager
+class TokenStorageManager {
+  private static ACTIVE_TOKEN_KEY = 'activeTokenId'
+  private static ACTIVE_NFT_KEY = 'activeNftId' 
+  private static TOKEN_TYPE_KEY = 'activeTokenType'
+
+  static setActiveToken(tokenAddress: string, tokenType: string) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(this.ACTIVE_TOKEN_KEY, tokenAddress)
+      localStorage.setItem(this.TOKEN_TYPE_KEY, tokenType)
+    }
+  }
+
+  static setActiveNFT(nftId: string) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(this.ACTIVE_NFT_KEY, nftId)
+    }
+  }
+
+  static getActiveToken(): { address: string; type: string } | null {
+    if (typeof window !== 'undefined') {
+      const address = localStorage.getItem(this.ACTIVE_TOKEN_KEY)
+      const type = localStorage.getItem(this.TOKEN_TYPE_KEY)
+      return address && type ? { address, type } : null
+    }
+    return null
+  }
+
+  static getActiveNFT(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(this.ACTIVE_NFT_KEY)
+    }
+    return null
+  }
+
+  static clearActive() {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(this.ACTIVE_TOKEN_KEY)
+      localStorage.removeItem(this.ACTIVE_NFT_KEY)
+      localStorage.removeItem(this.TOKEN_TYPE_KEY)
+    }
+  }
+
+  static clearOnWalletDisconnect() {
+    // Clear active selections when wallet disconnects
+    this.clearActive()
+  }
+}
+
 export default function Dashboard({ network }: { network: string }) {
   const [activeTab, setActiveTab] = useState("tokens")
   const [tokens, setTokens] = useState<Token[]>([])
@@ -63,10 +120,90 @@ export default function Dashboard({ network }: { network: string }) {
   const router = useRouter()
   const { toast } = useToast()
   const account = useCurrentAccount()
+  const { isConnected, isReady } = useWalletConnection()
 
   const allNfts = useGetAllNftsByOwner(account?.address || "");
-  // const allTokens = useGetAllTokensByOwner(account?.address || "");
   const { data: coinData, isLoading: coinsLoading } = useGetAllCoins(account?.address || "")
+
+  // Clear active selections when wallet disconnects
+  useEffect(() => {
+    if (!isConnected) {
+      TokenStorageManager.clearOnWalletDisconnect()
+    }
+  }, [isConnected])
+
+  // Function to determine token type based on coinType
+  const determineTokenType = (coinType: string): string => {
+    if (coinType.includes("p_regulated_coin") || coinType.includes("regulated")) {
+      return "regulated"
+    } else if (coinType.includes("closed_loop") || coinType.includes("closedloop")) {
+      return "closed-loop"
+    } else if (coinType.includes("my_coin") || coinType.includes("standard")) {
+      return "standard"
+    }
+    return "standard" // default
+  }
+
+  // Function to determine token features based on type
+  const getTokenFeatures = (type: string) => {
+    switch (type) {
+      case "regulated":
+        return {
+          burnable: true,
+          mintable: true,
+          pausable: true,
+          denylist: true,
+          allowlist: false,
+          transferRestrictions: false
+        }
+      case "closed-loop":
+        return {
+          burnable: true,
+          mintable: true,
+          pausable: false,
+          denylist: false,
+          allowlist: true,
+          transferRestrictions: true
+        }
+      case "standard":
+      default:
+        return {
+          burnable: false,
+          mintable: false,
+          pausable: false,
+          denylist: false,
+          allowlist: false,
+          transferRestrictions: false
+        }
+    }
+  }
+
+  // Function to navigate to token manager with minimal token data
+  const navigateToTokenManager = (token: Token) => {
+    // Store only minimal identifier and type
+    TokenStorageManager.setActiveToken(token.address, token.type)
+    
+    // Navigate to token manager - it will fetch fresh data
+    router.push(`/generator/${network}?tokenId=${encodeURIComponent(token.address)}&type=${token.type}`)
+  }
+
+  // Function to navigate to mint page with minimal token data
+  const navigateToMint = (token: Token) => {
+    // Store only minimal identifier and type
+    TokenStorageManager.setActiveToken(token.address, token.type)
+    
+    // Navigate directly to mint page - it will fetch fresh data
+    router.push(`/generator/${network}/mint?tokenId=${encodeURIComponent(token.address)}&type=${token.type}`)
+  }
+
+  // Function to navigate to NFT manager with minimal NFT data
+  const navigateToNFTManager = (nft: NFTCollection) => {
+    // Store only minimal identifier
+    TokenStorageManager.setActiveNFT(nft.objectId)
+    
+    // Navigate to NFT manager/mint page - it will fetch fresh data
+    router.push(`/nft/mint/${nft.address}?nftId=${encodeURIComponent(nft.objectId)}`)
+  }
 
   useEffect(() => {
     const fetchTokenData = async () => {
@@ -75,20 +212,24 @@ export default function Dashboard({ network }: { network: string }) {
 
         if (coinData?.data) {
           // Filter tokens
-          // Replace your filteredTokens logic with this inside your async function:
           const filteredTokens = await Promise.all(
             coinData.data
               .filter((token) =>
                 token.coinType.includes("p_regulated_coin") ||
                 token.coinType.includes("u_regulated_coin") ||
-                token.coinType.includes("my_coin")
+                token.coinType.includes("my_coin") ||
+                token.coinType.includes("regulated") ||
+                token.coinType.includes("closed_loop") ||
+                token.coinType.includes("standard")
               )
               .map(async (token, index) => {
                 try {
                   const tokenMetadata = await getMetadataField(suiClient, token.coinType);
+                  const tokenType = determineTokenType(token.coinType);
+                  
                   return {
                     id: `token-${index}`,
-                    name: tokenMetadata?.name?.split("::") || "Unknown Token",
+                    name: tokenMetadata?.name || "Unknown Token",
                     symbol: tokenMetadata?.symbol || "UNK",
                     network,
                     supply: token.balance || "0",
@@ -96,8 +237,11 @@ export default function Dashboard({ network }: { network: string }) {
                     description: tokenMetadata?.description || "No description",
                     address: token.coinType,
                     createdAt: new Date().toISOString().split("T")[0],
-                    type: "fungible",
+                    type: tokenType,
                     status: "active",
+                    // Hybrid approach: store minimal identifiers
+                    coinType: token.coinType,
+                    packageId: token.coinType.split("::")[0]
                   };
                 } catch (error) {
                   console.error("Error:", error);
@@ -135,11 +279,14 @@ export default function Dashboard({ network }: { network: string }) {
               createdAt: new Date().toISOString().split("T")[0],
               image: fields.url || "https://via.placeholder.com/150",
               status: "active",
+              // Hybrid approach: store minimal identifiers
+              objectId: token.data?.objectId || "",
+              type: "nft"
             };
           });
 
           // @ts-expect-error: type interface ish
-          setTokens(filteredTokens)
+          setTokens(filteredTokens.filter(Boolean))
           setNftCollections(filteredNfts || [])
         }
       } catch (err) {
@@ -149,11 +296,14 @@ export default function Dashboard({ network }: { network: string }) {
         setIsLoading(false)
       }
     }
-    if (account?.address && coinData) {
+    
+    // Only fetch data if wallet is connected
+    if (account?.address && coinData && isConnected) {
       fetchTokenData()
+    } else if (isConnected) {
+      setIsLoading(false)
     }
-  }, [account?.address, coinData, network, allNfts.data, suiClient])
-
+  }, [account?.address, coinData, network, allNfts.data, suiClient, isConnected])
 
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address)
@@ -176,6 +326,78 @@ export default function Dashboard({ network }: { network: string }) {
     }
   }
 
+  const getTokenTypeBadge = (type: string) => {
+    switch (type) {
+      case "regulated":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/30"
+      case "closed-loop":
+        return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+      case "standard":
+      default:
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30"
+    }
+  }
+
+  const getTokenTypeLabel = (type: string) => {
+    switch (type) {
+      case "regulated":
+        return "Regulated"
+      case "closed-loop":
+        return "Closed-Loop"
+      case "standard":
+      default:
+        return "Standard"
+    }
+  }
+
+  // Show loading state while checking wallet connection
+  if (!isReady) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+        <span className="ml-4 text-zinc-300">Checking wallet connection...</span>
+      </div>
+    )
+  }
+
+  // Show wallet connection prompt if not connected
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8">
+            <Wallet className="h-16 w-16 text-zinc-700 mx-auto mb-6" />
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">Connect Your Wallet</h1>
+            <p className="text-zinc-400 mb-8">
+              You need to connect your wallet to view your dashboard and manage your tokens and NFT collections.
+            </p>
+            <Alert className="bg-zinc-800 border-zinc-700 mb-6">
+              <Terminal className="h-4 w-4 text-teal-500" />
+              <AlertTitle className="text-white">Wallet Required</AlertTitle>
+              <AlertDescription className="text-zinc-400">
+                Connect your wallet to access your personal dashboard with all your tokens and NFT collections.
+              </AlertDescription>
+            </Alert>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <ConnectButton
+                connectText="Connect Wallet"
+                className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white px-8 py-3"
+              />
+              <Button
+                variant="outline"
+                className="border-zinc-700 text-zinc-300 cursor-pointer hover:text-white px-8 py-3"
+                onClick={() => router.push("/")}
+              >
+                Back to Home
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading state for token data
   if (isLoading || coinsLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -211,6 +433,9 @@ export default function Dashboard({ network }: { network: string }) {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white">My Dashboard</h1>
           <p className="text-zinc-400 mt-1">Manage your tokens and NFT collections</p>
+          <p className="text-zinc-500 mt-1 text-sm">
+            Connected: {account?.address.slice(0, 6)}...{account?.address.slice(-4)}
+          </p>
         </div>
         <div className="flex gap-3">
           <Button
@@ -263,6 +488,9 @@ export default function Dashboard({ network }: { network: string }) {
                         Token
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                         Network
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
@@ -306,6 +534,11 @@ export default function Dashboard({ network }: { network: string }) {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge variant="outline" className={getTokenTypeBadge(token.type)}>
+                            {getTokenTypeLabel(token.type)}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <Badge variant="outline" className={getNetworkBadgeColor(token.network)}>
                             {token.network}
                           </Badge>
@@ -337,16 +570,22 @@ export default function Dashboard({ network }: { network: string }) {
                             <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                                onClick={() => navigateToTokenManager(token)}
+                              >
+                                <Settings size={14} className="mr-2" /> Manage Token
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                                onClick={() => navigateToMint(token)}
+                              >
+                                <Coins size={14} className="mr-2" /> Mint Tokens
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
                               >
                                 <Link href={`https://suiscan.xyz/testnet/object/${token.address.split("::")[0]}`} target="_blank" rel="noopener noreferrer" className="flex">
                                   <ExternalLink size={14} className="mr-2" /> View on Explorer
                                 </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => router.push(`/mint/${token.address}`)}
-                              >
-                                <Coins size={14} className="mr-2" /> Mint Tokens
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -381,7 +620,7 @@ export default function Dashboard({ network }: { network: string }) {
                     transition={{ duration: 0.3 }}
                     className="bg-zinc-800 rounded-xl overflow-hidden border border-zinc-700"
                   >
-                    <div className="h-40 bg-zinc-700 relative">
+                    <div className="h-40 bg-zinc-700 relative cursor-pointer" onClick={() => navigateToNFTManager(collection)}>
                       <Image
                         src={collection.image}
                         alt={collection.name}
@@ -393,6 +632,9 @@ export default function Dashboard({ network }: { network: string }) {
                         <Badge variant="outline" className={getNetworkBadgeColor(collection.network)}>
                           {collection.network}
                         </Badge>
+                      </div>
+                      <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white font-medium">Click to Manage</span>
                       </div>
                     </div>
                     <div className="p-4">
@@ -410,15 +652,21 @@ export default function Dashboard({ network }: { network: string }) {
                           <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
                             <DropdownMenuItem
                               className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                              onClick={() => router.push(`/explorer/${collection.address}`)}
+                              onClick={() => navigateToNFTManager(collection)}
                             >
-                              <ExternalLink size={14} className="mr-2" /> View on Explorer
+                              <Settings size={14} className="mr-2" /> Manage NFT
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
                               onClick={() => router.push(`/nft/mint/${collection.address}`)}
                             >
                               <ImageIcon size={14} className="mr-2" /> Mint NFT
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                              onClick={() => router.push(`/explorer/${collection.address}`)}
+                            >
+                              <ExternalLink size={14} className="mr-2" /> View on Explorer
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -450,16 +698,13 @@ export default function Dashboard({ network }: { network: string }) {
                         <span>{collection.createdAt}</span>
                       </div>
 
-
-                      <Link href={`https://suiscan.xyz/testnet/object/${collection.address}`} className="w-full">
-                        <Button
-                          variant="outline"
-                          className="w-full mt-4 border-zinc-700 text-zinc-300 hover:text-white"
-
-                        >
-                          View Collection <ArrowUpRight className="ml-2 h-3 w-3" />
-                        </Button>
-                      </Link>
+                      <Button
+                        onClick={() => navigateToNFTManager(collection)}
+                        variant="outline"
+                        className="w-full mt-4 border-zinc-700 text-zinc-300 hover:text-white cursor-pointer"
+                      >
+                        Manage Collection <ArrowUpRight className="ml-2 h-3 w-3" />
+                      </Button>
                     </div>
                   </motion.div>
                 ))}

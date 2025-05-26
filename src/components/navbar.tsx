@@ -26,9 +26,35 @@ export default function Navbar() {
     isReady 
   } = useWalletConnection();
 
-  const handleFungibleTokenClick = () => router.push("/generate");
-  const handleNftCollectionClick = () => router.push("/nft/generate");
-  const handleDashboardClick = () => router.push("/dashboard");
+  const handleFungibleTokenClick = () => {
+    router.push("/generate");
+    setMobileMenuOpen(false); // Close mobile menu after navigation
+  };
+  
+  const handleNftCollectionClick = () => {
+    router.push("/nft/generate");
+    setMobileMenuOpen(false); // Close mobile menu after navigation
+  };
+  
+  const handleDashboardClick = () => {
+    router.push("/dashboard");
+    setMobileMenuOpen(false); // Close mobile menu after navigation
+  };
+
+  const handleExplorerClick = () => {
+    router.push("/tools/explorer");
+    setMobileMenuOpen(false); // Close mobile menu after navigation
+  };
+
+  const handleGasEstimatorClick = () => {
+    router.push("/tools/gas-estimator");
+    setMobileMenuOpen(false); // Close mobile menu after navigation
+  };
+
+  const handleGettingStartedClick = () => {
+    router.push("/docs/getting-started");
+    setMobileMenuOpen(false); // Close mobile menu after navigation
+  };
 
   // Format the address for display
   const displayAddress = currentAccount ? formatAddress(currentAccount.address) : "";
@@ -181,10 +207,10 @@ export default function Navbar() {
                   openDropdown === 'tools' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                 }`}
               >
-                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150"  onClick={() => router.push("/tools/explorer")}>
+                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150" onClick={handleExplorerClick}>
                   Explorer
                 </button>
-                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150" onClick={() => router.push("/tools/gas-estimator")}>
+                <button className="w-full px-3 py-2 cursor-pointer text-left text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150" onClick={handleGasEstimatorClick}>
                   Gas Estimator
                 </button>
               </div>
@@ -207,9 +233,9 @@ export default function Navbar() {
               <div 
                 className={`absolute top-full left-0 mt-1 py-1 bg-zinc-800 border border-zinc-700 rounded-md w-40 shadow-lg transition-all duration-200 origin-top-left ${
                   openDropdown === 'docs' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-                } `}  onClick={() => router.push("/docs/getting-started")}
+                }`}
               >
-                <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
+                <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150" onClick={handleGettingStartedClick}>
                   Getting Started
                 </button>
                 {/* <button className="w-full px-3 py-2 text-left cursor-pointer text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors duration-150">
@@ -395,10 +421,10 @@ export default function Navbar() {
                   openDropdown === 'mobile-tools' ? 'max-h-20 mt-2' : 'max-h-0'
                 }`}
               >
-                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white"  onClick={() => router.push("/tools/explorer")}>
+                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white" onClick={handleExplorerClick}>
                   Explorer
                 </button>
-                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white" onClick={() => router.push("/tools/gas-estimator")}>
+                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white" onClick={handleGasEstimatorClick}>
                   Gas Estimator
                 </button>
               </div>
@@ -422,7 +448,7 @@ export default function Navbar() {
                   openDropdown === 'mobile-docs' ? 'max-h-20 mt-2' : 'max-h-0'
                 }`}
               >
-                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white"  onClick={() => router.push("/docs/getting-started")}>
+                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white" onClick={handleGettingStartedClick}>
                   Getting Started
                 </button>
               </div>

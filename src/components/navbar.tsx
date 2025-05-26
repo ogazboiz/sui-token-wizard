@@ -102,10 +102,10 @@ export default function Navbar() {
       <div className="container max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4 sm:gap-8"> 
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-28 h-10 py-4  rounded-md  flex items-center justify-center text-white font-bold text-lg sm:text-xl">
+            <div className="w-20 h-[26px] my-4  rounded-md  flex items-center justify-center text-white font-bold text-lg sm:text-xl">
               <Image
-                src="/logo3.png"
-                alt="Sui Token Creator"
+                src="/logo.png"
+                alt="Sui Token Wizard"
                 width={100}
                 height={50}
               />
@@ -395,10 +395,10 @@ export default function Navbar() {
                   openDropdown === 'mobile-tools' ? 'max-h-20 mt-2' : 'max-h-0'
                 }`}
               >
-                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white">
+                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white"  onClick={() => router.push("/tools/explorer")}>
                   Explorer
                 </button>
-                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white">
+                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white" onClick={() => router.push("/tools/gas-estimator")}>
                   Gas Estimator
                 </button>
               </div>
@@ -422,11 +422,8 @@ export default function Navbar() {
                   openDropdown === 'mobile-docs' ? 'max-h-20 mt-2' : 'max-h-0'
                 }`}
               >
-                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white">
+                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white"  onClick={() => router.push("/docs/getting-started")}>
                   Getting Started
-                </button>
-                <button className="pl-4 py-2 w-full text-left text-zinc-400 hover:text-white">
-                  API Reference
                 </button>
               </div>
             </div>

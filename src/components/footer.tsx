@@ -9,10 +9,10 @@ export default function Footer() {
 
   return (
     <footer className="bg-zinc-900 border-t border-zinc-800 py-12 mt-16">
-      <div className="container mx-auto px-4">
+      <div className="container max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center ">
+            <div className="flex items-center gap-1 ">
              <Link href="/" className="flex items-center gap-2">
                 <Image
                 src="/logo2.png"

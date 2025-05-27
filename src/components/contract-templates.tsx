@@ -39,13 +39,13 @@ interface ContractTemplate {
 const templates: ContractTemplate[] = [
   {
     id: "standard",
-    name: "Standard Token",
+    name: "Standard Coin",
     price: "0.01 SUI",
     discount: 50,
     description:
-      "Meet the Standard token – your go-to solution for creating tokens with ease. It comes with all the standard features of the Sui standard and offers extra option like supply limits. Craft your token your way and start your crypto adventure effortlessly!",
+      "Meet the Standard coin – your go-to solution for creating tokens with ease. It comes with all the standard features of the Sui standard and offers extra option like supply limits. Craft your token your way and start your crypto adventure effortlessly!",
     features: [
-      { name: "Basic Token Functionality", included: true },
+      { name: "Basic Coin Functionality", included: true },
       { name: "Supply Limits", included: true },
       { name: "Mintable", included: false },
       { name: "Burnable", included: false },
@@ -57,14 +57,14 @@ const templates: ContractTemplate[] = [
   },
   {
     id: "regulated",
-    name: "Regulated Token",
+    name: "Regulated Coin",
     price: "0.02 SUI",
     discount: 60,
     popular: true,
     description:
-      "Discover the perfect regulated token that comes with all the basics from the Sui standard, plus extra features! Customize your token by setting supply limits, ownership parameters, and even consider its mintable, burnable, pausable, and denylist functionalities. Create your unique token with ease!",
+      "Discover the perfect regulated coin that comes with all the basics from the Sui standard, plus extra features! Customize your coin by setting supply limits, ownership parameters, and even consider its mintable, burnable, pausable, and denylist functionalities. Create your unique token with ease!",
     features: [
-      { name: "Basic Token Functionality", included: true },
+      { name: "Basic Coin Functionality", included: true },
       { name: "Supply Limits", included: true },
       { name: "Mintable", included: true },
       { name: "Burnable", included: true },

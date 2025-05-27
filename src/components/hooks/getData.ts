@@ -85,7 +85,6 @@ export const getTokenData = async (
             limit: 70, // Add limit to get more results
         });
 
-        console.log("Transactions count:", transactions.data.length);
 
         // Find transaction that published the package
         const publishTx = transactions.data.find((tx) => {
@@ -104,7 +103,6 @@ export const getTokenData = async (
             return hasPackageCreation || hasCreatedPackage;
         });
 
-        console.log("PublishTx found:", !!publishTx);
         const txId = publishTx?.digest || null;
 
         // Fetch owned objects for the owner with pagination
@@ -126,7 +124,6 @@ export const getTokenData = async (
             cursor = objectsPage.hasNextPage ? (objectsPage.nextCursor ?? null) : null;
         } while (cursor);
 
-        console.log("All Objects count:", allObjects.length);
 
         // Find TreasuryCap for the coin type
         const treasuryCapObj = allObjects.find((obj) => {
@@ -148,7 +145,6 @@ export const getTokenData = async (
             return false;
         });
 
-        console.log("TreasuryCapObj found:", !!treasuryCapObj);
         const treasuryCap = treasuryCapObj?.data?.objectId || null;
 
         return {

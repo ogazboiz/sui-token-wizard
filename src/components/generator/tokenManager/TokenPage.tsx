@@ -200,7 +200,7 @@ export default function TokenPage({ network }: TokenPageProps) {
       // const updatedValue = editValue;
 
       tx.moveCall({
-        target: `${token?.address}::update_${editMode}`,
+        target: `${targetModule}::update_${editMode}`,
         arguments: [
           tx.object(tokenData?.treasuryCap || ""),
           tx.object(metadata?.id || ""),
@@ -222,13 +222,6 @@ export default function TokenPage({ network }: TokenPageProps) {
             })
 
             if (res.effects?.status.status === "success") {
-              const updatedToken = {
-                ...token,
-                [editMode]: editValue,
-              }
-
-              setToken(updatedToken)
-              localStorage.setItem('token', JSON.stringify(updatedToken))
               closeEditModal()
 
               toast({
@@ -301,15 +294,6 @@ export default function TokenPage({ network }: TokenPageProps) {
             })
 
             if (res.effects?.status.status === "success") {
-              const updatedToken = {
-                ...token,
-                name: editForm.name,
-                symbol: editForm.symbol,
-                description: editForm.description
-              }
-
-              setToken(updatedToken)
-              localStorage.setItem('token', JSON.stringify(updatedToken))
               closeEditModal()
 
               toast({

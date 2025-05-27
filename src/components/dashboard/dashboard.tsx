@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Wallet, Coins, ImageIcon, ExternalLink, Copy, MoreHorizontal, PlusCircle, ArrowUpRight, Terminal, Loader2, Flame, Settings } from "lucide-react"
+import { Wallet, Coins, ImageIcon, ExternalLink, Copy, MoreHorizontal, PlusCircle, ArrowUpRight, Terminal, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
@@ -27,12 +27,10 @@ interface Token {
   network: string
   supply: string
   address: string
+  packageId: string // Extract package ID from coinType
   createdAt: string
-  type: string
+  type: 'standard' | 'regulated' | 'closed-loop'
   status: string
-  // Minimal identifiers for hybrid approach
-  coinType: string
-  packageId: string
 }
 
 interface NFTCollection {
@@ -43,6 +41,7 @@ interface NFTCollection {
   supply: string;
   minted: string;
   address: string;
+  packageId: string; // Extract package ID from objectId
   owner: string | {
     AddressOwner: string;
   } | {
@@ -55,58 +54,6 @@ interface NFTCollection {
   createdAt: string;
   image: string;
   status: string;
-  // Minimal identifiers for hybrid approach
-  objectId: string;
-  type?: string;
-}
-
-// Hybrid storage manager
-class TokenStorageManager {
-  private static ACTIVE_TOKEN_KEY = 'activeTokenId'
-  private static ACTIVE_NFT_KEY = 'activeNftId' 
-  private static TOKEN_TYPE_KEY = 'activeTokenType'
-
-  static setActiveToken(tokenAddress: string, tokenType: string) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.ACTIVE_TOKEN_KEY, tokenAddress)
-      localStorage.setItem(this.TOKEN_TYPE_KEY, tokenType)
-    }
-  }
-
-  static setActiveNFT(nftId: string) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.ACTIVE_NFT_KEY, nftId)
-    }
-  }
-
-  static getActiveToken(): { address: string; type: string } | null {
-    if (typeof window !== 'undefined') {
-      const address = localStorage.getItem(this.ACTIVE_TOKEN_KEY)
-      const type = localStorage.getItem(this.TOKEN_TYPE_KEY)
-      return address && type ? { address, type } : null
-    }
-    return null
-  }
-
-  static getActiveNFT(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(this.ACTIVE_NFT_KEY)
-    }
-    return null
-  }
-
-  static clearActive() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.ACTIVE_TOKEN_KEY)
-      localStorage.removeItem(this.ACTIVE_NFT_KEY)
-      localStorage.removeItem(this.TOKEN_TYPE_KEY)
-    }
-  }
-
-  static clearOnWalletDisconnect() {
-    // Clear active selections when wallet disconnects
-    this.clearActive()
-  }
 }
 
 export default function Dashboard({ network }: { network: string }) {
@@ -125,84 +72,30 @@ export default function Dashboard({ network }: { network: string }) {
   const allNfts = useGetAllNftsByOwner(account?.address || "");
   const { data: coinData, isLoading: coinsLoading } = useGetAllCoins(account?.address || "")
 
-  // Clear active selections when wallet disconnects
-  useEffect(() => {
-    if (!isConnected) {
-      TokenStorageManager.clearOnWalletDisconnect()
-    }
-  }, [isConnected])
-
-  // Function to determine token type based on coinType
-  const determineTokenType = (coinType: string): string => {
-    if (coinType.includes("p_regulated_coin") || coinType.includes("regulated")) {
-      return "regulated"
-    } else if (coinType.includes("closed_loop") || coinType.includes("closedloop")) {
+  // Helper function to detect token type from coinType
+  const detectTokenType = (coinType: string): 'standard' | 'regulated' | 'closed-loop' => {
+    if (coinType.includes("p_regulated_coin")) {
       return "closed-loop"
-    } else if (coinType.includes("my_coin") || coinType.includes("standard")) {
+    } else if (coinType.includes("u_regulated_coin")) {
+      return "regulated"
+    } else if (coinType.includes("my_coin")) {
       return "standard"
     }
-    return "standard" // default
+    return "standard" // default fallback
   }
 
-  // Function to determine token features based on type
-  const getTokenFeatures = (type: string) => {
-    switch (type) {
-      case "regulated":
-        return {
-          burnable: true,
-          mintable: true,
-          pausable: true,
-          denylist: true,
-          allowlist: false,
-          transferRestrictions: false
-        }
-      case "closed-loop":
-        return {
-          burnable: true,
-          mintable: true,
-          pausable: false,
-          denylist: false,
-          allowlist: true,
-          transferRestrictions: true
-        }
-      case "standard":
-      default:
-        return {
-          burnable: false,
-          mintable: false,
-          pausable: false,
-          denylist: false,
-          allowlist: false,
-          transferRestrictions: false
-        }
-    }
+  // Helper function to extract package ID from coinType
+  const extractPackageIdFromCoinType = (coinType: string): string => {
+    // coinType format: "0x<package_id>::<module>::<type>"
+    const parts = coinType.split("::")
+    return parts[0] // This is the package ID
   }
 
-  // Function to navigate to token manager with minimal token data
-  const navigateToTokenManager = (token: Token) => {
-    // Store only minimal identifier and type
-    TokenStorageManager.setActiveToken(token.address, token.type)
-    
-    // Navigate to token manager - it will fetch fresh data
-    router.push(`/generator/${network}?tokenId=${encodeURIComponent(token.address)}&type=${token.type}`)
-  }
-
-  // Function to navigate to mint page with minimal token data
-  const navigateToMint = (token: Token) => {
-    // Store only minimal identifier and type
-    TokenStorageManager.setActiveToken(token.address, token.type)
-    
-    // Navigate directly to mint page - it will fetch fresh data
-    router.push(`/generator/${network}/mint?tokenId=${encodeURIComponent(token.address)}&type=${token.type}`)
-  }
-
-  // Function to navigate to NFT manager with minimal NFT data
-  const navigateToNFTManager = (nft: NFTCollection) => {
-    // Store only minimal identifier
-    TokenStorageManager.setActiveNFT(nft.objectId)
-    
-    // Navigate to NFT manager/mint page - it will fetch fresh data
-    router.push(`/nft/mint/${nft.address}?nftId=${encodeURIComponent(nft.objectId)}`)
+  // Helper function to extract package ID from object address  
+  const extractPackageIdFromObject = (objectId: string): string => {
+    // For NFTs, the package ID might be embedded differently
+    // You might need to adjust this based on your NFT structure
+    return objectId.split("::")[0] || objectId
   }
 
   useEffect(() => {
@@ -211,37 +104,33 @@ export default function Dashboard({ network }: { network: string }) {
         setIsLoading(true)
 
         if (coinData?.data) {
-          // Filter tokens
+          // Filter tokens and extract package IDs
           const filteredTokens = await Promise.all(
             coinData.data
               .filter((token) =>
                 token.coinType.includes("p_regulated_coin") ||
                 token.coinType.includes("u_regulated_coin") ||
-                token.coinType.includes("my_coin") ||
-                token.coinType.includes("regulated") ||
-                token.coinType.includes("closed_loop") ||
-                token.coinType.includes("standard")
+                token.coinType.includes("my_coin")
               )
               .map(async (token, index) => {
                 try {
                   const tokenMetadata = await getMetadataField(suiClient, token.coinType);
-                  const tokenType = determineTokenType(token.coinType);
+                  const packageId = extractPackageIdFromCoinType(token.coinType);
+                  const tokenType = detectTokenType(token.coinType);
                   
                   return {
                     id: `token-${index}`,
-                    name: tokenMetadata?.name || "Unknown Token",
+                    name: tokenMetadata?.name?.split("::") || "Unknown Token",
                     symbol: tokenMetadata?.symbol || "UNK",
                     network,
                     supply: token.balance || "0",
                     decimals: tokenMetadata?.decimals || 0,
                     description: tokenMetadata?.description || "No description",
                     address: token.coinType,
+                    packageId, // Store the extracted package ID
+                    type: tokenType, // Store the detected token type
                     createdAt: new Date().toISOString().split("T")[0],
-                    type: tokenType,
                     status: "active",
-                    // Hybrid approach: store minimal identifiers
-                    coinType: token.coinType,
-                    packageId: token.coinType.split("::")[0]
                   };
                 } catch (error) {
                   console.error("Error:", error);
@@ -250,11 +139,12 @@ export default function Dashboard({ network }: { network: string }) {
               })
           );
 
-          // Filter NFTs
+          // Filter NFTs and extract package IDs
           const filteredNfts = allNfts.data?.map((token, index) => {
             // @ts-expect-error: Sui object content fields are not typed in the SDK
             const fields = token.data?.content?.fields || {};
             const owner = token.data?.owner;
+            const packageId = extractPackageIdFromObject(token.data?.objectId || "");
 
             // Ensure owner matches the expected type
             let typedOwner: NFTCollection['owner'];
@@ -275,18 +165,16 @@ export default function Dashboard({ network }: { network: string }) {
               supply: fields.supply?.toString() || "10000",
               minted: fields.minted?.toString() || "0",
               address: token.data?.objectId || "",
+              packageId, // Store the extracted package ID
               owner: typedOwner,
               createdAt: new Date().toISOString().split("T")[0],
               image: fields.url || "https://via.placeholder.com/150",
               status: "active",
-              // Hybrid approach: store minimal identifiers
-              objectId: token.data?.objectId || "",
-              type: "nft"
             };
           });
 
           // @ts-expect-error: type interface ish
-          setTokens(filteredTokens.filter(Boolean))
+          setTokens(filteredTokens)
           setNftCollections(filteredNfts || [])
         }
       } catch (err) {
@@ -313,6 +201,90 @@ export default function Dashboard({ network }: { network: string }) {
     })
   }
 
+  // Handle mint button click - navigate with package ID
+  const handleMintTokens = (token: Token) => {
+    console.log("Navigating to mint with package ID:", token.packageId)
+    
+    // Store token data in localStorage so TokenManager can detect the type
+    const tokenData = {
+      name: token.name,
+      symbol: token.symbol,
+      description: token.description,
+      decimal: token.decimals.toString(),
+      newPkgId: token.packageId,
+      packageId: token.packageId, // Add both for compatibility
+      txId: "", // You might want to store this if available
+      owner: "", // You might want to store this if available
+      treasuryCap: "", // You might want to store this if available
+      metadata: "", // You might want to store this if available
+      type: token.type,
+      features: {} // Add features if available
+    }
+    
+    localStorage.setItem('tokenData', JSON.stringify(tokenData))
+    
+    router.push(`/generator/${network}/mint?packageId=${token.packageId}`)
+  }
+
+  // Handle manage token click - navigate with package ID  
+  const handleManageToken = (token: Token) => {
+    console.log("Navigating to manage with package ID:", token.packageId)
+    
+    // Store token data in localStorage for the token manager
+    const tokenData = {
+      name: token.name,
+      symbol: token.symbol,
+      description: token.description,
+      decimal: token.decimals.toString(),
+      newPkgId: token.packageId,
+      packageId: token.packageId, // Add both for compatibility
+      txId: "", // You might want to store this if available
+      owner: "", // You might want to store this if available
+      treasuryCap: "", // You might want to store this if available
+      metadata: "", // You might want to store this if available
+      type: token.type,
+      features: {} // Add features if available
+    }
+    
+    localStorage.setItem('tokenData', JSON.stringify(tokenData))
+    
+    router.push(`/generator/${network}/token?packageId=${token.packageId}`)
+  }
+
+  // Handle NFT mint click - navigate with package ID
+  const handleMintNFT = (collection: NFTCollection) => {
+    console.log("Navigating to NFT mint with package ID:", collection.packageId)
+    router.push(`/nft/mint/${collection.packageId}`)
+  }
+
+  // Get token type badge styling
+  const getTokenTypeBadge = (type: 'standard' | 'regulated' | 'closed-loop') => {
+    switch (type) {
+      case "closed-loop":
+        return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+      case "regulated":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/30"
+      case "standard":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30"
+      default:
+        return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
+    }
+  }
+
+  // Get token type display name
+  const getTokenTypeLabel = (type: 'standard' | 'regulated' | 'closed-loop') => {
+    switch (type) {
+      case "closed-loop":
+        return "Closed-Loop"
+      case "regulated":
+        return "Regulated"
+      case "standard":
+        return "Standard"
+      default:
+        return "Unknown"
+    }
+  }
+
   const getNetworkBadgeColor = (network: string) => {
     switch (network.toLowerCase()) {
       case "mainnet":
@@ -323,30 +295,6 @@ export default function Dashboard({ network }: { network: string }) {
         return "bg-blue-500/20 text-blue-400 border-blue-500/30"
       default:
         return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
-    }
-  }
-
-  const getTokenTypeBadge = (type: string) => {
-    switch (type) {
-      case "regulated":
-        return "bg-purple-500/20 text-purple-400 border-purple-500/30"
-      case "closed-loop":
-        return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-      case "standard":
-      default:
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30"
-    }
-  }
-
-  const getTokenTypeLabel = (type: string) => {
-    switch (type) {
-      case "regulated":
-        return "Regulated"
-      case "closed-loop":
-        return "Closed-Loop"
-      case "standard":
-      default:
-        return "Standard"
     }
   }
 
@@ -488,19 +436,19 @@ export default function Dashboard({ network }: { network: string }) {
                         Token
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                         Network
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                         Supply
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                        Token Type
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                         Decimals
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Description
+                        Package ID
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                         Address
@@ -534,18 +482,30 @@ export default function Dashboard({ network }: { network: string }) {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="outline" className={getTokenTypeBadge(token.type)}>
-                            {getTokenTypeLabel(token.type)}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
                           <Badge variant="outline" className={getNetworkBadgeColor(token.network)}>
                             {token.network}
                           </Badge>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">{token.supply}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge variant="outline" className={getTokenTypeBadge(token.type)}>
+                            {getTokenTypeLabel(token.type)}
+                          </Badge>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">{token.decimals}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300 capitalize">{token.description}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <span className="text-sm text-zinc-400 font-mono">
+                              {token.packageId.slice(0, 6)}...{token.packageId.slice(-4)}
+                            </span>
+                            <button
+                              className="ml-2 text-zinc-500 cursor-pointer hover:text-zinc-300"
+                              onClick={() => handleCopyAddress(token.packageId)}
+                            >
+                              <Copy size={14} />
+                            </button>
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <span className="text-sm text-zinc-400 font-mono">
@@ -570,22 +530,22 @@ export default function Dashboard({ network }: { network: string }) {
                             <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => navigateToTokenManager(token)}
                               >
-                                <Settings size={14} className="mr-2" /> Manage Token
+                                <Link href={`https://suiscan.xyz/${network}/object/${token.packageId}`} target="_blank" rel="noopener noreferrer" className="flex">
+                                  <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => navigateToMint(token)}
+                                onClick={() => handleMintTokens(token)}
                               >
                                 <Coins size={14} className="mr-2" /> Mint Tokens
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                                onClick={() => handleManageToken(token)}
                               >
-                                <Link href={`https://suiscan.xyz/testnet/object/${token.address.split("::")[0]}`} target="_blank" rel="noopener noreferrer" className="flex">
-                                  <ExternalLink size={14} className="mr-2" /> View on Explorer
-                                </Link>
+                                <Terminal size={14} className="mr-2" /> Manage Token
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -620,7 +580,7 @@ export default function Dashboard({ network }: { network: string }) {
                     transition={{ duration: 0.3 }}
                     className="bg-zinc-800 rounded-xl overflow-hidden border border-zinc-700"
                   >
-                    <div className="h-40 bg-zinc-700 relative cursor-pointer" onClick={() => navigateToNFTManager(collection)}>
+                    <div className="h-40 bg-zinc-700 relative">
                       <Image
                         src={collection.image}
                         alt={collection.name}
@@ -632,9 +592,6 @@ export default function Dashboard({ network }: { network: string }) {
                         <Badge variant="outline" className={getNetworkBadgeColor(collection.network)}>
                           {collection.network}
                         </Badge>
-                      </div>
-                      <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-white font-medium">Click to Manage</span>
                       </div>
                     </div>
                     <div className="p-4">
@@ -652,21 +609,16 @@ export default function Dashboard({ network }: { network: string }) {
                           <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
                             <DropdownMenuItem
                               className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                              onClick={() => navigateToNFTManager(collection)}
                             >
-                              <Settings size={14} className="mr-2" /> Manage NFT
+                              <Link href={`https://suiscan.xyz/${network}/object/${collection.packageId}`} target="_blank" rel="noopener noreferrer" className="flex">
+                                <ExternalLink size={14} className="mr-2" /> View on Explorer
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                              onClick={() => router.push(`/nft/mint/${collection.address}`)}
+                              onClick={() => handleMintNFT(collection)}
                             >
                               <ImageIcon size={14} className="mr-2" /> Mint NFT
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                              onClick={() => router.push(`/explorer/${collection.address}`)}
-                            >
-                              <ExternalLink size={14} className="mr-2" /> View on Explorer
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -683,14 +635,14 @@ export default function Dashboard({ network }: { network: string }) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-zinc-500">
+                      <div className="flex items-center justify-between text-xs text-zinc-500 mb-3">
                         <div className="flex items-center">
                           <span className="font-mono text-zinc-300">
-                            {collection.address.slice(0, 6)}...{collection.address.slice(-4)}
+                            {collection.packageId.slice(0, 6)}...{collection.packageId.slice(-4)}
                           </span>
                           <button
                             className="ml-1 text-zinc-500 cursor-pointer hover:text-zinc-300"
-                            onClick={() => handleCopyAddress(collection.address)}
+                            onClick={() => handleCopyAddress(collection.packageId)}
                           >
                             <Copy size={12} />
                           </button>
@@ -698,13 +650,14 @@ export default function Dashboard({ network }: { network: string }) {
                         <span>{collection.createdAt}</span>
                       </div>
 
-                      <Button
-                        onClick={() => navigateToNFTManager(collection)}
-                        variant="outline"
-                        className="w-full mt-4 border-zinc-700 text-zinc-300 hover:text-white cursor-pointer"
-                      >
-                        Manage Collection <ArrowUpRight className="ml-2 h-3 w-3" />
-                      </Button>
+                      <Link href={`https://suiscan.xyz/${network}/object/${collection.packageId}`} className="w-full">
+                        <Button
+                          variant="outline"
+                          className="w-full border-zinc-700 text-zinc-300 hover:text-white"
+                        >
+                          View Collection <ArrowUpRight className="ml-2 h-3 w-3" />
+                        </Button>
+                      </Link>
                     </div>
                   </motion.div>
                 ))}
@@ -728,5 +681,4 @@ export default function Dashboard({ network }: { network: string }) {
         </Tabs>
       </div>
     </div>
-  )
-}
+  )}

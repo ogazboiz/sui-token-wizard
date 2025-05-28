@@ -45,8 +45,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
   const searchParams = useSearchParams()
   const packageId = searchParams?.get('packageId')
   const suiClient = useSuiClient()
-  const tokenData = useFetchTokenData(suiClient, packageId ?? "")
-  console.log("Token data:", tokenData.data);
 
   const [activeTool, setActiveTool] = useState("token-creator")
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
@@ -102,6 +100,9 @@ export default function TokenManager({ network }: TokenManagerProps) {
 
     loadTokenData()
   }, [packageId, pathname, suiClient])
+
+  const tokenData = useFetchTokenData(suiClient, packageId ?? "", tokenType ?? undefined)
+  console.log("Token data:", tokenData.data);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -479,7 +480,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
             </>
           )}
           {activeTool === "token-page" && (
-            <TokenPage network={network} />
+            <TokenPage network={network} tokenData={tokenData.data} />
           )}
           {activeTool === "policy" && (
             <PolicyTokens network={network} />

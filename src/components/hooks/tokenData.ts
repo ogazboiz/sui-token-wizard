@@ -1,8 +1,11 @@
 import { SuiClient } from "@mysten/sui/client";
 import { useQuery } from "@tanstack/react-query";
 import { deriveFullCoinType } from "./getData";
+// import { CoinMetadata } from "@mysten/sui/client"
 
-interface TokenData {
+export type TokenType = "standard" | "regulated" | "closed-loop" | undefined;
+
+export interface TokenData {
     pkgId: string;
     symbol: string;
     name?: string;
@@ -13,7 +16,7 @@ interface TokenData {
     treasuryCap?: string;
     metadata?: string;
     denyCap?: string;
-    type?: string;
+    type?: "standard" | "regulated" | "closed-loop";
     features?: {
         burnable?: boolean;
         mintable?: boolean;
@@ -25,7 +28,9 @@ interface TokenData {
 const fetchTokenData = async (
     suiClient: SuiClient,
     pkgId: string,
+    tokenType: TokenType,
 ): Promise<TokenData> => {
+    console.log("token type here", tokenType);
     if (!pkgId) {
         throw new Error("pkgId is required in tokenData");
     }
@@ -39,7 +44,7 @@ const fetchTokenData = async (
 
     const coinType = await deriveFullCoinType(suiClient, pkgId);
     const metadata = await suiClient.getCoinMetadata({ coinType });
-     
+
 
     // Try to extract symbol and name from metadata if available
     const symbol = metadata?.symbol || "";
@@ -57,13 +62,20 @@ const fetchTokenData = async (
         decimal,
         metadata: metadataId,
         // Add more fields as needed
+        type: tokenType,
+        features: {
+            burnable: true,
+            mintable: true,
+            pausable: true,
+            denylist: true,
+        }
     };
 }
 
-export const useFetchTokenData = (suiClient: SuiClient, pkgId: string, coinType?: string) => {
+export const useFetchTokenData = (suiClient: SuiClient, pkgId: string, tokenType: TokenType) => {
     const { data, isLoading, isError } = useQuery<TokenData, Error>({
-        queryKey: ["tokenData", pkgId, coinType],
-        queryFn: () => fetchTokenData(suiClient, pkgId, coinType),
+        queryKey: ["tokenData", pkgId, tokenType],
+        queryFn: () => fetchTokenData(suiClient, pkgId, tokenType),
         enabled: !!pkgId,
     });
 

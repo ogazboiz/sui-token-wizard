@@ -15,74 +15,53 @@ import { Transaction } from "@mysten/sui/transactions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, Shield, Pause, ScrollText, Plus } from "lucide-react"
-import { deriveCoinType, deriveFullCoinType, getMetadataField } from "@/components/hooks/getData"
-import { CoinMetadata } from "@mysten/sui/client"
+import { TokenData } from "@/components/hooks/tokenData"
 
 interface TokenPageProps {
-  network: string
-}
-
-interface TokenData {
-  name: string
-  symbol: string
-  description: string
-  decimal: string
-  newPkgId: string
-  txId: string
-  owner: string
-  treasuryCap: string
-  metadata: string
-  denyCap?: string
-  type?: string
-  features?: {
-    burnable?: boolean
-    mintable?: boolean
-    pausable?: boolean
-    denylist?: boolean
-    allowlist?: boolean
-    transferRestrictions?: boolean
-  }
+  network: "mainnet" | "testnet" | "devnet"
+  tokenData: TokenData | undefined
 }
 
 type EditMode = 'name' | 'symbol' | 'description' | 'all' | null
 
-export default function TokenPage({ network }: TokenPageProps) {
+export default function TokenPage({ network, tokenData }: TokenPageProps) {
+  console.log(tokenData);
   const { toast } = useToast()
   const account = useCurrentAccount()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
-  const [tokenData, setTokenData] = useState<TokenData | null>(null)
+  // const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [tokenLoaded, setTokenLoaded] = useState(false)
-  const [metadata, setMetadata] = useState<CoinMetadata | null>(null)
+  // const [metadata, setMetadata] = useState<CoinMetadata | null>(null)
 
   let derivedCoinType: string | undefined;
 
-  if (tokenData) {
-    deriveCoinType(suiClient, tokenData).then((result) => {
-      derivedCoinType = result;
-      console.log("Derived coin type:", result);
-    });
-  }
+  // if (tokenData) {
+  //   deriveCoinType(suiClient, tokenData).then((result) => {
+  //     derivedCoinType = result;
+  //     console.log("Derived coin type:", result);
+  //   });
+  // }
 
-  useEffect(() => {
-    if (!tokenData) return;
+  // useEffect(() => {
+  //   if (!tokenData) return;
 
-    const fetchMetadata = async () => {
-      try {
-        const derivedFullCoinType = await deriveFullCoinType(suiClient, tokenData);
-        console.log("Derived coin type:", derivedFullCoinType);
+  //   const fetchMetadata = async () => {
+  //     try {
+  //       const derivedFullCoinType = await deriveFullCoinType(suiClient, tokenData);
+  //       console.log("Derived coin type:", derivedFullCoinType);
 
-        const metadata = await getMetadataField(suiClient, derivedFullCoinType);
-        console.log("Metadata:", metadata);
-        setMetadata(metadata);
-      } catch (err) {
-        console.error("Error fetching metadata:", err);
-      }
-    };
+  //       const metadata = await getMetadataField(suiClient, derivedFullCoinType);
+  //       console.log("Metadata:", metadata);
+  //       setMetadata(metadata);
+  //     } catch (err) {
+  //       console.error("Error fetching metadata:", err);
+  //     }
+  //   };
 
-    fetchMetadata();
-  }, [tokenData, suiClient]);
+  //   fetchMetadata();
+  // }, [tokenData, suiClient]);
 
 
 
@@ -97,20 +76,20 @@ export default function TokenPage({ network }: TokenPageProps) {
   })
   const [isUpdating, setIsUpdating] = useState(false)
 
-  useEffect(() => {
-    // Check localStorage for token data when component mounts
-    const savedTokenData = localStorage.getItem("tokenData")
-    if (savedTokenData) {
-      const parsedData = JSON.parse(savedTokenData)
-      setTokenData(parsedData)
-      setEditForm({
-        name: parsedData.name || "",
-        symbol: parsedData.symbol || "",
-        description: parsedData.description || ""
-      })
-      setTokenLoaded(true)
-    }
-  }, [])
+  // useEffect(() => {
+  //   // Check localStorage for token data when component mounts
+  //   const savedTokenData = localStorage.getItem("tokenData")
+  //   if (savedTokenData) {
+  //     const parsedData = JSON.parse(savedTokenData)
+  //     // setTokenData(parsedData)
+  //     setEditForm({
+  //       name: parsedData.name || "",
+  //       symbol: parsedData.symbol || "",
+  //       description: parsedData.description || ""
+  //     })
+  //     setTokenLoaded(true)
+  //   }
+  // }, [])
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -323,7 +302,7 @@ export default function TokenPage({ network }: TokenPageProps) {
   }
 
   const canEdit = () => {
-    return tokenData && tokenData.type !== "closed-loop"
+    return tokenData && tokenData?.type !== "closed-loop"
   }
 
   const getModalTitle = () => {
@@ -383,10 +362,10 @@ export default function TokenPage({ network }: TokenPageProps) {
               <div className="flex-1">
                 <CardTitle className="text-xl font-bold flex flex-col">
                   <span className="bg-gradient-to-r from-teal-400 to-teal-500 bg-clip-text text-transparent capitalize">
-                    {metadata?.name} ({metadata?.symbol})
+                    {tokenData?.name} ({tokenData?.symbol})
                   </span>
                 </CardTitle>
-                <CardDescription className="text-zinc-400 capitalize">{metadata?.description}</CardDescription>
+                <CardDescription className="text-zinc-400 capitalize">{tokenData?.description}</CardDescription>
 
                 {/* Token Type Badge */}
                 <div className="mt-3">
@@ -471,9 +450,9 @@ export default function TokenPage({ network }: TokenPageProps) {
             <div className="grid grid-cols-2 gap-4">
               <InfoCard
                 label="Package ID"
-                value={tokenData?.newPkgId || ""}
+                value={tokenData?.pkgId || ""}
                 isCopyable
-                explorer={`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`}
+                explorer={`https://suiscan.xyz/${network}/object/${tokenData?.pkgId}`}
                 onCopy={copyToClipboard}
               />
               <InfoCard
@@ -495,7 +474,7 @@ export default function TokenPage({ network }: TokenPageProps) {
               />
               <InfoCard
                 label="Metadata"
-                value={metadata?.id || ""}
+                value={tokenData?.metadata || ""}
                 isCopyable
                 explorer={`https://suiscan.xyz/${network}/object/${tokenData?.metadata}`}
                 onCopy={copyToClipboard}
@@ -503,7 +482,7 @@ export default function TokenPage({ network }: TokenPageProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <InfoCard label="Decimals" value={String(metadata?.decimals) || "9"} />
+              <InfoCard label="Decimals" value={String(tokenData?.decimal) || "9"} />
               <InfoCard
                 label="Transaction"
                 value={tokenData?.txId || ""}
@@ -513,22 +492,22 @@ export default function TokenPage({ network }: TokenPageProps) {
               />
             </div>
 
-            {(tokenData?.type === "regulated" || tokenData?.type === "closed-loop") && tokenData.features && (
+            {(tokenData?.type === "regulated" || tokenData?.type === "closed-loop") && tokenData?.features && (
               <div className="mt-4 border-t border-zinc-800 pt-4">
                 <h3 className="text-sm font-medium mb-3">Token Features</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <FeatureItem name="Mintable" enabled={tokenData.features?.mintable || false} />
-                  <FeatureItem name="Burnable" enabled={tokenData.features?.burnable || false} />
-                  {tokenData.type !== "closed-loop" && (
-                  <>
-                    <FeatureItem name="Pausable" enabled={tokenData.features?.pausable || false} />
-                    <FeatureItem name="Denylist" enabled={tokenData.features?.denylist || false} />
-                  </>
-                  )}
-                  {tokenData.type === "closed-loop" && (
+                  <FeatureItem name="Mintable" enabled={tokenData?.features?.mintable || false} />
+                  <FeatureItem name="Burnable" enabled={tokenData?.features?.burnable || false} />
+                  {tokenData?.type !== "closed-loop" && (
                     <>
-                      <FeatureItem name="Allowlist" enabled={tokenData.features?.allowlist || false} />
-                      <FeatureItem name="Transfer Restrictions" enabled={tokenData.features?.transferRestrictions || false} />
+                      <FeatureItem name="Pausable" enabled={tokenData?.features?.pausable || false} />
+                      <FeatureItem name="Denylist" enabled={tokenData?.features?.denylist || false} />
+                    </>
+                  )}
+                  {tokenData?.type === "closed-loop" && (
+                    <>
+                      <FeatureItem name="Allowlist" enabled={tokenData?.features?.allowlist || false} />
+                      <FeatureItem name="Transfer Restrictions" enabled={tokenData?.features?.transferRestrictions || false} />
                     </>
                   )}
                 </div>
@@ -590,9 +569,9 @@ export default function TokenPage({ network }: TokenPageProps) {
                 </>
               )}
 
-              {tokenData?.type === "regulated" && tokenData.features && (
+              {tokenData?.type === "regulated" && tokenData?.features && (
                 <>
-                  {tokenData.features.denylist && (
+                  {tokenData?.features.denylist && (
                     <ActionCard
                       title="Denylist Management"
                       description="Block or unblock addresses from transferring tokens"
@@ -603,7 +582,7 @@ export default function TokenPage({ network }: TokenPageProps) {
                     />
                   )}
 
-                  {tokenData.features.pausable && (
+                  {tokenData?.features.pausable && (
                     <ActionCard
                       title="Pause/Unpause"
                       description="Control token transfers in case of emergency"

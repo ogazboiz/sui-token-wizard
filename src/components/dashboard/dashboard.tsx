@@ -11,11 +11,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { useCurrentAccount, useSuiClient, ConnectButton } from "@mysten/dapp-kit"
-import { deriveFullCoinType, getMetadataField, useGetAllCoinsAndTokensByOwner, useGetAllNftsByOwner } from "../hooks/getData"
+import { getMetadataField, useGetAllCoinsAndTokensByOwner, useGetAllNftsByOwner } from "../hooks/getData"
 import { ClipLoader } from "react-spinners"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import Link from "next/link"
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
+import { detectTokenType, extractPackageIdFromCoinType, extractPackageIdFromObject } from "../utils/helpers"
 
 // Interface for token and NFT data
 interface Token {
@@ -71,32 +72,6 @@ export default function Dashboard({ network }: { network: string }) {
 
   const allNfts = useGetAllNftsByOwner(account?.address || "");
   const { data: coinData, isLoading: coinsLoading } = useGetAllCoinsAndTokensByOwner(account?.address || "")
-  console.log("Coin data:", coinData);
-  const derivedCoinType = deriveFullCoinType(suiClient, "0xd0e8a80345eefadc43b546ae90b64d5db529cb18e501db6459d2f7c4a17ffa01")
-  console.log("Derived coin type:", derivedCoinType);
-
-  // Helper function to detect token type from coinType
-  const detectTokenType = (coinType: string): 'standard' | 'regulated' | 'closed-loop' => {
-    if (coinType.includes("regulated_coin")) {
-      return "regulated"
-    } else if (coinType.includes("token")) {
-      return "closed-loop"
-    } else if (coinType.includes("my_coin")) {
-      return "standard"
-    }
-    return "standard"
-  }
-
-  // Helper function to extract package ID from coinType
-  const extractPackageIdFromCoinType = (coinType: string): string => {
-    const parts = coinType.split("::")
-    return parts[0] // This is the package ID
-  }
-
-  // Helper function to extract package ID from object address  
-  const extractPackageIdFromObject = (objectId: string): string => {
-    return objectId.split("::")[0] || objectId
-  }
 
   useEffect(() => {
     const fetchTokenData = async () => {
@@ -114,15 +89,10 @@ export default function Dashboard({ network }: { network: string }) {
                 token.coinType.includes("my_coin")
               )
               .map(async (token, index) => {
-                console.log("Token:", token);
                 try {
                   const tokenMetadata = await getMetadataField(suiClient, token.coinType);
                   const packageId = extractPackageIdFromCoinType(token.coinType);
                   const tokenType = detectTokenType(token.coinType);
-
-                  console.log("Token Metadata:", tokenMetadata);
-                  console.log("Package ID:", packageId);
-                  console.log("Token Type:", tokenType);
 
                   return {
                     id: `token-${index}`,
@@ -211,23 +181,23 @@ export default function Dashboard({ network }: { network: string }) {
   const handleMintTokens = (token: Token) => {
     console.log("Navigating to mint with package ID:", token.packageId)
 
-    // Store token data in localStorage so TokenManager can detect the type
-    const tokenData = {
-      name: token.name,
-      symbol: token.symbol,
-      description: token.description,
-      decimal: token.decimals.toString(),
-      newPkgId: token.packageId,
-      packageId: token.packageId, // Add both for compatibility
-      txId: "", // You might want to store this if available
-      owner: "", // You might want to store this if available
-      treasuryCap: "", // You might want to store this if available
-      metadata: "", // You might want to store this if available
-      type: token.type,
-      features: {} // Add features if available
-    }
+    // // Store token data in localStorage so TokenManager can detect the type
+    // const tokenData = {
+    //   name: token.name,
+    //   symbol: token.symbol,
+    //   description: token.description,
+    //   decimal: token.decimals.toString(),
+    //   newPkgId: token.packageId,
+    //   packageId: token.packageId, // Add both for compatibility
+    //   txId: "", // You might want to store this if available
+    //   owner: "", // You might want to store this if available
+    //   treasuryCap: "", // You might want to store this if available
+    //   metadata: "", // You might want to store this if available
+    //   type: token.type,
+    //   features: {} // Add features if available
+    // }
 
-    localStorage.setItem('tokenData', JSON.stringify(tokenData))
+    // localStorage.setItem('tokenData', JSON.stringify(tokenData))
 
     router.push(`/generator/${network}/mint?packageId=${token.packageId}`)
   }
@@ -236,23 +206,23 @@ export default function Dashboard({ network }: { network: string }) {
   const handleManageToken = (token: Token) => {
     console.log("Navigating to manage with package ID:", token.packageId)
 
-    // Store token data in localStorage for the token manager
-    const tokenData = {
-      name: token.name,
-      symbol: token.symbol,
-      description: token.description,
-      decimal: token.decimals.toString(),
-      newPkgId: token.packageId,
-      packageId: token.packageId, // Add both for compatibility
-      txId: "", // You might want to store this if available
-      owner: "", // You might want to store this if available
-      treasuryCap: "", // You might want to store this if available
-      metadata: "", // You might want to store this if available
-      type: token.type,
-      features: {} // Add features if available
-    }
+    // // Store token data in localStorage for the token manager
+    // const tokenData = {
+    //   name: token.name,
+    //   symbol: token.symbol,
+    //   description: token.description,
+    //   decimal: token.decimals.toString(),
+    //   newPkgId: token.packageId,
+    //   packageId: token.packageId, // Add both for compatibility
+    //   txId: "", // You might want to store this if available
+    //   owner: "", // You might want to store this if available
+    //   treasuryCap: "", // You might want to store this if available
+    //   metadata: "", // You might want to store this if available
+    //   type: token.type,
+    //   features: {} // Add features if available
+    // }
 
-    localStorage.setItem('tokenData', JSON.stringify(tokenData))
+    // localStorage.setItem('tokenData', JSON.stringify(tokenData))
 
     router.push(`/generator/${network}/token?packageId=${token.packageId}`)
   }

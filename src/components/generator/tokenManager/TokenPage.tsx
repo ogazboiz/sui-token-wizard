@@ -336,15 +336,15 @@ export default function TokenPage({ network }: TokenPageProps) {
     }
   }
 
-  // Render loading state if token data isn't loaded yet
-  if (!tokenLoaded) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <ClipLoader size={40} color="#14b8a6" />
-        <span className="ml-4 text-zinc-300">Loading token data...</span>
-      </div>
-    )
-  }
+  // // Render loading state if token data isn't loaded yet
+  // if (!tokenLoaded) {
+  //   return (
+  //     <div className="flex justify-center items-center py-20">
+  //       <ClipLoader size={40} color="#14b8a6" />
+  //       <span className="ml-4 text-zinc-300">Loading token data...</span>
+  //     </div>
+  //   )
+  // }
 
   // Render no token found message if no token data is available
   if (tokenLoaded && !tokenData) {

@@ -107,7 +107,6 @@ export async function getMetadataField(suiClient: SuiClient, coinType: string) {
     const object = await suiClient.getCoinMetadata({
         coinType: coinType,
     });
-    console.log("Object:", object);
 
     if (!object) {
         throw new Error("Object not found");

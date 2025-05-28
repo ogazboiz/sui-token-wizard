@@ -120,7 +120,7 @@ export default function MintTokens({ network }: MintTokensProps) {
             setMintAmount('')
             setCoin(coin as string)
 
-            localStorage.setItem('coinId', coin as string)
+            // localStorage.setItem('coinId', coin as string)
           }
         },
         onError: (err) => {

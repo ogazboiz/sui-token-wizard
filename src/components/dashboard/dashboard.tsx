@@ -79,6 +79,7 @@ export default function Dashboard({ network }: { network: string }) {
         setIsLoading(true)
 
         if (coinData) {
+          console.log("Coin data:", coinData);
           // Filter tokens and extract package IDs
           const filteredTokens = await Promise.all(
             coinData

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
 import ContractTemplates from "@/components/contract-templates"
-import { ConnectButton, useSuiClient } from "@mysten/dapp-kit"
+import { ConnectButton, useCurrentAccount, useSuiClient } from "@mysten/dapp-kit"
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import TokenPage from "./tokenManager/TokenPage"
@@ -45,6 +45,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
   const searchParams = useSearchParams()
   const packageId = searchParams?.get('packageId')
   const suiClient = useSuiClient()
+  const account = useCurrentAccount()
 
   const [activeTool, setActiveTool] = useState("token-creator")
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
@@ -101,7 +102,8 @@ export default function TokenManager({ network }: TokenManagerProps) {
     loadTokenData()
   }, [packageId, pathname, suiClient])
 
-  const tokenData = useFetchTokenData(suiClient, packageId ?? "", tokenType ?? undefined)
+
+  const tokenData = useFetchTokenData(suiClient, packageId ?? "", account?.address ?? "", tokenType ?? undefined)
   console.log("Token data:", tokenData.data);
 
   useEffect(() => {

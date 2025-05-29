@@ -148,14 +148,14 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
                 setTokenPolicyCapId(policyCapId)
                 setPolicyCreated(true)
 
-                // Save policy data
-                const policyData = {
-                  policyId,
-                  policyCapId,
-                  tokenSymbol: tokenData.symbol,
-                  createdAt: new Date().toISOString()
-                }
-                localStorage.setItem('tokenPolicy', JSON.stringify(policyData))
+                // // Save policy data
+                // const policyData = {
+                //   policyId,
+                //   policyCapId,
+                //   tokenSymbol: tokenData.symbol,
+                //   createdAt: new Date().toISOString()
+                // }
+                // localStorage.setItem('tokenPolicy', JSON.stringify(policyData))
 
                 toast({
                   title: "Policy created successfully!",

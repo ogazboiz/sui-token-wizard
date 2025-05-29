@@ -2,39 +2,20 @@ import { useQuery } from "@tanstack/react-query";
 import { useSuiClient, useSuiClientQuery } from "@mysten/dapp-kit";
 import { SuiClient } from "@mysten/sui/client";
 import { normalizeSuiAddress } from "@mysten/sui/utils";
-
-interface TokenData {
-    newPkgId: string;
-    symbol: string;
-    name?: string;
-    description?: string;
-    decimal?: string;
-    txId?: string;
-    owner?: string;
-    treasuryCap?: string;
-    metadata?: string;
-    denyCap?: string;
-    type?: string;
-    features?: {
-        burnable?: boolean;
-        mintable?: boolean;
-        pausable?: boolean;
-        denylist?: boolean;
-    };
-}
+import { TokenData } from "./tokenData";
 
 // Utility functions
 export async function deriveCoinType(
     suiClient: SuiClient,
     tokenData: TokenData,
 ): Promise<string> {
-    const { newPkgId, symbol } = tokenData;
+    const { pkgId, symbol } = tokenData;
 
-    if (!newPkgId || !symbol) {
-        throw new Error("newPkgId and symbol are required in tokenData");
+    if (!pkgId || !symbol) {
+        throw new Error("pkgId and symbol are required in tokenData");
     }
 
-    const normalizedPkgId = normalizeSuiAddress(newPkgId);
+    const normalizedPkgId = normalizeSuiAddress(pkgId);
 
     try {
         const packageObject = await suiClient.getObject({
@@ -65,15 +46,15 @@ export async function deriveCoinType(
 
 export async function deriveFullCoinType(
     suiClient: SuiClient,
-    tokenData: TokenData,
+    pkgId: string,
 ): Promise<string> {
-    const { newPkgId, symbol } = tokenData;
+    // const { pkgId, symbol } = tokenData;
 
-    if (!newPkgId || !symbol) {
-        throw new Error("newPkgId and symbol are required in tokenData");
+    if (!pkgId) {
+        throw new Error("pkgId and symbol are required in tokenData");
     }
 
-    const normalizedPkgId = normalizeSuiAddress(newPkgId);
+    const normalizedPkgId = normalizeSuiAddress(pkgId);
 
     try {
         const packageObject = await suiClient.getObject({
@@ -96,6 +77,7 @@ export async function deriveFullCoinType(
         }
 
         const moduleName = moduleNames[0];
+        console.log("Module name:", moduleName);
         return `${normalizedPkgId}::${moduleName}::${moduleName.toUpperCase()}`;
     } catch (err) {
         throw new Error(`Failed to derive coinType: ${err instanceof Error ? err.message : "Unknown error"}`);
@@ -145,7 +127,7 @@ async function getAllNftsByOwner(suiClient: SuiClient, address: string) {
     });
 }
 
-async function getAllTokensByOwner(suiClient: SuiClient, address: string) {
+async function getCLTokensByOwner(suiClient: SuiClient, address: string) {
     const response = await suiClient.getOwnedObjects({
         owner: address,
         options: {
@@ -158,10 +140,35 @@ async function getAllTokensByOwner(suiClient: SuiClient, address: string) {
     return response.data.filter((item) => {
         if (!item.data?.type) return false;
         const type = item.data.type;
-        const isCoin = type.startsWith('0x2::coin::Coin<');
+        const isCoin = type.startsWith('0x2::token::Token<');
 
         return isCoin;
     });
+}
+
+async function getAllCoinsAndTokensByOwner(suiClient: SuiClient, address: string) {
+    const allCoinsPromise = suiClient.getAllCoins({ owner: address });
+    const allTokensPromise = getCLTokensByOwner(suiClient, address);
+
+    const [allCoins, allTokens] = await Promise.all([allCoinsPromise, allTokensPromise]);
+    console.log("allclTokens", allTokens);
+    const formattedTokens = allTokens.map((token) => {
+        // @ts-expect-error: Sui object content fields are not typed in the SDK
+        const { type, objectId, version, digest, content } = token.data;
+        const { fields } = content;
+        const { balance } = fields;
+        return {
+            balance,
+            coinObjectId: objectId,
+            coinType: type.match(/<([^>]+)>/)[1],
+            digest,
+            previousTransaction: null,
+            version,
+        };
+    })
+
+    // allCoins.data contains the array of coins
+    return [...allCoins.data, ...formattedTokens];
 }
 
 // Hooks
@@ -175,16 +182,6 @@ export const useGetMetadataField = (coinType: string) => {
     });
 };
 
-export const useGetAllCoins = (address: string) => {
-    const suiClient = useSuiClient();
-
-    return useQuery({
-        queryKey: ["allCoins", address],
-        queryFn: () => suiClient.getAllCoins({ owner: address }),
-        enabled: !!address,
-    });
-};
-
 export const useGetAllNftsByOwner = (address: string) => {
     const suiClient = useSuiClient();
 
@@ -195,16 +192,36 @@ export const useGetAllNftsByOwner = (address: string) => {
     });
 };
 
-
-export const useGetAllTokensByOwner = (address: string) => {
+export const useGetAllCoinsAndTokensByOwner = (address: string) => {
     const suiClient = useSuiClient();
 
     return useQuery({
-        queryKey: ["allTokensByOwner", address],
-        queryFn: () => getAllTokensByOwner(suiClient, address),
+        queryKey: ["allCoinsAndTokensByOwner", address],
+        queryFn: () => getAllCoinsAndTokensByOwner(suiClient, address),
         enabled: !!address,
     });
 };
+
+// get all coins except closed loop tokens
+// export const useGetAllCoins = (address: string) => {
+//     const suiClient = useSuiClient();
+
+//     return useQuery({
+//         queryKey: ["allCoins", address],
+//         queryFn: () => suiClient.getAllCoins({ owner: address }),
+//         enabled: !!address,
+//     });
+// };
+
+// export const useGetAllTokensByOwner = (address: string) => {
+//     const suiClient = useSuiClient();
+
+//     return useQuery({
+//         queryKey: ["allTokensByOwner", address],
+//         queryFn: () => getAllTokensByOwner(suiClient, address),
+//         enabled: !!address,
+//     });
+// };
 
 export const useGetObjects = (account: { address: string }) => {
     const { data, isPending, error } = useSuiClientQuery(

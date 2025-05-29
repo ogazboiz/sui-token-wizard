@@ -20,33 +20,16 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
 import { deriveCoinType, getDenyList } from "@/components/hooks/getData"
+import { TokenPageProps } from "./TokenPage"
 // import { useNetworkVariables } from "@/components/utils/networkConfig"
 
-interface DenylistTokensProps {
-  network: string
-}
 
-export default function DenylistTokens({ network }: DenylistTokensProps) {
+
+export default function DenylistTokens({ network, tokenData, isLoading }: TokenPageProps) {
   const { toast } = useToast()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
   // const { coinPackageId } = useNetworkVariables();
-
-  // Token data state
-  const [tokenData, setTokenData] = useState<{
-    name: string
-    symbol: string
-    description: string
-    decimal: string
-    newPkgId: string
-    txId: string
-    metadata: string
-    treasuryCap: string
-    denyCap: string
-    features?: {
-      denylist?: boolean
-    }
-  } | null>(null)
 
   let derivedCoinType: string | undefined;
   // let denylist: string[] | undefined;
@@ -56,10 +39,6 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
       derivedCoinType = result;
       console.log("Derived coin type:", result);
     });
-
-    // getMetadataField(suiClient, tokenData.metadata || "").then((result) => {
-    //   console.log("Metadata:", result);
-    // });
   }
 
   // Denylist state
@@ -67,48 +46,39 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
   const [addressToRemove, setAddressToRemove] = useState('')
   const [denylistAddSuccess, setDenylistAddSuccess] = useState(false)
   const [denylistRemoveSuccess, setDenylistRemoveSuccess] = useState(false)
-  const [tokenLoaded, setTokenLoaded] = useState(false)
   const [denylistedAddresses, setDenylistedAddresses] = useState<string[]>([])
   const [isAddPending, setIsAddPending] = useState(false)
   const [isRemovePending, setIsRemovePending] = useState(false)
 
   useEffect(() => {
-    // Check localStorage for token data when component mounts
-    const savedTokenData = localStorage.getItem('tokenData')
     let denylist: string[] | undefined;
-    if (savedTokenData) {
-      const parsedData = JSON.parse(savedTokenData)
-      setTokenData(parsedData)
 
-      // // dummy addresses
-      // setDenylistedAddresses([
-      //   "0x1234...5678",
-      //   "0xabcd...ef01"
-      // ])
 
-      getDenyList(suiClient, '0x403').then((result) => {
-        let denylist: string[] = [];
+    // // dummy addresses
+    // setDenylistedAddresses([
+    //   "0x1234...5678",
+    //   "0xabcd...ef01"
+    // ])
 
-        // If fields.id is an array of objects
-        if (Array.isArray(result.lists.fields.id)) {
-          denylist = result.lists.fields.id.map((item: { id: string }) => item.id);
-        }
-        // If fields.id is a single object
-        else if (result.lists.fields.id && typeof result.lists.fields.id === "object" && result.lists.fields.id.id) {
-          denylist = [result.lists.fields.id.id];
-        }
-        // If fields.id is a string (unlikely, but just in case)
-        else if (typeof result.lists.fields.id === "string") {
-          denylist = [result.lists.fields.id];
-        }
+    getDenyList(suiClient, '0x403').then((result) => {
+      let denylist: string[] = [];
 
-        setDenylistedAddresses(denylist);
-      });
+      // If fields.id is an array of objects
+      if (Array.isArray(result.lists.fields.id)) {
+        denylist = result.lists.fields.id.map((item: { id: string }) => item.id);
+      }
+      // If fields.id is a single object
+      else if (result.lists.fields.id && typeof result.lists.fields.id === "object" && result.lists.fields.id.id) {
+        denylist = [result.lists.fields.id.id];
+      }
+      // If fields.id is a string (unlikely, but just in case)
+      else if (typeof result.lists.fields.id === "string") {
+        denylist = [result.lists.fields.id];
+      }
+      setDenylistedAddresses(denylist);
+    });
 
-      setDenylistedAddresses(denylist || [])
-
-      setTokenLoaded(true)
-    }
+    setDenylistedAddresses(denylist || [])
   }, [suiClient])
 
   // Handle adding address to denylist
@@ -131,7 +101,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
       target: `${derivedCoinType}::add_deny_list`,
       arguments: [
         tx.object('0x403'),
-        tx.object(tokenData.denyCap),
+        tx.object(tokenData.denyCap || ""),
         tx.pure.address(addressToAdd),
       ],
     })
@@ -192,7 +162,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
       target: `${derivedCoinType}::remove_deny_list`,
       arguments: [
         tx.object('0x403'),
-        tx.object(tokenData.denyCap),
+        tx.object(tokenData.denyCap || ""),
         tx.pure.address(addressToRemove),
       ],
     })
@@ -243,7 +213,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
   }
 
   // Render loading state if token data isn't loaded yet
-  if (!tokenLoaded) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
         <ClipLoader size={40} color="#14b8a6" />
@@ -253,7 +223,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
   }
 
   // Render no token found message if no token data is available
-  if (tokenLoaded && !tokenData) {
+  if (!isLoading && !tokenData) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
         <Terminal className="h-4 w-4 text-teal-500" />
@@ -337,7 +307,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
               <span className="text-zinc-400 text-sm">Deny Cap:</span>
               <div className="flex items-center">
                 <span className="text-white truncate max-w-[200px]">
-                  {tokenData?.denyCap.substring(0, 6)}...{tokenData?.denyCap.substring(tokenData?.denyCap.length - 4)}
+                  {tokenData?.denyCap?.substring(0, 6)}...{tokenData?.denyCap?.substring(tokenData?.denyCap.length - 4)}
                 </span>
                 <Button
                   variant="ghost"
@@ -481,7 +451,7 @@ export default function DenylistTokens({ network }: DenylistTokensProps) {
             variant="outline"
             size="sm"
             className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
-            onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`, '_blank')}
+            onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.pkgId}`, '_blank')}
           >
             View on Explorer
             <ExternalLink className="h-4 w-4 ml-2" />

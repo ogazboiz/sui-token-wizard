@@ -28,26 +28,21 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
   const suiClient = useSuiClient();
   const updateToken = useUpdateToken;
   const account = useCurrentAccount();
-  const { mutate: signAndExecute, isSuccess, isPending } = useSignAndExecuteTransaction();
+  const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction();
 
   const [tokenName, setTokenName] = useState("")
   const [tokenSymbol, setTokenSymbol] = useState("")
   const [customDecimals, setCustomDecimals] = useState(false)
   const [decimals, setDecimals] = useState("9")
-  const [initialSupply, setInitialSupply] = useState("")
-  const [maxSupply, setMaxSupply] = useState("")
+  // const [initialSupply, setInitialSupply] = useState("")
+  // const [maxSupply, setMaxSupply] = useState("")
   const [description, setDescription] = useState("")
   const [burnable, setBurnable] = useState(true)
   const [mintable, setMintable] = useState(true)
   const [denylist, setDenylist] = useState(true)
   const [allowlist, setAllowlist] = useState(true)
   const [transferRestrictions, setTransferRestrictions] = useState(true)
-  const [txId, setTxId] = useState('');
-  const [owner, setOwner] = useState('')
-  const [newPkgId, setNewPkgId] = useState('');
-  const [treasuryCap, setTreasuryCap] = useState('');
-  const [denyCap, setDenyCap] = useState('');
-  const [tokenCreated, setTokenCreated] = useState(false);
+  const [, setTokenCreated] = useState(false);
   const [isCreatingToken, setIsCreatingToken] = useState(false)
 
   const getNetworkName = () => {
@@ -138,19 +133,19 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
             const ownerObj = createdArr.find(
               (item) => typeof item.owner === "object" && "AddressOwner" in item.owner
             );
+            // @ts-expect-error addr owner type
             const owner = ownerObj ? ownerObj?.owner?.AddressOwner : "";
 
-            // Get the new package ID
             const newPkgId = res.objectChanges?.find(
               (item) => item.type === "published"
             )?.packageId || "";
 
-            // Get the treasury cap
             const treasuryCap = res.objectChanges?.find(
               (item) =>
                 item.type === "created" &&
                 typeof item.objectType === "string" &&
                 item.objectType.includes("TreasuryCap")
+              // @ts-expect-error object id type
             )?.objectId || "";
 
             const denyCap = res.objectChanges?.find(
@@ -158,49 +153,17 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                 item.type === "created" &&
                 typeof item.objectType === "string" &&
                 item.objectType.includes("DenyCap")
+              // @ts-expect-error object id type
             )?.objectId;
 
-            console.log({ owner, denyCap, treasuryCap, newPkgId });
-
-            // Set state variables
-            setTxId(txId);
-            setOwner(owner ? String(owner) : "");
-            setNewPkgId(newPkgId);
-            setTreasuryCap(treasuryCap);
-            setDenyCap(denyCap);
+            console.log({ txId, owner, newPkgId, treasuryCap, denyCap });
             setTokenCreated(true);
 
-            // Create token data object to save
-            const tokenData = {
-              name: tokenName,
-              symbol: tokenSymbol,
-              description: description || `${tokenName} (${tokenSymbol}) - Closed-Loop Token`,
-              decimal: decimals,
-              newPkgId,
-              txId,
-              treasuryCap,
-              denyCap,
-              type: "closed-loop",
-              features: {
-                burnable,
-                mintable,
-                pausable: false, // Always false for closed-loop
-                denylist: false, // Always false for closed-loop
-                allowlist,
-                transferRestrictions
-              }
-            }
-
-            // Save token data to localStorage
-            localStorage.setItem('tokenData', JSON.stringify(tokenData))
-
-            // Show success toast
             toast({
               title: "Token created successfully!",
               description: "Your closed-loop token has been created and is ready to use.",
             })
 
-            // Redirect to token page
             setTimeout(() => {
               router.push(`/generator/${network}/token`)
             }, 1000)
@@ -267,7 +230,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                           <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="w-[200px] text-xs">The name of your closed-loop token (e.g., "Ecosystem Points")</p>
+                          <p className="w-[200px] text-xs">The name of your closed-loop token (e.g., &quot;Ecosystem Points&quot;)</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -290,7 +253,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="w-[200px] text-xs">
-                            The symbol of your token (e.g., "ECO"). Usually 3-5 characters.
+                            The symbol of your token (e.g., &quot;ECO&quot;). Usually 3-5 characters.
                           </p>
                         </TooltipContent>
                       </Tooltip>

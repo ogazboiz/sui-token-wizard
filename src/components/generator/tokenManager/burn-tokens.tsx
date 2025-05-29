@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -20,56 +20,34 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
 import { deriveCoinType } from "@/components/hooks/getData"
+import { TokenPageProps } from "./TokenPage"
 
-interface BurnTokensProps {
-  network: string
-}
-
-export default function BurnTokens({ network }: BurnTokensProps) {
+export default function BurnTokens({ network, tokenData, isLoading }: TokenPageProps) {
   const { toast } = useToast()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
 
-  // Token data state
-  const [tokenData, setTokenData] = useState<{
-    name: string
-    symbol: string
-    description: string
-    decimal: string
-    newPkgId: string
-    txId: string
-    treasuryCap: string
-  } | null>(null)
+  let derivedCoinType: string | undefined;
 
-    let derivedCoinType: string | undefined;
-  
-    if (tokenData) {
-      deriveCoinType(suiClient, tokenData).then((result) => {
-        derivedCoinType = result;
-        console.log("Derived coin type:", result);
-      });
-    }
+  if (tokenData) {
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
+      console.log("Derived coin type:", result);
+    });
+  }
 
   // Burn state
-  const [treasuryCap, setTreasuryCap] = useState('')
-  const [burnCoin, setBurnCoin] = useState('')
+  const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap)
+  const [burnCoin, setBurnCoin] = useState(tokenData?.coinCap)
   const [burnSuccess, setBurnSuccess] = useState(false)
-  const [tokenLoaded, setTokenLoaded] = useState(false)
 
-  useEffect(() => {
-    // Check localStorage for token data when component mounts
-    const savedTokenData = localStorage.getItem('tokenData')
-    const coinId = localStorage.getItem('coinId')
-    if (savedTokenData) {
-      const parsedData = JSON.parse(savedTokenData)
-      setTreasuryCap(parsedData?.treasuryCap)
-      setTokenData(parsedData)
-      setTokenLoaded(true)
-    }
-    if (coinId) {
-      setBurnCoin(coinId)
-    }
-  }, [])
+  // todo: to get coinCap from token data
+  // useEffect(() => {
+  //   const coinCap = localStorage.getItem('coinCap')
+  //   if (coinCap) {
+  //     setBurnCoin(coinCap)
+  //   }
+  // }, [])
 
   console.log(tokenData)
 
@@ -80,7 +58,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
 
     console.log("Burning with values:", {
       treasuryCap: tokenData.treasuryCap,
-      coinId: burnCoin,
+      coinCap: burnCoin,
     })
 
     const tx = new Transaction()
@@ -91,7 +69,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
       target: `${derivedCoinType}::burn`,
       arguments: [
         tx.object(tokenData.treasuryCap),
-        tx.object(burnCoin),
+        tx.object(burnCoin || ""),
       ],
     })
 
@@ -128,7 +106,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
   }
 
   // Render loading state if token data isn't loaded yet
-  if (!tokenLoaded) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
         <ClipLoader size={40} color="#14b8a6" />
@@ -138,7 +116,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
   }
 
   // Render no token found message if no token data is available
-  if (tokenLoaded && !tokenData) {
+  if (!isLoading && !tokenData) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
         <Terminal className="h-4 w-4 text-teal-500" />
@@ -263,7 +241,7 @@ export default function BurnTokens({ network }: BurnTokensProps) {
             variant="outline"
             size="sm"
             className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
-            onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`, '_blank')}
+            onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.pkgId}`, '_blank')}
           >
             View on Explorer
             <ExternalLink className="h-4 w-4 ml-2" />

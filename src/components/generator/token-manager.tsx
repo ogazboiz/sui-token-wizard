@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
 import ContractTemplates from "@/components/contract-templates"
-import { ConnectButton } from "@mysten/dapp-kit"
+import { ConnectButton, useCurrentAccount, useSuiClient } from "@mysten/dapp-kit"
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import TokenPage from "./tokenManager/TokenPage"
@@ -18,9 +18,11 @@ import DenylistTokens from "./tokenManager/denylist-tokens"
 import PausableTokens from "./tokenManager/pausable-tokens"
 import PolicyTokens from "./tokenManager/policy-tokens"
 import ActionRequests from "./tokenManager/new-request"
+import { detectTokenTypeFromPackageId } from "../utils/helpers"
+import { TokenData, useFetchTokenData } from "../hooks/tokenData"
 
 interface TokenManagerProps {
-  network: string
+  network: "mainnet" | "testnet" | "devnet"
 }
 
 interface Tool {
@@ -37,112 +39,82 @@ interface Tool {
   requiresPolicy?: boolean
 }
 
-export default function TokenManager({ network }: TokenManagerProps) {
+export default function TokenManager({ network = "testnet" }: TokenManagerProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const packageId = searchParams?.get('packageId')
-  
+  const suiClient = useSuiClient()
+  const account = useCurrentAccount()
+
   const [activeTool, setActiveTool] = useState("token-creator")
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const { isConnected, isReady } = useWalletConnection()
   const [hasCreatedToken, setHasCreatedToken] = useState(false)
+  const [tokenData, setTokenData] = useState<TokenData | undefined>(undefined)
   const [tokenType, setTokenType] = useState<'standard' | 'regulated' | 'closed-loop' | null>(null)
   const [hasPolicyCreated, setHasPolicyCreated] = useState(false)
-
-  // Helper function to detect token type from package ID
-  const detectTokenTypeFromPackageId = async (pkgId: string): Promise<'standard' | 'regulated' | 'closed-loop' | null> => {
-    try {
-      // Method 1: Check localStorage for existing token data
-      const savedTokenData = localStorage.getItem('tokenData')
-      if (savedTokenData) {
-        const parsedData = JSON.parse(savedTokenData)
-        if (parsedData.newPkgId === pkgId || parsedData.packageId === pkgId) {
-          return parsedData.type || 'standard'
-        }
-      }
-
-      // Method 2: Check if there's a userTokens array in localStorage
-      const userTokens = localStorage.getItem('userTokens')
-      if (userTokens) {
-        const tokens = JSON.parse(userTokens)
-        const matchingToken = tokens.find((token: any) => 
-          token.packageId === pkgId || token.newPkgId === pkgId
-        )
-        if (matchingToken) {
-          return matchingToken.type || 'standard'
-        }
-      }
-
-      // Method 3: Try to detect from package ID pattern (if you have consistent patterns)
-      // This is a fallback method - you might need to adjust based on your actual package ID patterns
-      
-      // For now, return standard as default
-      return 'standard'
-    } catch (error) {
-      console.error('Error detecting token type:', error)
-      return 'standard' // Default fallback
-    }
-  }
-
-  // Add network validation at the beginning
-  if (!network || typeof network !== 'string') {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center text-red-400">
-          Error: Invalid network parameter
-        </div>
-      </div>
-    )
-  }
 
   // Check if the user has a token and detect its type
   useEffect(() => {
     const loadTokenData = async () => {
       console.log('Loading token data, packageId:', packageId)
       console.log('Current pathname:', pathname)
-      
+
       if (packageId) {
-        // If packageId is provided, detect token type
-        const detectedType = await detectTokenTypeFromPackageId(packageId)
+        const detectedType = await detectTokenTypeFromPackageId(suiClient, packageId)
         console.log('Detected token type:', detectedType)
-        
+
         if (detectedType) {
           setTokenType(detectedType)
           setHasCreatedToken(true)
-          
-          // Check if policy exists for closed-loop tokens
+          // todo: make dynamic
           if (detectedType === "closed-loop") {
             const policyData = localStorage.getItem('tokenPolicy')
             setHasPolicyCreated(!!policyData)
           }
         } else {
-          // If we can't detect type from packageId, still set hasCreatedToken to true
-          // so the tools show up, and default to standard
           setHasCreatedToken(true)
           setTokenType('standard')
-        }
-      } else {
-        // Fallback to localStorage check
-        if (typeof window !== "undefined") {
-          const tokenData = localStorage.getItem('tokenData')
-          if (tokenData) {
-            const parsedTokenData = JSON.parse(tokenData)
-            setHasCreatedToken(true)
-            setTokenType(parsedTokenData.type || 'standard')
-            
-            // Check if policy exists for closed-loop tokens
-            if (parsedTokenData.type === "closed-loop") {
-              const policyData = localStorage.getItem('tokenPolicy')
-              setHasPolicyCreated(!!policyData)
-            }
-          }
         }
       }
     }
 
     loadTokenData()
-  }, [packageId, pathname])
+  }, [packageId, pathname, suiClient])
+
+  //can also get isError here
+  const { data, isLoading, refetch } = useFetchTokenData(suiClient, packageId ?? "", account?.address ?? "", tokenType ?? undefined)
+  useEffect(() => {
+    setTokenData(data);
+  }, [data]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const toolMap: { [key: string]: string } = {
+      '/mint': 'mint-tokens',
+      '/burn': 'burn-tokens',
+      '/denylist': 'denylist',
+      '/pausable': 'pausable',
+      '/policy': 'policy',
+      '/action-requests': 'action-requests',
+      '/token': 'token-page',
+    };
+
+    const matchedTool = Object.entries(toolMap).find(([key]) => pathname.includes(key));
+    if (matchedTool) {
+      setActiveTool(matchedTool[1]);
+    } else {
+      setActiveTool('token-creator');
+      // Set template from URL if on token-creator
+      const params = new URLSearchParams(window.location.search);
+      const template = params.get("template");
+      if (template && ["standard", "regulated", "closed-loop"].includes(template)) {
+        setSelectedTemplate(template);
+      }
+    }
+  }, [pathname]);
 
   // Define tools with updated conditional logic
   const tools: Tool[] = [
@@ -242,64 +214,28 @@ export default function TokenManager({ network }: TokenManagerProps) {
 
   // Filter tools based on token type
   const filteredTools = tools.filter(tool => {
-    // Always show token creator
     if (tool.id === "token-creator") return true
-    
-    // Always show coming soon tools
+
     if (tool.comingSoon && !tool.showOnlyForClosedLoop && !tool.showOnlyForRegulated) return true
-    
-    // If no token type detected yet, only show universal tools and coming soon
+
     if (!tokenType) {
       return !tool.showOnlyForClosedLoop && !tool.showOnlyForRegulated
     }
-    
-    // Filter based on token type
+
     switch (tokenType) {
       case "closed-loop":
-        // Show: universal tools + closed-loop specific tools
         return !tool.showOnlyForRegulated
-        
+
       case "regulated":
-        // Show: universal tools + regulated specific tools
         return !tool.showOnlyForClosedLoop
-        
+
       case "standard":
-        // Show: only universal tools (no regulated or closed-loop tools)
         return !tool.showOnlyForClosedLoop && !tool.showOnlyForRegulated
-        
+
       default:
         return !tool.showOnlyForClosedLoop && !tool.showOnlyForRegulated
     }
   })
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Check URL to determine active tool
-      if (pathname.includes('/mint')) {
-        setActiveTool('mint-tokens')
-      } else if (pathname.includes('/burn')) {
-        setActiveTool('burn-tokens')
-      } else if (pathname.includes('/denylist')) {
-        setActiveTool('denylist')
-      } else if (pathname.includes('/pausable')) {
-        setActiveTool('pausable')
-      } else if (pathname.includes('/policy')) {
-        setActiveTool('policy')
-      } else if (pathname.includes('/action-requests')) {
-        setActiveTool('action-requests')
-      } else if (pathname.includes('/token')) {
-        setActiveTool('token-page')
-      } else {
-        setActiveTool('token-creator')
-        // Set template from URL if on token-creator
-        const params = new URLSearchParams(window.location.search)
-        const template = params.get("template")
-        if (template && ["standard", "regulated", "closed-loop"].includes(template)) {
-          setSelectedTemplate(template)
-        }
-      }
-    }
-  }, [pathname])
 
   const handleTemplateSelect = (templateId: string | null) => {
     setSelectedTemplate(templateId)
@@ -357,7 +293,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
 
   const getTokenTypeDisplay = () => {
     if (!tokenType) return ""
-    
+
     switch (tokenType) {
       case "closed-loop":
         return " (Closed-Loop)"
@@ -370,7 +306,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
     }
   }
 
-  // Show loading state while checking wallet connection
   if (!isReady) {
     return (
       <div className="container mx-auto px-4 py-6 flex justify-center items-center h-48">
@@ -379,7 +314,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
     )
   }
 
-  // Show wallet connection prompt if not connected
   if (!isConnected) {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -426,19 +360,18 @@ export default function TokenManager({ network }: TokenManagerProps) {
         <ChevronRight className="w-4 h-4 mx-1" />
         <span className="text-white">{getActiveToolName()}{getTokenTypeDisplay()}</span>
       </div>
-      
+
       <div className="grid md:grid-cols-[300px_1fr] gap-6">
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
           <div className="p-4 border-b border-zinc-800">
             <h2 className="font-medium text-white flex items-center">
               Tools{tokenType && (
-                <span className={`ml-2 text-xs px-2 py-1 rounded ${
-                  tokenType === 'closed-loop' ? 'bg-emerald-500/20 text-emerald-400' :
+                <span className={`ml-2 text-xs px-2 py-1 rounded ${tokenType === 'closed-loop' ? 'bg-emerald-500/20 text-emerald-400' :
                   tokenType === 'regulated' ? 'bg-purple-500/20 text-purple-400' :
-                  'bg-blue-500/20 text-blue-400'
-                }`}>
+                    'bg-blue-500/20 text-blue-400'
+                  }`}>
                   {tokenType === 'closed-loop' ? 'Closed-Loop' :
-                   tokenType === 'regulated' ? 'Regulated' : 'Standard'}
+                    tokenType === 'regulated' ? 'Regulated' : 'Standard'}
                 </span>
               )}
               <span className="ml-1 text-orange-400">🔥</span>
@@ -453,9 +386,8 @@ export default function TokenManager({ network }: TokenManagerProps) {
             {filteredTools.map((tool) => (
               <button
                 key={tool.id}
-                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${
-                  tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-                } ${tool.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                  } ${tool.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                 disabled={tool.comingSoon}
                 onClick={() => !tool.comingSoon && handleToolSelect(tool.id, tool.route)}
               >
@@ -478,7 +410,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
             </Button>
           </div>
         </div>
-        
+
         <div>
           {activeTool === "token-creator" && (
             <>
@@ -513,7 +445,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
             </>
           )}
           {activeTool === "token-page" && (
-            <TokenPage network={network} />
+            <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "policy" && (
             <PolicyTokens network={network} />
@@ -522,16 +454,16 @@ export default function TokenManager({ network }: TokenManagerProps) {
             <ActionRequests network={network} />
           )}
           {activeTool === "mint-tokens" && (
-            <MintTokens network={network} />
+            <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "burn-tokens" && (
-            <BurnTokens network={network} />
+            <BurnTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "denylist" && (
-            <DenylistTokens network={network} />
+            <DenylistTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "pausable" && (
-            <PausableTokens network={network} />
+            <PausableTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
         </div>
       </div>

@@ -84,7 +84,7 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
   }, [packageId, pathname, suiClient])
 
   //can also get isError here
-  const { data, isLoading } = useFetchTokenData(suiClient, packageId ?? "", account?.address ?? "", tokenType ?? undefined)
+  const { data, isLoading, refetch } = useFetchTokenData(suiClient, packageId ?? "", account?.address ?? "", tokenType ?? undefined)
   useEffect(() => {
     setTokenData(data);
   }, [data]);
@@ -445,7 +445,7 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
             </>
           )}
           {activeTool === "token-page" && (
-            <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} />
+            <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "policy" && (
             <PolicyTokens network={network} />
@@ -454,16 +454,16 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
             <ActionRequests network={network} />
           )}
           {activeTool === "mint-tokens" && (
-            <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} />
+            <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "burn-tokens" && (
-            <BurnTokens network={network} tokenData={tokenData} isLoading={isLoading} />
+            <BurnTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "denylist" && (
-            <DenylistTokens network={network} tokenData={tokenData} isLoading={isLoading} />
+            <DenylistTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "pausable" && (
-            <PausableTokens network={network} tokenData={tokenData} isLoading={isLoading} />
+            <PausableTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { PaginatedObjectsResponse, SuiClient, SuiObjectResponse } from "@mysten/sui/client";
+import { PaginatedObjectsResponse, SuiClient, SuiObjectResponse, SuiTransactionBlockResponse } from "@mysten/sui/client";
 import { useQuery } from "@tanstack/react-query";
 import { deriveFullCoinType } from "./getData";
 import { normalizeSuiAddress } from "@mysten/sui/utils";
@@ -51,7 +51,36 @@ const fetchTokenData = async (
     const description = metadata?.description || "";
     const decimal = metadata?.decimals?.toString() || "";
     const metadataId = metadata?.id || "";
-    // You may want to extract more fields as needed
+
+    const features =
+        tokenType === "closed-loop"
+            ? {
+                burnable: true,
+                mintable: true,
+                pausable: false,
+                denylist: false,
+                allowlist: true,
+                transferRestrictions: true,
+            }
+            : tokenType === "regulated"
+                ? {
+                    burnable: true,
+                    mintable: true,
+                    pausable: true,
+                    denylist: true,
+                    allowlist: false,
+                    transferRestrictions: false,
+                }
+                : tokenType === "standard"
+                    ? {
+                        burnable: true,
+                        mintable: true,
+                        pausable: false,
+                        denylist: false,
+                        allowlist: false,
+                        transferRestrictions: false,
+                    }
+                    : {};
 
     return {
         pkgId,
@@ -66,17 +95,12 @@ const fetchTokenData = async (
         denyCap: denyCap ?? "",
         coinCap: coinCap ?? "",
         type: tokenType ?? undefined,
-        features: {
-            burnable: true,
-            mintable: true,
-            pausable: true,
-            denylist: true,
-        }
+        features
     };
 }
 
 export const useFetchTokenData = (suiClient: SuiClient, pkgId: string, owner: string, tokenType: TokenType) => {
-    const { data, isLoading, isError } = useQuery<TokenData, Error>({
+    const { data, isLoading, isError, refetch } = useQuery<TokenData, Error>({
         queryKey: ["tokenData", pkgId, tokenType],
         queryFn: () => fetchTokenData(suiClient, pkgId, owner, tokenType),
         enabled: !!pkgId,
@@ -86,6 +110,7 @@ export const useFetchTokenData = (suiClient: SuiClient, pkgId: string, owner: st
         data,
         isLoading,
         isError,
+        refetch
     };
 }
 
@@ -93,29 +118,6 @@ export async function getPackageOwner(client: SuiClient, packageId: string) {
     const object = await client.getObject({ id: packageId, options: { showOwner: true } });
     return object.data?.owner;
 }
-
-// async function getPublishTxAndTreasuryCap(client: SuiClient, packageId: string): Promise<TxIdsAndCaps> {
-//     // Find transactions involving the packageId
-//     const txs = await client.queryTransactionBlocks({
-//         filter: { InputObject: packageId },
-//         limit: 1,
-//     });
-
-//     if (!txs.data.length) return null;
-
-//     const txid = txs.data[0].digest;
-//     const txDetails = await client.getTransactionBlock({ digest: txid, options: { showObjectChanges: true } });
-
-//     // Find TreasuryCap object in object changes
-//     const treasuryCap = txDetails.objectChanges?.find(
-//         (change) => change.objectType && change.objectType.includes('TreasuryCap')
-//     );
-
-//     return {
-//         txid,
-//         treasuryCap: treasuryCap?.objectId,
-//     };
-// }
 
 interface TxIdsAndCaps {
     txId: string | null;
@@ -135,18 +137,30 @@ export const getTxIdsAndCaps = async (
         console.log("NormalizedPkgId:", normalizedPkgId);
 
         // Fetch transactions for the owner with proper pagination
-        const transactions = await suiClient.queryTransactionBlocks({
-            filter: { FromAddress: ownerAddress },
-            options: {
-                showEffects: true,
-                showObjectChanges: true,
-            },
-            limit: 70, // Add limit to get more results
-        });
-        console.log("transactions:", transactions);
+        let allTransactions: SuiTransactionBlockResponse[] = [];
+        let txCursor: string | null = null;
+        let hasNextPage = true;
+
+        while (hasNextPage) {
+            const result = await suiClient.queryTransactionBlocks({
+                filter: { FromAddress: ownerAddress },
+                options: {
+                    showEffects: true,
+                    showObjectChanges: true,
+                },
+                limit: 100,
+                cursor: txCursor || undefined,
+            });
+
+            allTransactions = allTransactions.concat(result.data);
+            hasNextPage = result.hasNextPage;
+            txCursor = result.nextCursor ?? null;
+        }
+
+        console.log("allTransactions:", allTransactions);
 
         // Find transaction that published the package
-        const publishTx = transactions.data.find((tx) => {
+        const publishTx = allTransactions.find((tx) => {
             // Check object changes for package publication
             const hasPackageCreation = tx.objectChanges?.some(
                 (change) => change.type === 'published' &&
@@ -163,11 +177,11 @@ export const getTxIdsAndCaps = async (
         });
         console.log("publishTx:", publishTx);
 
-        const txId = publishTx?.digest || null;
+        const txId = publishTx?.effects?.transactionDigest || null;
 
         // Fetch owned objects for the owner with pagination
         let allObjects: SuiObjectResponse[] = [];
-        let cursor: string | null = null;
+        let objCursor: string | null = null;
 
         do {
             const objectsPage: PaginatedObjectsResponse = await suiClient.getOwnedObjects({
@@ -176,13 +190,13 @@ export const getTxIdsAndCaps = async (
                     showType: true,
                     showContent: true,
                 },
-                cursor,
+                cursor: objCursor,
                 limit: 50,
             });
 
             allObjects = allObjects.concat(objectsPage.data);
-            cursor = objectsPage.hasNextPage ? (objectsPage.nextCursor ?? null) : null;
-        } while (cursor);
+            objCursor = objectsPage.hasNextPage ? (objectsPage.nextCursor ?? null) : null;
+        } while (objCursor);
 
 
         // Find TreasuryCap for the coin type
@@ -213,7 +227,7 @@ export const getTxIdsAndCaps = async (
             if (!objType) return false;
 
             // Check for DenyCap with the specific coin type
-            if (objType.includes(`0x2::coin::DenyCap<${coinType}>`)) {
+            if (objType.includes(`0x2::coin::DenyCapV2<${coinType}>`)) {
                 return true;
             }
 
@@ -235,13 +249,13 @@ export const getTxIdsAndCaps = async (
             if (!objType) return false;
 
             // Check for CoinCap with the specific coin type
-            if (objType.includes(`0x2::coin::CoinCap<${coinType}>`)) {
+            if (objType.includes(`0x2::coin::Coin<${coinType}>`)) {
                 return true;
             }
 
             // If coinType doesn't include the package ID, check for CoinCap with any coin type from this package
             if (!coinType.includes(normalizedPkgId) &&
-                objType.includes('0x2::coin::CoinCap') &&
+                objType.includes('0x2::coin::Coin') &&
                 objType.includes(normalizedPkgId)) {
                 return true;
             }
@@ -269,3 +283,26 @@ export const getTxIdsAndCaps = async (
         };
     }
 };
+
+// async function getPublishTxAndTreasuryCap(client: SuiClient, packageId: string): Promise<TxIdsAndCaps> {
+//     // Find transactions involving the packageId
+//     const txs = await client.queryTransactionBlocks({
+//         filter: { InputObject: packageId },
+//         limit: 1,
+//     });
+
+//     if (!txs.data.length) return null;
+
+//     const txid = txs.data[0].digest;
+//     const txDetails = await client.getTransactionBlock({ digest: txid, options: { showObjectChanges: true } });
+
+//     // Find TreasuryCap object in object changes
+//     const treasuryCap = txDetails.objectChanges?.find(
+//         (change) => change.objectType && change.objectType.includes('TreasuryCap')
+//     );
+
+//     return {
+//         txid,
+//         treasuryCap: treasuryCap?.objectId,
+//     };
+// }

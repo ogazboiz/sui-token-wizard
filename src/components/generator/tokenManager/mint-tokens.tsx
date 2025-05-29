@@ -40,7 +40,7 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
   const [mintAmount, setMintAmount] = useState('')
   const [mintRecipient, setMintRecipient] = useState(account?.address || '')
   const [mintSuccess, setMintSuccess] = useState(false)
-  const [coinCap, setCoinCap] = useState('')
+  const [coinCap, setCoinCap] = useState(tokenData?.coinCap)
 
   // Handle mint token function
   const handleMint = async (e: React.FormEvent) => {

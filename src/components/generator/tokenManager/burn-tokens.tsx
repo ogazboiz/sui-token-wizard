@@ -37,8 +37,8 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
   }
 
   // Burn state
-  const [treasuryCap, setTreasuryCap] = useState('')
-  const [burnCoin, setBurnCoin] = useState('')
+  const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap)
+  const [burnCoin, setBurnCoin] = useState(tokenData?.coinCap)
   const [burnSuccess, setBurnSuccess] = useState(false)
 
   // todo: to get coinCap from token data
@@ -69,7 +69,7 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
       target: `${derivedCoinType}::burn`,
       arguments: [
         tx.object(tokenData.treasuryCap),
-        tx.object(burnCoin),
+        tx.object(burnCoin || ""),
       ],
     })
 

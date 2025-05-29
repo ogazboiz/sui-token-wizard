@@ -136,12 +136,10 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
             // @ts-expect-error addr owner type
             const owner = ownerObj ? ownerObj?.owner?.AddressOwner : "";
 
-            // Get the new package ID
             const newPkgId = res.objectChanges?.find(
               (item) => item.type === "published"
             )?.packageId || "";
 
-            // Get the treasury cap
             const treasuryCap = res.objectChanges?.find(
               (item) =>
                 item.type === "created" &&
@@ -161,13 +159,11 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
             console.log({ txId, owner, newPkgId, treasuryCap, denyCap });
             setTokenCreated(true);
 
-            // Show success toast
             toast({
               title: "Token created successfully!",
               description: "Your closed-loop token has been created and is ready to use.",
             })
 
-            // Redirect to token page
             setTimeout(() => {
               router.push(`/generator/${network}/token`)
             }, 1000)

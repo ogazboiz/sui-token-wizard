@@ -22,11 +22,12 @@ export interface TokenPageProps {
   network: "mainnet" | "testnet" | "devnet"
   tokenData: TokenData | undefined
   isLoading: boolean
+  refetch: () => void
 }
 
 type EditMode = 'name' | 'symbol' | 'description' | 'all' | null
 
-export default function TokenPage({ network, tokenData, isLoading }: TokenPageProps) {
+export default function TokenPage({ network, tokenData, isLoading, refetch }: TokenPageProps) {
   console.log("network", network);
   console.log(tokenData);
   const { toast } = useToast()
@@ -146,11 +147,7 @@ export default function TokenPage({ network, tokenData, isLoading }: TokenPagePr
             })
 
             if (res.effects?.status.status === "success") {
-              // const updatedTokenData = {
-              //   ...tokenData,
-              //   [editMode]: editValue,
-              // }
-              // setTokenData(updatedTokenData) // should update automatically
+              refetch()
               closeEditModal()
 
               toast({
@@ -198,7 +195,7 @@ export default function TokenPage({ network, tokenData, isLoading }: TokenPagePr
     try {
       const tx = new Transaction()
       tx.setGasBudget(10_000_000)
-
+      console.log("this does not have update_metadata?", derivedCoinType);
       tx.moveCall({
         target: `${derivedCoinType}::update_metadata`,
         arguments: [
@@ -223,13 +220,7 @@ export default function TokenPage({ network, tokenData, isLoading }: TokenPagePr
             })
 
             if (res.effects?.status.status === "success") {
-              // const updatedTokenData = {
-              //   ...tokenData,
-              //   name: editForm.name,
-              //   symbol: editForm.symbol,
-              //   description: editForm.description
-              // }
-              // setTokenData(updatedTokenData) // should update automatically
+              refetch()
               closeEditModal()
 
               toast({
@@ -274,7 +265,6 @@ export default function TokenPage({ network, tokenData, isLoading }: TokenPagePr
     }
   }
 
-  // Render loading state if token data isn't loaded yet
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -284,7 +274,6 @@ export default function TokenPage({ network, tokenData, isLoading }: TokenPagePr
     )
   }
 
-  // Render no token found message if no token data is available
   if (!isLoading && !tokenData) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
@@ -305,7 +294,6 @@ export default function TokenPage({ network, tokenData, isLoading }: TokenPagePr
     )
   }
 
-  // Render token details
   return (
     <>
       <motion.div

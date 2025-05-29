@@ -36,22 +36,12 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
     });
   }
 
-  // Burn state
   const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap)
   const [burnCoin, setBurnCoin] = useState(tokenData?.coinCap)
   const [burnSuccess, setBurnSuccess] = useState(false)
 
-  // todo: to get coinCap from token data
-  // useEffect(() => {
-  //   const coinCap = localStorage.getItem('coinCap')
-  //   if (coinCap) {
-  //     setBurnCoin(coinCap)
-  //   }
-  // }, [])
-
   console.log(tokenData)
 
-  // Handle burn token function
   const handleBurn = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!tokenData) return
@@ -64,7 +54,6 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
-    // Call the burn function on the Coin contract
     tx.moveCall({
       target: `${derivedCoinType}::burn`,
       arguments: [
@@ -105,7 +94,6 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
     )
   }
 
-  // Render loading state if token data isn't loaded yet
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -115,7 +103,6 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
     )
   }
 
-  // Render no token found message if no token data is available
   if (!isLoading && !tokenData) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">

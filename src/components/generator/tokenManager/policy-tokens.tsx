@@ -3,50 +3,40 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ScrollText, AlertCircle, Plus, Check, X, Loader2, User, Coins } from "lucide-react"
+import { ScrollText, AlertCircle, Plus, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from "@mysten/sui/transactions"
 import { deriveCoinType } from "@/components/hooks/getData"
+import { TokenData } from "@/components/hooks/tokenData"
+
+// interface PolicyRequest {
+//   id: string
+//   name: string
+//   amount: string
+//   recipient: string
+//   status: 'pending' | 'approved' | 'rejected'
+//   createdAt: string
+// }
 
 interface PolicyTokensProps {
   network: string
+  tokenData: TokenData | undefined
 }
 
-interface TokenData {
-  name: string
-  symbol: string
-  newPkgId: string
-  treasuryCap: string
-  type: string
-}
-
-interface PolicyRequest {
-  id: string
-  name: string
-  amount: string
-  recipient: string
-  status: 'pending' | 'approved' | 'rejected'
-  createdAt: string
-}
-
-export default function PolicyTokens({ network }: PolicyTokensProps) {
+export default function PolicyTokens({ network, tokenData }: PolicyTokensProps) {
   const { toast } = useToast()
   const suiClient = useSuiClient()
   const account = useCurrentAccount()
-  const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
-  const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [isCreatingPolicy, setIsCreatingPolicy] = useState(false)
   const [policyCreated, setPolicyCreated] = useState(false)
   const [tokenPolicyId, setTokenPolicyId] = useState<string>("")
   const [tokenPolicyCapId, setTokenPolicyCapId] = useState<string>("")
-
 
   let derivedCoinType: string | undefined;
 
@@ -58,13 +48,7 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
   }
 
   useEffect(() => {
-    // Load token data from localStorage
-    const storedTokenData = localStorage.getItem('tokenData')
-    if (storedTokenData) {
-      const parsedData = JSON.parse(storedTokenData)
-      if (parsedData.type === 'closed-loop') {
-        setTokenData(parsedData)
-
+      if (tokenData?.type === 'closed-loop') {
         // Check if policy already exists
         const policyData = localStorage.getItem('tokenPolicy')
         if (policyData) {
@@ -73,9 +57,8 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
           setTokenPolicyId(parsedPolicy.policyId)
           setTokenPolicyCapId(parsedPolicy.policyCapId)
         }
-      }
     }
-  }, [])
+  }, [tokenData])
 
   const getNetworkName = () => {
     switch (network) {
@@ -141,21 +124,23 @@ export default function PolicyTokens({ network }: PolicyTokensProps) {
               )
 
               if (policyObj && policyCapObj) {
+                // @ts-expect-error object id
                 const policyId = policyObj.objectId
+                // @ts-expect-error object id
                 const policyCapId = policyCapObj.objectId
 
                 setTokenPolicyId(policyId)
                 setTokenPolicyCapId(policyCapId)
                 setPolicyCreated(true)
 
-                // // Save policy data
-                // const policyData = {
-                //   policyId,
-                //   policyCapId,
-                //   tokenSymbol: tokenData.symbol,
-                //   createdAt: new Date().toISOString()
-                // }
-                // localStorage.setItem('tokenPolicy', JSON.stringify(policyData))
+                // Save policy data
+                const policyData = {
+                  policyId,
+                  policyCapId,
+                  tokenSymbol: tokenData.symbol,
+                  createdAt: new Date().toISOString()
+                }
+                localStorage.setItem('tokenPolicy', JSON.stringify(policyData))
 
                 toast({
                   title: "Policy created successfully!",

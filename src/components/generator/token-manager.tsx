@@ -39,6 +39,8 @@ interface Tool {
   requiresPolicy?: boolean
 }
 
+// have a return to dashboard somewhere on this page
+
 export default function TokenManager({ network = "testnet" }: TokenManagerProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -448,10 +450,10 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
             <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
           {activeTool === "policy" && (
-            <PolicyTokens network={network} />
+            <PolicyTokens network={network} tokenData={tokenData} />
           )}
           {activeTool === "action-requests" && (
-            <ActionRequests network={network} />
+            <ActionRequests network={network} tokenData={tokenData} />
           )}
           {activeTool === "mint-tokens" && (
             <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />

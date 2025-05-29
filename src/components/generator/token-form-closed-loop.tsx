@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation"
 interface TokenFormClosedLoopProps {
   network: string
   onBack: () => void
-  onSwitchTemplate: (templateId: string) => void
+  onSwitchTemplate: (templateId: "standard" | "regulated") => void
 }
 
 export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate }: TokenFormClosedLoopProps) {
@@ -136,7 +136,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
             // @ts-expect-error addr owner type
             const owner = ownerObj ? ownerObj?.owner?.AddressOwner : "";
 
-            const newPkgId = res.objectChanges?.find(
+            const pkgId = res.objectChanges?.find(
               (item) => item.type === "published"
             )?.packageId || "";
 
@@ -156,7 +156,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
               // @ts-expect-error object id type
             )?.objectId;
 
-            console.log({ txId, owner, newPkgId, treasuryCap, denyCap });
+            console.log({ txId, owner, pkgId, treasuryCap, denyCap });
             setTokenCreated(true);
 
             toast({
@@ -165,7 +165,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
             })
 
             setTimeout(() => {
-              router.push(`/generator/${network}/token`)
+              router.push(`/generator/${network}/token/?packageId=${pkgId}`)
             }, 1000)
           } else {
             setIsCreatingToken(false)

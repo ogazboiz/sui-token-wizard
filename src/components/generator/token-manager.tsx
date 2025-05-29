@@ -68,7 +68,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
         if (detectedType) {
           setTokenType(detectedType)
           setHasCreatedToken(true)
-
+          // todo: make dynamic
           if (detectedType === "closed-loop") {
             const policyData = localStorage.getItem('tokenPolicy')
             setHasPolicyCreated(!!policyData)
@@ -83,12 +83,12 @@ export default function TokenManager({ network }: TokenManagerProps) {
     loadTokenData()
   }, [packageId, pathname, suiClient])
 
-
   //can also get isError here
   const { data, isLoading } = useFetchTokenData(suiClient, packageId ?? "", account?.address ?? "", tokenType ?? undefined)
   useEffect(() => {
     setTokenData(data);
   }, [data]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -454,7 +454,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
             <ActionRequests network={network} />
           )}
           {activeTool === "mint-tokens" && (
-            <MintTokens network={network} />
+            <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} />
           )}
           {activeTool === "burn-tokens" && (
             <BurnTokens network={network} />

@@ -18,7 +18,7 @@ import { Terminal, Shield, Pause, ScrollText, Plus } from "lucide-react"
 import { TokenData } from "@/components/hooks/tokenData"
 import { deriveCoinType } from "@/components/hooks/getData"
 
-interface TokenPageProps {
+export interface TokenPageProps {
   network: "mainnet" | "testnet" | "devnet"
   tokenData: TokenData | undefined
   isLoading: boolean
@@ -32,8 +32,6 @@ export default function TokenPage({ network, tokenData, isLoading }: TokenPagePr
   const account = useCurrentAccount()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
-
-  // const [tokenLoaded, setTokenLoaded] = useState(false)
 
   let derivedCoinType: string | undefined;
 

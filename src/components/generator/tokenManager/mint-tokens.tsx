@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, ExternalLink, Loader2, Coins } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -20,28 +20,13 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
 import { deriveCoinType } from "@/components/hooks/getData"
+import { TokenPageProps } from "./TokenPage"
 
-interface MintTokensProps {
-  network: string
-}
-
-export default function MintTokens({ network }: MintTokensProps) {
+export default function MintTokens({ network, tokenData, isLoading }: TokenPageProps) {
   const { toast } = useToast()
-  const account = useCurrentAccount()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
-
-  // Token data state
-  const [tokenData, setTokenData] = useState<{
-    name: string
-    symbol: string
-    description: string
-    decimal: string
-    newPkgId: string
-    txId: string
-    treasuryCap: string
-  } | null>(null)
-
+  const account = useCurrentAccount()
   let derivedCoinType: string | undefined;
 
   if (tokenData) {
@@ -53,24 +38,9 @@ export default function MintTokens({ network }: MintTokensProps) {
 
   // Mint state
   const [mintAmount, setMintAmount] = useState('')
-  const [mintRecipient, setMintRecipient] = useState('')
+  const [mintRecipient, setMintRecipient] = useState(account?.address || '')
   const [mintSuccess, setMintSuccess] = useState(false)
-  const [tokenLoaded, setTokenLoaded] = useState(false)
-  const [coin, setCoin] = useState('')
-
-  useEffect(() => {
-    // Check localStorage for token data when component mounts
-    const savedTokenData = localStorage.getItem('tokenData')
-    if (savedTokenData) {
-      const parsedData = JSON.parse(savedTokenData)
-      setTokenData(parsedData)
-      // Pre-fill recipient with user's address
-      if (account) {
-        setMintRecipient(account.address)
-      }
-      setTokenLoaded(true)
-    }
-  }, [account])
+  const [coinCap, setCoinCap] = useState('')
 
   // Handle mint token function
   const handleMint = async (e: React.FormEvent) => {
@@ -86,7 +56,6 @@ export default function MintTokens({ network }: MintTokensProps) {
     const tx = new Transaction()
     tx.setGasBudget(100_000_000)
 
-    // Call the mint function on the Coin contract
     tx.moveCall({
       target: `${derivedCoinType}::mint`,
       arguments: [
@@ -118,8 +87,9 @@ export default function MintTokens({ network }: MintTokensProps) {
             setMintSuccess(true);
             setTimeout(() => setMintSuccess(false), 3000);
             setMintAmount('')
-            setCoin(coin as string)
+            setCoinCap(coin as string)
 
+            // todo: add this to token data hook
             // localStorage.setItem('coinId', coin as string)
           }
         },
@@ -136,7 +106,7 @@ export default function MintTokens({ network }: MintTokensProps) {
   }
 
   // Render loading state if token data isn't loaded yet
-  if (!tokenLoaded) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
         <ClipLoader size={40} color="#14b8a6" />
@@ -146,7 +116,7 @@ export default function MintTokens({ network }: MintTokensProps) {
   }
 
   // Render no token found message if no token data is available
-  if (tokenLoaded && !tokenData) {
+  if (!isLoading && !tokenData) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
         <Terminal className="h-4 w-4 text-teal-500" />
@@ -205,18 +175,18 @@ export default function MintTokens({ network }: MintTokensProps) {
                 </Button>
               </div>
             </div>
-            {coin && (
+            {coinCap && (
               <div className="flex justify-between items-center mt-4">
-                <span className="text-zinc-400 text-sm">Coin ID:</span>
+                <span className="text-zinc-400 text-sm">Coin Cap:</span>
                 <div className="flex items-center">
                   <span className="text-white truncate max-w-[200px]">
-                    {coin.substring(0, 6)}...{coin.substring(coin.length - 4)}
+                    {coinCap.substring(0, 6)}...{coinCap.substring(coinCap.length - 4)}
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 ml-1 cursor-pointer"
-                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${coin}`, '_blank')}
+                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${coinCap}`, '_blank')}
                   >
                     <ExternalLink className="h-3 w-3 text-zinc-400" />
                   </Button>
@@ -290,7 +260,7 @@ export default function MintTokens({ network }: MintTokensProps) {
             variant="outline"
             size="sm"
             className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
-            onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`, '_blank')}
+            onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenData?.pkgId}`, '_blank')}
           >
             View on Explorer
             <ExternalLink className="h-4 w-4 ml-2" />

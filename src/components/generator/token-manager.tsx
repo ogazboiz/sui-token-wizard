@@ -39,7 +39,7 @@ interface Tool {
   requiresPolicy?: boolean
 }
 
-export default function TokenManager({ network }: TokenManagerProps) {
+export default function TokenManager({ network = "testnet" }: TokenManagerProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()

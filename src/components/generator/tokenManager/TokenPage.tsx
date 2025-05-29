@@ -27,6 +27,7 @@ export interface TokenPageProps {
 type EditMode = 'name' | 'symbol' | 'description' | 'all' | null
 
 export default function TokenPage({ network, tokenData, isLoading }: TokenPageProps) {
+  console.log("network", network);
   console.log(tokenData);
   const { toast } = useToast()
   const account = useCurrentAccount()

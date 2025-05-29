@@ -209,19 +209,6 @@ export default function PausableTokens({ network }: PausableTokensProps) {
     )
   }
 
-  // Add network validation at the beginning
-  if (!network || typeof network !== 'string') {
-    return (
-      <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
-        <Terminal className="h-4 w-4 text-red-500" />
-        <AlertTitle className="text-white">Invalid Network</AlertTitle>
-        <AlertDescription className="text-zinc-400">
-          Network parameter is missing or invalid. Please check the URL and try again.
-        </AlertDescription>
-      </Alert>
-    )
-  }
-
   // Render loading state if token data isn't loaded yet
   if (!tokenLoaded) {
     return (

@@ -6,23 +6,28 @@ import { normalizeSuiAddress } from "@mysten/sui/utils";
 
 export type TokenType = "standard" | "regulated" | "closed-loop" | undefined;
 
+export type Network = "mainnet" | "testnet" | "devnet";
+
 export interface TokenData {
     pkgId: string;
     symbol: string;
-    name?: string;
-    description?: string;
-    decimal?: string;
-    txId?: string;
-    owner?: string;
-    treasuryCap?: string;
-    metadata?: string;
+    name: string;
+    description: string;
+    decimal: string;
+    txId: string;
+    owner: string;
+    treasuryCap: string;
+    metadata: string;
     denyCap?: string;
-    type?: "standard" | "regulated" | "closed-loop";
+    coinCap?: string;
+    type: TokenType
     features?: {
         burnable?: boolean;
         mintable?: boolean;
         pausable?: boolean;
         denylist?: boolean;
+        allowlist?: boolean;
+        transferRestrictions?: boolean;
     };
 }
 
@@ -57,11 +62,10 @@ const fetchTokenData = async (
         description,
         decimal,
         metadata: metadataId,
-        owner: typeof owner === "string" ? owner : undefined,
-        txId: txId ?? undefined,
-        treasuryCap: treasuryCap ?? undefined,
-        // Add more fields as needed
-        type: tokenType,
+        owner: owner,
+        txId: txId ?? "",
+        treasuryCap: treasuryCap ?? "",
+        type: tokenType ?? undefined,
         features: {
             burnable: true,
             mintable: true,
@@ -137,7 +141,7 @@ export const getTxnTreasury = async (
             },
             limit: 70, // Add limit to get more results
         });
-console.log("transactions:", transactions);
+        console.log("transactions:", transactions);
 
         // Find transaction that published the package
         const publishTx = transactions.data.find((tx) => {

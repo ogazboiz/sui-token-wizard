@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Copy, ExternalLink, Edit3, Save, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -16,54 +16,33 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, Shield, Pause, ScrollText, Plus } from "lucide-react"
 import { TokenData } from "@/components/hooks/tokenData"
+import { deriveCoinType } from "@/components/hooks/getData"
 
 interface TokenPageProps {
   network: "mainnet" | "testnet" | "devnet"
   tokenData: TokenData | undefined
+  isLoading: boolean
 }
 
 type EditMode = 'name' | 'symbol' | 'description' | 'all' | null
 
-export default function TokenPage({ network, tokenData }: TokenPageProps) {
+export default function TokenPage({ network, tokenData, isLoading }: TokenPageProps) {
   console.log(tokenData);
   const { toast } = useToast()
   const account = useCurrentAccount()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
-  // const [tokenData, setTokenData] = useState<TokenData | null>(null)
-  const [tokenLoaded, setTokenLoaded] = useState(false)
-  // const [metadata, setMetadata] = useState<CoinMetadata | null>(null)
+  // const [tokenLoaded, setTokenLoaded] = useState(false)
 
   let derivedCoinType: string | undefined;
 
-  // if (tokenData) {
-  //   deriveCoinType(suiClient, tokenData).then((result) => {
-  //     derivedCoinType = result;
-  //     console.log("Derived coin type:", result);
-  //   });
-  // }
-
-  // useEffect(() => {
-  //   if (!tokenData) return;
-
-  //   const fetchMetadata = async () => {
-  //     try {
-  //       const derivedFullCoinType = await deriveFullCoinType(suiClient, tokenData);
-  //       console.log("Derived coin type:", derivedFullCoinType);
-
-  //       const metadata = await getMetadataField(suiClient, derivedFullCoinType);
-  //       console.log("Metadata:", metadata);
-  //       setMetadata(metadata);
-  //     } catch (err) {
-  //       console.error("Error fetching metadata:", err);
-  //     }
-  //   };
-
-  //   fetchMetadata();
-  // }, [tokenData, suiClient]);
-
-
+  if (tokenData) {
+    deriveCoinType(suiClient, tokenData).then((result) => {
+      derivedCoinType = result;
+      console.log("Derived coin type:", result);
+    });
+  }
 
   // Modal and edit state
   const [showEditModal, setShowEditModal] = useState(false)
@@ -75,21 +54,6 @@ export default function TokenPage({ network, tokenData }: TokenPageProps) {
     description: ""
   })
   const [isUpdating, setIsUpdating] = useState(false)
-
-  // useEffect(() => {
-  //   // Check localStorage for token data when component mounts
-  //   const savedTokenData = localStorage.getItem("tokenData")
-  //   if (savedTokenData) {
-  //     const parsedData = JSON.parse(savedTokenData)
-  //     // setTokenData(parsedData)
-  //     setEditForm({
-  //       name: parsedData.name || "",
-  //       symbol: parsedData.symbol || "",
-  //       description: parsedData.description || ""
-  //     })
-  //     setTokenLoaded(true)
-  //   }
-  // }, [])
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -183,13 +147,11 @@ export default function TokenPage({ network, tokenData }: TokenPageProps) {
             })
 
             if (res.effects?.status.status === "success") {
-              const updatedTokenData = {
-                ...tokenData,
-                [editMode]: editValue,
-              }
-
-              setTokenData(updatedTokenData)
-              localStorage.setItem('tokenData', JSON.stringify(updatedTokenData))
+              // const updatedTokenData = {
+              //   ...tokenData,
+              //   [editMode]: editValue,
+              // }
+              // setTokenData(updatedTokenData) // should update automatically
               closeEditModal()
 
               toast({
@@ -262,15 +224,13 @@ export default function TokenPage({ network, tokenData }: TokenPageProps) {
             })
 
             if (res.effects?.status.status === "success") {
-              const updatedTokenData = {
-                ...tokenData,
-                name: editForm.name,
-                symbol: editForm.symbol,
-                description: editForm.description
-              }
-
-              setTokenData(updatedTokenData)
-              localStorage.setItem('tokenData', JSON.stringify(updatedTokenData))
+              // const updatedTokenData = {
+              //   ...tokenData,
+              //   name: editForm.name,
+              //   symbol: editForm.symbol,
+              //   description: editForm.description
+              // }
+              // setTokenData(updatedTokenData) // should update automatically
               closeEditModal()
 
               toast({
@@ -315,18 +275,18 @@ export default function TokenPage({ network, tokenData }: TokenPageProps) {
     }
   }
 
-  // // Render loading state if token data isn't loaded yet
-  // if (!tokenLoaded) {
-  //   return (
-  //     <div className="flex justify-center items-center py-20">
-  //       <ClipLoader size={40} color="#14b8a6" />
-  //       <span className="ml-4 text-zinc-300">Loading token data...</span>
-  //     </div>
-  //   )
-  // }
+  // Render loading state if token data isn't loaded yet
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <ClipLoader size={40} color="#14b8a6" />
+        <span className="ml-4 text-zinc-300">Loading token data...</span>
+      </div>
+    )
+  }
 
   // Render no token found message if no token data is available
-  if (tokenLoaded && !tokenData) {
+  if (!isLoading && !tokenData) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
         <Terminal className="h-4 w-4 text-teal-500" />

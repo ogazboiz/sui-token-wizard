@@ -19,7 +19,7 @@ import PausableTokens from "./tokenManager/pausable-tokens"
 import PolicyTokens from "./tokenManager/policy-tokens"
 import ActionRequests from "./tokenManager/new-request"
 import { detectTokenTypeFromPackageId } from "../utils/helpers"
-import { useFetchTokenData } from "../hooks/tokenData"
+import { TokenData, useFetchTokenData } from "../hooks/tokenData"
 
 interface TokenManagerProps {
   network: "mainnet" | "testnet" | "devnet"
@@ -51,6 +51,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const { isConnected, isReady } = useWalletConnection()
   const [hasCreatedToken, setHasCreatedToken] = useState(false)
+  const [tokenData, setTokenData] = useState<TokenData | undefined>(undefined)
   const [tokenType, setTokenType] = useState<'standard' | 'regulated' | 'closed-loop' | null>(null)
   const [hasPolicyCreated, setHasPolicyCreated] = useState(false)
 
@@ -61,7 +62,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
       console.log('Current pathname:', pathname)
 
       if (packageId) {
-        // If packageId is provided, detect token type
         const detectedType = await detectTokenTypeFromPackageId(suiClient, packageId)
         console.log('Detected token type:', detectedType)
 
@@ -69,32 +69,13 @@ export default function TokenManager({ network }: TokenManagerProps) {
           setTokenType(detectedType)
           setHasCreatedToken(true)
 
-          // Check if policy exists for closed-loop tokens
           if (detectedType === "closed-loop") {
             const policyData = localStorage.getItem('tokenPolicy')
             setHasPolicyCreated(!!policyData)
           }
         } else {
-          // If we can't detect type from packageId, still set hasCreatedToken to true
-          // so the tools show up, and default to standard
           setHasCreatedToken(true)
           setTokenType('standard')
-        }
-      } else {
-        // Fallback to localStorage check
-        if (typeof window !== "undefined") {
-          const tokenData = localStorage.getItem('tokenData')
-          if (tokenData) {
-            const parsedTokenData = JSON.parse(tokenData)
-            setHasCreatedToken(true)
-            setTokenType(parsedTokenData.type || 'standard')
-
-            // Check if policy exists for closed-loop tokens
-            if (parsedTokenData.type === "closed-loop") {
-              const policyData = localStorage.getItem('tokenPolicy')
-              setHasPolicyCreated(!!policyData)
-            }
-          }
         }
       }
     }
@@ -103,9 +84,11 @@ export default function TokenManager({ network }: TokenManagerProps) {
   }, [packageId, pathname, suiClient])
 
 
-  const tokenData = useFetchTokenData(suiClient, packageId ?? "", account?.address ?? "", tokenType ?? undefined)
-  console.log("Token data:", tokenData.data);
-
+  //can also get isError here
+  const { data, isLoading } = useFetchTokenData(suiClient, packageId ?? "", account?.address ?? "", tokenType ?? undefined)
+  useEffect(() => {
+    setTokenData(data);
+  }, [data]);
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -132,17 +115,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
       }
     }
   }, [pathname]);
-
-  // Add network validation at the beginning
-  if (!network || typeof network !== 'string') {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center text-red-400">
-          Error: Invalid network parameter
-        </div>
-      </div>
-    )
-  }
 
   // Define tools with updated conditional logic
   const tools: Tool[] = [
@@ -242,29 +214,22 @@ export default function TokenManager({ network }: TokenManagerProps) {
 
   // Filter tools based on token type
   const filteredTools = tools.filter(tool => {
-    // Always show token creator
     if (tool.id === "token-creator") return true
 
-    // Always show coming soon tools
     if (tool.comingSoon && !tool.showOnlyForClosedLoop && !tool.showOnlyForRegulated) return true
 
-    // If no token type detected yet, only show universal tools and coming soon
     if (!tokenType) {
       return !tool.showOnlyForClosedLoop && !tool.showOnlyForRegulated
     }
 
-    // Filter based on token type
     switch (tokenType) {
       case "closed-loop":
-        // Show: universal tools + closed-loop specific tools
         return !tool.showOnlyForRegulated
 
       case "regulated":
-        // Show: universal tools + regulated specific tools
         return !tool.showOnlyForClosedLoop
 
       case "standard":
-        // Show: only universal tools (no regulated or closed-loop tools)
         return !tool.showOnlyForClosedLoop && !tool.showOnlyForRegulated
 
       default:
@@ -341,7 +306,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
     }
   }
 
-  // Show loading state while checking wallet connection
   if (!isReady) {
     return (
       <div className="container mx-auto px-4 py-6 flex justify-center items-center h-48">
@@ -350,7 +314,6 @@ export default function TokenManager({ network }: TokenManagerProps) {
     )
   }
 
-  // Show wallet connection prompt if not connected
   if (!isConnected) {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -482,7 +445,7 @@ export default function TokenManager({ network }: TokenManagerProps) {
             </>
           )}
           {activeTool === "token-page" && (
-            <TokenPage network={network} tokenData={tokenData.data} />
+            <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} />
           )}
           {activeTool === "policy" && (
             <PolicyTokens network={network} />

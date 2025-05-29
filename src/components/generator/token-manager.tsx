@@ -457,13 +457,13 @@ export default function TokenManager({ network }: TokenManagerProps) {
             <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} />
           )}
           {activeTool === "burn-tokens" && (
-            <BurnTokens network={network} />
+            <BurnTokens network={network} tokenData={tokenData} isLoading={isLoading} />
           )}
           {activeTool === "denylist" && (
-            <DenylistTokens network={network} />
+            <DenylistTokens network={network} tokenData={tokenData} isLoading={isLoading} />
           )}
           {activeTool === "pausable" && (
-            <PausableTokens network={network} />
+            <PausableTokens network={network} tokenData={tokenData} isLoading={isLoading} />
           )}
         </div>
       </div>

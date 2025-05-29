@@ -21,34 +21,15 @@ import {
   Badge
 } from "@/components/ui/badge"
 // import { useNetworkVariables } from "@/components/utils/networkConfig"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { deriveCoinType } from "@/components/hooks/getData"
+import { TokenPageProps } from "./TokenPage"
 
-interface PausableTokensProps {
-  network: string
-}
-
-export default function PausableTokens({ network }: PausableTokensProps) {
+export default function PausableTokens({ network, tokenData, isLoading }: TokenPageProps) {
   const { toast } = useToast()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
   // const { coinPackageId } = useNetworkVariables();
-
-
-  // Token data state
-  const [tokenData, setTokenData] = useState<{
-    name: string
-    symbol: string
-    description: string
-    decimal: string
-    newPkgId: string
-    txId: string
-    treasuryCap: string
-    denyCap: string
-    features?: {
-      pausable?: boolean
-    }
-  } | null>(null)
 
   let derivedCoinType: string | undefined;
 
@@ -63,25 +44,6 @@ export default function PausableTokens({ network }: PausableTokensProps) {
   const [isPaused, setIsPaused] = useState(false)
   const [pauseSuccess, setPauseSuccess] = useState(false)
   const [unpauseSuccess, setUnpauseSuccess] = useState(false)
-  const [tokenLoaded, setTokenLoaded] = useState(false)
-
-  useEffect(() => {
-    // Check localStorage for token data when component mounts
-    const savedTokenData = localStorage.getItem('tokenData')
-    if (savedTokenData) {
-      try {
-        const parsedData = JSON.parse(savedTokenData)
-        setTokenData(parsedData)
-        setIsPaused(false)
-        setTokenLoaded(true)
-      } catch (error) {
-        console.error('Error parsing token data:', error)
-        setTokenLoaded(true) // Still set to true to show "no token" message
-      }
-    } else {
-      setTokenLoaded(true)
-    }
-  }, [])
 
   // Helper function to safely truncate strings
   const truncateString = (str: string | undefined, start = 6, end = 4) => {
@@ -210,7 +172,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
   }
 
   // Render loading state if token data isn't loaded yet
-  if (!tokenLoaded) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
         <ClipLoader size={40} color="#14b8a6" />
@@ -220,7 +182,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
   }
 
   // Render no token found message if no token data is available
-  if (tokenLoaded && !tokenData) {
+  if (!isLoading && !tokenData) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
         <Terminal className="h-4 w-4 text-teal-500" />
@@ -437,7 +399,7 @@ export default function PausableTokens({ network }: PausableTokensProps) {
             variant="outline"
             size="sm"
             className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
-            onClick={() => tokenData?.newPkgId && window.open(`https://suiscan.xyz/${network}/object/${tokenData?.newPkgId}`, '_blank')}
+            onClick={() => tokenData?.pkgId && window.open(`https://suiscan.xyz/${network}/object/${tokenData?.pkgId}`, '_blank')}
           >
             View on Explorer
             <ExternalLink className="h-4 w-4 ml-2" />

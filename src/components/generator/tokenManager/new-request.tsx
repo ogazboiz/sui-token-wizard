@@ -7,26 +7,28 @@ import { Plus, AlertCircle, Check, X, Loader2, User, Clock, FileText } from "luc
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from "@mysten/sui/transactions"
 import { deriveCoinType } from "@/components/hooks/getData"
+import { TokenData } from "@/components/hooks/tokenData"
 
 interface ActionRequestsProps {
   network: string
+  tokenData: TokenData | undefined
 }
 
-interface TokenData {
-  name: string
-  symbol: string
-  newPkgId: string
-  treasuryCap: string
-  type: string
-}
+// interface TokenData {
+//   name: string
+//   symbol: string
+//   pkgId: string
+//   treasuryCap: string
+//   type: string
+// }
 
 interface PolicyRequest {
   id: string
@@ -38,13 +40,12 @@ interface PolicyRequest {
   description?: string
 }
 
-export default function ActionRequests({ network }: ActionRequestsProps) {
+export default function ActionRequests({ network, tokenData }: ActionRequestsProps) {
   const { toast } = useToast()
   const suiClient = useSuiClient()
-  const account = useCurrentAccount()
-  const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
+  // const account = useCurrentAccount()
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
-  const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [hasPolicyCreated, setHasPolicyCreated] = useState(false)
 
   let derivedCoinType: string | undefined;
@@ -68,25 +69,19 @@ export default function ActionRequests({ network }: ActionRequestsProps) {
   const [requests, setRequests] = useState<PolicyRequest[]>([])
 
   useEffect(() => {
-    // Load token data from localStorage
-    const storedTokenData = localStorage.getItem('tokenData')
-    if (storedTokenData) {
-      const parsedData = JSON.parse(storedTokenData)
-      if (parsedData.type === 'closed-loop') {
-        setTokenData(parsedData)
+    if (tokenData?.type === 'closed-loop') {
 
-        // Check if policy exists
-        const policyData = localStorage.getItem('tokenPolicy')
-        setHasPolicyCreated(!!policyData)
+      // Check if policy exists
+      const policyData = localStorage.getItem('tokenPolicy')
+      setHasPolicyCreated(!!policyData)
 
-        // Load existing requests
-        const savedRequests = localStorage.getItem('actionRequests')
-        if (savedRequests) {
-          setRequests(JSON.parse(savedRequests))
-        }
+      // Load existing requests
+      const savedRequests = localStorage.getItem('actionRequests')
+      if (savedRequests) {
+        setRequests(JSON.parse(savedRequests))
       }
     }
-  }, [])
+  }, [tokenData])
 
   const getNetworkName = () => {
     switch (network) {

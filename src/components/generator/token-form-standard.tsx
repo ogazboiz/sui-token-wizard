@@ -21,18 +21,6 @@ interface TokenFormStandardProps {
   onSwitchTemplate: (templateId: "regulated" | "closed-loop") => void;
 }
 
-interface TokenData {
-  name: string;
-  symbol: string;
-  description: string;
-  decimal: string;
-  newPkgId: string;
-  txId: string;
-  owner: string;
-  treasuryCap: string;
-  metadata: string;
-}
-
 export default function TokenFormStandard({ network, onBack, onSwitchTemplate }: TokenFormStandardProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -51,7 +39,6 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
   });
   const [customDecimals, setCustomDecimals] = useState(false);
   const [isCreatingToken, setIsCreatingToken] = useState(false);
-  const [tokenData, setTokenData] = useState<TokenData | null>(null);
 
   const getNetworkName = () => {
     const networkNames: Record<string, string> = {
@@ -121,30 +108,20 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
           const createdArr = res.effects.created || [];
           const owner = createdArr.find((item) =>
             typeof item.owner === "object" && "AddressOwner" in item.owner
+            // @ts-expect-error addr owner type
           )?.owner.AddressOwner || "";
 
-          const newPkgId = res.objectChanges?.find((item) => item.type === "published")?.packageId || "";
+          const pkgId = res.objectChanges?.find((item) => item.type === "published")?.packageId || "";
           const treasuryCap = res.objectChanges?.find(
             (item) => item.type === "created" && typeof item.objectType === "string" && item.objectType.includes("TreasuryCap")
+            // @ts-expect-error object id type
           )?.objectId || "";
           const metadata = res.objectChanges?.find(
             (item) => item.type === "created" && typeof item.objectType === "string" && item.objectType.includes("Metadata")
+            // @ts-expect-error object id type
           )?.objectId || "";
 
-          const tokenData: TokenData = {
-            name: formData.tokenName,
-            symbol: formData.tokenSymbol,
-            description: formData.description,
-            decimal: formData.decimals,
-            newPkgId,
-            txId: res.digest,
-            owner,
-            treasuryCap,
-            metadata,
-          };
-
-          setTokenData(tokenData);
-          localStorage.setItem("tokenData", JSON.stringify(tokenData));
+          console.log({ owner, pkgId, treasuryCap, metadata });
 
           toast({
             title: "Token created successfully!",
@@ -152,7 +129,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
           });
 
           setTimeout(() => {
-            router.push(`/generator/${network}/token`);
+            router.push(`/generator/${network}/token?packageId=${pkgId}`);
           }, 1000);
         },
         onError: (err) => {

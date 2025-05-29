@@ -88,9 +88,6 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
             setTimeout(() => setMintSuccess(false), 3000);
             setMintAmount('')
             setCoinCap(coin as string)
-
-            // todo: add this to token data hook
-            // localStorage.setItem('coinId', coin as string)
           }
         },
         onError: (err) => {
@@ -105,7 +102,6 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
     )
   }
 
-  // Render loading state if token data isn't loaded yet
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -115,7 +111,6 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
     )
   }
 
-  // Render no token found message if no token data is available
   if (!isLoading && !tokenData) {
     return (
       <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">

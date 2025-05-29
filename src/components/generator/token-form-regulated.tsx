@@ -22,26 +22,6 @@ interface TokenFormRegulatedProps {
   onSwitchTemplate: (templateId: "standard" | "closed-loop") => void;
 }
 
-interface TokenData {
-  name: string;
-  symbol: string;
-  description: string;
-  decimal: string;
-  newPkgId: string;
-  txId: string;
-  owner: string;
-  treasuryCap: string;
-  denyCap: string | undefined;
-  metadata: string | undefined;
-  type: "regulated";
-  features: {
-    burnable: boolean;
-    mintable: boolean;
-    pausable: boolean;
-    denylist: boolean;
-  };
-}
-
 export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }: TokenFormRegulatedProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -67,7 +47,6 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
   });
   const [customDecimals, setCustomDecimals] = useState(false);
   const [isCreatingToken, setIsCreatingToken] = useState(false);
-  const [tokenData, setTokenData] = useState<TokenData | null>(null);
 
   const getNetworkName = () => {
     const networkNames: Record<string, string> = {
@@ -141,36 +120,26 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
           const createdArr = res.effects.created || [];
           const owner = createdArr.find((item) =>
             typeof item.owner === "object" && "AddressOwner" in item.owner
+            // @ts-expect-error addr owner type
           )?.owner.AddressOwner || "";
 
-          const newPkgId = res.objectChanges?.find((item) => item.type === "published")?.packageId || "";
+          const pkgId = res.objectChanges?.find((item) => item.type === "published")?.packageId || "";
           const treasuryCap = res.objectChanges?.find(
             (item) => item.type === "created" && typeof item.objectType === "string" && item.objectType.includes("TreasuryCap")
+            // @ts-expect-error object id type
           )?.objectId || "";
           const denyCap = res.objectChanges?.find(
             (item) => item.type === "created" && typeof item.objectType === "string" && item.objectType.includes("DenyCap")
+            // @ts-expect-error object id type
           )?.objectId;
           const metadata = res.objectChanges?.find(
             (item) => item.type === "created" && typeof item.objectType === "string" && item.objectType.includes("Metadata")
+            // @ts-expect-error object id type
           )?.objectId;
 
-          const tokenData: TokenData = {
-            name: formData.tokenName,
-            symbol: formData.tokenSymbol,
-            description: formData.description || `${formData.tokenName} (${formData.tokenSymbol}) - Regulated Token`,
-            decimal: formData.decimals,
-            newPkgId,
-            txId: res.digest,
-            owner,
-            treasuryCap,
-            denyCap,
-            metadata,
-            type: "regulated",
-            features,
-          };
+          console.log({ owner, pkgId, treasuryCap, denyCap, metadata });
 
-          setTokenData(tokenData);
-          localStorage.setItem("tokenData", JSON.stringify(tokenData));
+          setIsCreatingToken(false);
 
           toast({
             title: "Token created successfully!",
@@ -178,7 +147,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
           });
 
           setTimeout(() => {
-            router.push(`/generator/${network}/token`);
+            router.push(`/generator/${network}/token?packageId=${pkgId}`);
           }, 1000);
         },
         onError: (err) => {

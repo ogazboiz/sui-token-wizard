@@ -176,6 +176,7 @@ export const getTxIdsAndCaps = async (
             return hasPackageCreation || hasCreatedPackage;
         });
         console.log("publishTx:", publishTx);
+        // seems to be working for only closed loop rn - need to fix
 
         const txId = publishTx?.effects?.transactionDigest || null;
 

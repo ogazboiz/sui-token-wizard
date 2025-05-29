@@ -178,63 +178,21 @@ export default function Dashboard({ network }: { network: string }) {
     })
   }
 
-  // Handle mint button click - navigate with package ID
   const handleMintTokens = (token: Token) => {
     console.log("Navigating to mint with package ID:", token.packageId)
-
-    // // Store token data in localStorage so TokenManager can detect the type
-    // const tokenData = {
-    //   name: token.name,
-    //   symbol: token.symbol,
-    //   description: token.description,
-    //   decimal: token.decimals.toString(),
-    //   newPkgId: token.packageId,
-    //   packageId: token.packageId, // Add both for compatibility
-    //   txId: "", // You might want to store this if available
-    //   owner: "", // You might want to store this if available
-    //   treasuryCap: "", // You might want to store this if available
-    //   metadata: "", // You might want to store this if available
-    //   type: token.type,
-    //   features: {} // Add features if available
-    // }
-
-    // localStorage.setItem('tokenData', JSON.stringify(tokenData))
-
     router.push(`/generator/${network}/mint?packageId=${token.packageId}`)
   }
 
-  // Handle manage token click - navigate with package ID  
   const handleManageToken = (token: Token) => {
     console.log("Navigating to manage with package ID:", token.packageId)
-
-    // // Store token data in localStorage for the token manager
-    // const tokenData = {
-    //   name: token.name,
-    //   symbol: token.symbol,
-    //   description: token.description,
-    //   decimal: token.decimals.toString(),
-    //   newPkgId: token.packageId,
-    //   packageId: token.packageId, // Add both for compatibility
-    //   txId: "", // You might want to store this if available
-    //   owner: "", // You might want to store this if available
-    //   treasuryCap: "", // You might want to store this if available
-    //   metadata: "", // You might want to store this if available
-    //   type: token.type,
-    //   features: {} // Add features if available
-    // }
-
-    // localStorage.setItem('tokenData', JSON.stringify(tokenData))
-
     router.push(`/generator/${network}/token?packageId=${token.packageId}`)
   }
 
-  // Handle NFT mint click - navigate with package ID
   const handleMintNFT = (collection: NFTCollection) => {
     console.log("Navigating to NFT mint with package ID:", collection.packageId)
     router.push(`/nft/mint/${collection.packageId}`)
   }
 
-  // Get token type badge styling
   const getTokenTypeBadge = (type: 'standard' | 'regulated' | 'closed-loop') => {
     switch (type) {
       case "closed-loop":
@@ -248,7 +206,6 @@ export default function Dashboard({ network }: { network: string }) {
     }
   }
 
-  // Get token type display name
   const getTokenTypeLabel = (type: 'standard' | 'regulated' | 'closed-loop') => {
     switch (type) {
       case "closed-loop":
@@ -275,7 +232,6 @@ export default function Dashboard({ network }: { network: string }) {
     }
   }
 
-  // Show loading state while checking wallet connection
   if (!isReady) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -285,7 +241,6 @@ export default function Dashboard({ network }: { network: string }) {
     )
   }
 
-  // Show wallet connection prompt if not connected
   if (!isConnected) {
     return (
       <div className="container mx-auto px-4 py-12">
@@ -322,7 +277,6 @@ export default function Dashboard({ network }: { network: string }) {
     )
   }
 
-  // Show loading state for token data
   if (isLoading || coinsLoading) {
     return (
       <div className="flex justify-center items-center py-20">

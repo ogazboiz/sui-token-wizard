@@ -195,7 +195,7 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
     try {
       const tx = new Transaction()
       tx.setGasBudget(10_000_000)
-      console.log("this does not have update_metadata?", derivedCoinType);
+      // console.log("this does not have update_metadata?", derivedCoinType); //oh for previous pkgid deployed
       tx.moveCall({
         target: `${derivedCoinType}::update_metadata`,
         arguments: [
@@ -479,7 +479,7 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
                 icon={<Coins className="h-8 w-8 text-teal-400" />}
                 buttonText="Mint Tokens"
                 buttonVariant="default"
-                href={`/generator/${network}/mint`}
+                href={`/generator/${network}/mint/?packageId=${tokenData?.pkgId}`}
               />
 
               <ActionCard
@@ -488,7 +488,7 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
                 icon={<Flame className="h-8 w-8 text-orange-400" />}
                 buttonText="Burn Tokens"
                 buttonVariant="custom"
-                href={`/generator/${network}/burn`}
+                href={`/generator/${network}/burn/?packageId=${tokenData?.pkgId}`}
               />
             </div>
 

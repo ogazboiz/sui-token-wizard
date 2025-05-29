@@ -247,7 +247,7 @@ export const useUpdateToken = async (
         updatedBytes = update_constants(
             updatedBytes,
             bcs.vector(bcs.u8()).serialize(encodeText(symbol)).toBytes(),
-            bcs.vector(bcs.u8()).serialize(encodeText('SBAO')).toBytes(),
+            bcs.vector(bcs.u8()).serialize(encodeText('SBAO symbol')).toBytes(),
             'Vector(U8)',
         );
 
@@ -255,7 +255,7 @@ export const useUpdateToken = async (
         updatedBytes = update_constants(
             updatedBytes,
             bcs.vector(bcs.u8()).serialize(encodeText(name)).toBytes(),
-            bcs.vector(bcs.u8()).serialize(encodeText('SBAO')).toBytes(),
+            bcs.vector(bcs.u8()).serialize(encodeText('SBAO name')).toBytes(),
             'Vector(U8)',
         );
 
@@ -263,7 +263,7 @@ export const useUpdateToken = async (
         updatedBytes = update_constants(
             updatedBytes,
             bcs.vector(bcs.u8()).serialize(encodeText(description)).toBytes(),
-            bcs.vector(bcs.u8()).serialize(encodeText('SBAO')).toBytes(),
+            bcs.vector(bcs.u8()).serialize(encodeText('SBAO description')).toBytes(),
             'Vector(U8)',
         );
 

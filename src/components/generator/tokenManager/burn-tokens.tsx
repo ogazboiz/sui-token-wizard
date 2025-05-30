@@ -37,8 +37,8 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
       console.log("Derived coin type:", result);
     });
   }
-  
-  const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap)
+
+  const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap || "")
   const [burnCoin, setBurnCoin] = useState(id || "")
   const [burnSuccess, setBurnSuccess] = useState(false)
 

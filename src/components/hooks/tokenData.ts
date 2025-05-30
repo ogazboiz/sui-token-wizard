@@ -183,25 +183,7 @@ export const getTxIdsAndCaps = async (
 
         const txId = publishTx?.effects?.transactionDigest || null;
 
-        // Fetch owned objects for the owner with pagination
-        let allObjects: SuiObjectResponse[] = [];
-        let objCursor: string | null = null;
-
-        do {
-            const objectsPage: PaginatedObjectsResponse = await suiClient.getOwnedObjects({
-                owner: ownerAddress,
-                options: {
-                    showType: true,
-                    showContent: true,
-                },
-                cursor: objCursor,
-                limit: 50,
-            });
-
-            allObjects = allObjects.concat(objectsPage.data);
-            objCursor = objectsPage.hasNextPage ? (objectsPage.nextCursor ?? null) : null;
-        } while (objCursor);
-
+        const allObjects = await getAllObjects(suiClient, ownerAddress);
 
         // Find TreasuryCap for the coin type
         const treasuryCapObj = allObjects.find((obj) => {
@@ -225,17 +207,14 @@ export const getTxIdsAndCaps = async (
 
         const treasuryCap = treasuryCapObj?.data?.objectId || null;
 
-        // Find DenyCap for the coin type if it exists
         const denyCapObj = allObjects.find((obj) => {
             const objType = obj.data?.type;
             if (!objType) return false;
 
-            // Check for DenyCap with the specific coin type
             if (objType.includes(`0x2::coin::DenyCapV2<${coinType}>`)) {
                 return true;
             }
 
-            // If coinType doesn't include the package ID, check for DenyCap with any coin type from this package
             if (!coinType.includes(normalizedPkgId) &&
                 objType.includes('0x2::coin::DenyCap') &&
                 objType.includes(normalizedPkgId)) {
@@ -247,17 +226,14 @@ export const getTxIdsAndCaps = async (
 
         const denyCap = denyCapObj?.data?.objectId || null;
 
-        // Find coinId for the coin type if it exists
         const coinIdObj = allObjects.find((obj) => {
             const objType = obj.data?.type;
             if (!objType) return false;
 
-            // Check for coinId with the specific coin type
             if (objType.includes(`0x2::coin::Coin<${coinType}>`)) {
                 return true;
             }
 
-            // If coinType doesn't include the package ID, check for coinId with any coin type from this package
             if (!coinType.includes(normalizedPkgId) &&
                 objType.includes('0x2::coin::Coin') &&
                 objType.includes(normalizedPkgId)) {
@@ -269,17 +245,14 @@ export const getTxIdsAndCaps = async (
 
         const coinId = coinIdObj?.data?.objectId || null;
 
-        // Find tokenId for the closed loop tokens
         const tokenIdObj = allObjects.find((obj) => {
             const objType = obj.data?.type;
             if (!objType) return false;
 
-            // Check for tokenId with the specific token type
             if (objType.includes(`0x2::token::Token<${coinType}>`)) {
                 return true;
             }
 
-            // If coinType doesn't include the package ID, check for tokenId with any token type from this package
             if (!coinType.includes(normalizedPkgId) &&
                 objType.includes('0x2::token::Token') &&
                 objType.includes(normalizedPkgId)) {
@@ -311,6 +284,28 @@ export const getTxIdsAndCaps = async (
         };
     }
 };
+
+// Fetch owned objects for the owner with pagination
+export async function getAllObjects(suiClient: SuiClient, ownerAddress: string) {
+    let allObjects: SuiObjectResponse[] = [];
+    let objCursor: string | null = null;
+
+    do {
+        const objectsPage: PaginatedObjectsResponse = await suiClient.getOwnedObjects({
+            owner: ownerAddress,
+            options: {
+                showType: true,
+                showContent: true,
+            },
+            cursor: objCursor,
+            limit: 50,
+        });
+
+        allObjects = allObjects.concat(objectsPage.data);
+        objCursor = objectsPage.hasNextPage ? (objectsPage.nextCursor ?? null) : null;
+    } while (objCursor);
+    return allObjects;
+}
 
 // async function getPublishTxAndTreasuryCap(client: SuiClient, packageId: string): Promise<TxIdsAndCaps> {
 //     // Find transactions involving the packageId

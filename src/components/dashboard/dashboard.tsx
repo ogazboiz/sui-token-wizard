@@ -90,6 +90,7 @@ export default function Dashboard({ network }: { network: string }) {
                 token.coinType.includes("my_coin")
               )
               .map(async (token, index) => {
+                console.log("Token:", token);
                 try {
                   const tokenMetadata = await getMetadataField(suiClient, token.coinType);
                   const packageId = extractPackageIdFromCoinType(token.coinType);
@@ -145,7 +146,10 @@ export default function Dashboard({ network }: { network: string }) {
               packageId, // Store the extracted package ID
               owner: typedOwner,
               createdAt: new Date().toISOString().split("T")[0],
-              image: fields.url || "https://via.placeholder.com/150",
+              image:
+                !fields.url || fields.url.trim() === ""
+                  ? "https://ik.imagekit.io/9okxyhdq0/Sui%20Token%20Creator.png?updatedAt=1748573953730"
+                  : fields.url,
               status: "active",
             };
           });

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -30,17 +30,24 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
   let derivedCoinType: string | undefined;
   let id;
 
+  const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap || "")
+  const [burnCoin, setBurnCoin] = useState(id || "")
+  const [burnSuccess, setBurnSuccess] = useState(false)
+
   if (tokenData) {
-    id = tokenData?.type === "closed-loop" ? tokenData.tokenId : tokenData.coinId
     deriveCoinType(suiClient, tokenData).then((result) => {
       derivedCoinType = result;
       console.log("Derived coin type:", result);
     });
   }
 
-  const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap || "")
-  const [burnCoin, setBurnCoin] = useState(id || "")
-  const [burnSuccess, setBurnSuccess] = useState(false)
+  useEffect(() => {
+    if (tokenData) {
+      const id = tokenData.type === "closed-loop" ? tokenData.tokenId : tokenData.coinId;
+      setBurnCoin(id || "");
+      setTreasuryCap(tokenData.treasuryCap || "");
+    }
+  }, [tokenData]);
 
   console.log(tokenData)
 

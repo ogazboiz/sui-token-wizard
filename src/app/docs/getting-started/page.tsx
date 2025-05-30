@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ChevronRight, Home, Rocket, Coins, Shield, Zap, ExternalLink, Sparkles, ScrollText, Plus, Image, Palette } from "lucide-react"
+import { ChevronRight, Home, Coins, Shield, Zap, ExternalLink, ScrollText, Image, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -107,7 +107,7 @@ export default function GettingStartedPage() {
                     <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
                       <span className="text-lg">😊</span>
                     </div>
-                    Standard Token
+                    Standard Coin
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-zinc-300">
@@ -130,7 +130,7 @@ export default function GettingStartedPage() {
                     <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center mr-3">
                       <span className="text-lg">😎</span>
                     </div>
-                    Regulated Token
+                    Regulated Coin
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-zinc-300">
@@ -219,10 +219,10 @@ export default function GettingStartedPage() {
                       </p>
                       <div className="flex gap-2 flex-wrap">
                         <Badge variant="outline" className="border-blue-500 text-blue-400">
-                          Standard Token
+                          Standard Coin
                         </Badge>
                         <Badge variant="outline" className="border-purple-500 text-purple-400">
-                          Regulated Token
+                          Regulated Coin
                         </Badge>
                         <Badge variant="outline" className="border-emerald-500 text-emerald-400">
                           Closed-Loop Token

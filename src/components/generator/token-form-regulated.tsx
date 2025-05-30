@@ -143,7 +143,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
 
           toast({
             title: "Token created successfully!",
-            description: "Your regulated token has been created and is ready to use.",
+            description: "Your regulated coin has been created and is ready to use.",
           });
 
           setTimeout(() => {
@@ -216,7 +216,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
 
       <div className="p-6">
         <p className="mb-6 text-zinc-400">
-          Launch your own regulated token on the {getNetworkName()} network with advanced features.
+          Launch your own regulated coin on the {getNetworkName()} network with advanced features.
         </p>
 
         <div className="mb-6 rounded-lg bg-zinc-800 p-6">
@@ -312,7 +312,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                   id="description"
                   value={formData.description}
                   onChange={handleInputChange("description")}
-                  placeholder="A regulated token with advanced features"
+                  placeholder="A regulated coin with advanced features"
                   className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
                 />
                 <p className="mt-1 text-xs text-zinc-500">A brief description of your token&apos;s purpose</p>
@@ -496,7 +496,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                   <span className="text-lg">😊</span>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-white">Standard Token</div>
+                  <div className="text-sm font-medium text-white">Standard Coin</div>
                   <div className="text-xs text-teal-400">Price: 0.01 SUI</div>
                 </div>
               </div>

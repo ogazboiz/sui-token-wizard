@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSuiClient, useSuiClientQuery } from "@mysten/dapp-kit";
 import { SuiClient } from "@mysten/sui/client";
 import { normalizeSuiAddress } from "@mysten/sui/utils";
-import { TokenData } from "./tokenData";
+import { getAllObjects, TokenData } from "./tokenData";
 
 // Utility functions
 export async function deriveCoinType(
@@ -107,18 +107,9 @@ export async function getDenyList(suiClient: SuiClient, denyCapId: string) {
 }
 
 async function getAllNftsByOwner(suiClient: SuiClient, address: string) {
-    const response = await suiClient.getOwnedObjects({
-        owner: address,
-        options: {
-            showType: true,
-            showDisplay: true,
-            showContent: true,
-        },
-    });
+    const allObjects = await getAllObjects(suiClient, address);
 
-    // Filter out objects that are NFTs (not coins or other system objects)
-    // NFTs typically have custom types that don't start with "0x2::" (system modules)
-    return response.data.filter((item) => {
+    return allObjects.filter((item) => {
         if (!item.data?.type) return false;
         const type = item.data.type;
         const isNFT = type.includes('nft::');
@@ -128,31 +119,37 @@ async function getAllNftsByOwner(suiClient: SuiClient, address: string) {
 }
 
 async function getCLTokensByOwner(suiClient: SuiClient, address: string) {
-    const response = await suiClient.getOwnedObjects({
-        owner: address,
-        options: {
-            showType: true,
-            showDisplay: true,
-            showContent: true,
-        },
-    });
+    const allObjects = await getAllObjects(suiClient, address);
 
-    return response.data.filter((item) => {
+    return allObjects.filter((item) => {
         if (!item.data?.type) return false;
         const type = item.data.type;
-        const isCoin = type.startsWith('0x2::token::Token<');
+        const isCLToken = type.includes('0x2::token::Token<');
+
+        return isCLToken;
+    });
+}
+
+async function getAllCoinsByOwner(suiClient: SuiClient, address: string) {
+    const allObjects = await getAllObjects(suiClient, address);
+
+    return allObjects.filter((item) => {
+        if (!item.data?.type) return false;
+        const type = item.data.type;
+        const isCoin = type.includes('0x2::coin::Coin<');
 
         return isCoin;
     });
 }
 
 async function getAllCoinsAndTokensByOwner(suiClient: SuiClient, address: string) {
-    const allCoinsPromise = suiClient.getAllCoins({ owner: address });
+    const allCoinsPromise = getAllCoinsByOwner(suiClient, address);
     const allTokensPromise = getCLTokensByOwner(suiClient, address);
 
     const [allCoins, allTokens] = await Promise.all([allCoinsPromise, allTokensPromise]);
     console.log("allclTokens", allTokens);
-    const formattedTokens = allTokens.map((token) => {
+    const allCoinsAndTokens = [...allCoins, ...allTokens];
+    const formattedCoinsAndTokens = allCoinsAndTokens.map((token) => {
         // @ts-expect-error: Sui object content fields are not typed in the SDK
         const { type, objectId, version, digest, content } = token.data;
         const { fields } = content;
@@ -167,8 +164,7 @@ async function getAllCoinsAndTokensByOwner(suiClient: SuiClient, address: string
         };
     })
 
-    // allCoins.data contains the array of coins
-    return [...allCoins.data, ...formattedTokens];
+    return formattedCoinsAndTokens;
 }
 
 // Hooks

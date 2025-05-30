@@ -10,8 +10,8 @@ A comprehensive platform for creating, managing, and deploying tokens on the Sui
 ## ✨ Features
 
 ### 🪙 Token Creation
-- **Standard Tokens**: Basic fungible tokens with essential functionality
-- **Regulated Tokens**: Advanced tokens with compliance features
+- **Standard Coins**: Basic fungible coins with essential functionality
+- **Regulated Coins**: Advanced coins with compliance features
 - **Closed Loop Tokens**: Policy-controlled tokens with governance and action requests
 - **Custom Parameters**: Configurable name, symbol, decimals, and supply
 - **Multi-Network Support**: Deploy on Mainnet, Testnet, or Devnet

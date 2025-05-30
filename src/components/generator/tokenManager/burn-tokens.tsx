@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,11 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
 
   let derivedCoinType: string | undefined;
+  let id;
+
+  const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap || "")
+  const [burnCoin, setBurnCoin] = useState(id || "")
+  const [burnSuccess, setBurnSuccess] = useState(false)
 
   if (tokenData) {
     deriveCoinType(suiClient, tokenData).then((result) => {
@@ -36,9 +41,13 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
     });
   }
 
-  const [treasuryCap, setTreasuryCap] = useState(tokenData?.treasuryCap)
-  const [burnCoin, setBurnCoin] = useState(tokenData?.coinCap)
-  const [burnSuccess, setBurnSuccess] = useState(false)
+  useEffect(() => {
+    if (tokenData) {
+      const id = tokenData.type === "closed-loop" ? tokenData.tokenId : tokenData.coinId;
+      setBurnCoin(id || "");
+      setTreasuryCap(tokenData.treasuryCap || "");
+    }
+  }, [tokenData]);
 
   console.log(tokenData)
 
@@ -48,7 +57,7 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
 
     console.log("Burning with values:", {
       treasuryCap: tokenData.treasuryCap,
-      coinCap: burnCoin,
+      "coin/tokenId": burnCoin,
     })
 
     const tx = new Transaction()
@@ -180,16 +189,16 @@ export default function BurnTokens({ network, tokenData, isLoading }: TokenPageP
             </div>
 
             <div>
-              <label className="text-zinc-300 text-sm block mb-1">Coin ID</label>
+              <label className="text-zinc-300 text-sm block mb-1">{tokenData?.type === "closed-loop" ? "Token ID" : "Coin ID"}</label>
               <Input
-                placeholder="Enter coin ID to burn (optional)"
+                placeholder="Enter coin/token ID to burn (optional)"
                 value={burnCoin}
                 onChange={(e) => setBurnCoin(e.target.value)}
                 required
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
               <p className="text-zinc-500 text-xs mt-1">
-                Optionally specify a coin ID to burn. Leave empty to burn from your wallet balance.
+                Optionally specify a coin/token ID to burn. Leave empty to burn from your wallet balance.
               </p>
             </div>
 

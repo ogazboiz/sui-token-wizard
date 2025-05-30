@@ -26,39 +26,39 @@ interface ContractTemplate {
 const templates: ContractTemplate[] = [
   {
     id: "standard",
-    name: "Standard Token",
+    name: "Standard Coin",
     price: "0.01 SUI",
     discount: 50,
     description:
-      "Meet the Standard token – your go-to solution for creating tokens with ease. It comes with all the standard features of the Sui standard and offers extra option like supply limits. Craft your token your way and start your crypto adventure effortlessly!",
+      "Meet the Standard coin – your go-to solution for creating coins with ease. It comes with all the standard features of the Sui standard and offers extra option like supply limits. Craft your coin your way and start your crypto adventure effortlessly!",
     features: [
-      { name: "Basic Token Functionality", included: true },
+      { name: "Basic Coin Functionality", included: true },
       { name: "Supply Limits", included: true },
-      { name: "Mintable", included: false },
-      { name: "Burnable", included: false },
+      { name: "Mintable", included: true },
+      { name: "Burnable", included: true },
       { name: "Pausable", included: false },
-      { name: "Blacklist", included: false },
+      { name: "Denylist", included: false },
     ],
     tags: ["sui-standard", "supply-limits"],
     imageSrc: "/placeholder.svg?height=120&width=120",
   },
   {
-    id: "essential",
-    name: "Essential Token",
+    id: "regulated",
+    name: "Regulated Coin",
     price: "0.02 SUI",
     discount: 60,
     popular: true,
     description:
-      "Discover the perfect Essential token that comes with all the basics from the Sui standard, plus extra features! Customize your token by setting supply limits, ownership parameters, and even consider its mintable, burnable, pausable, and blacklist functionalities. Create your unique token with ease!",
+      "Discover the perfect regulated coin that comes with all the basics from the Sui standard, plus extra features! Customize your token by setting supply limits, ownership parameters, and even consider its mintable, burnable, pausable, and denylist functionalities. Create your unique token with ease!",
     features: [
       { name: "Basic Token Functionality", included: true },
       { name: "Supply Limits", included: true },
       { name: "Mintable", included: true },
       { name: "Burnable", included: true },
       { name: "Pausable", included: true },
-      { name: "Blacklist", included: true },
+      { name: "Denylist", included: true },
     ],
-    tags: ["sui-standard", "supply-limits", "ownership", "mintable", "burnable", "pausable", "blacklist"],
+    tags: ["sui-standard", "supply-limits", "ownership", "mintable", "burnable", "pausable", "denylist"],
     imageSrc: "/placeholder.svg?height=120&width=120",
   },
 ]
@@ -140,11 +140,10 @@ export default function LandingContractTemplates() {
             >
               <div className="absolute inset-0 opacity-10">
                 <div
-                  className={`absolute inset-0 ${
-                    template.id === "standard"
-                      ? "bg-indigo-500/10 pattern-dots pattern-indigo-500"
-                      : "bg-fuchsia-500/10 pattern-dots pattern-fuchsia-500"
-                  } pattern-bg-transparent pattern-size-4 pattern-opacity-10`}
+                  className={`absolute inset-0 ${template.id === "standard"
+                    ? "bg-indigo-500/10 pattern-dots pattern-indigo-500"
+                    : "bg-fuchsia-500/10 pattern-dots pattern-fuchsia-500"
+                    } pattern-bg-transparent pattern-size-4 pattern-opacity-10`}
                 ></div>
               </div>
 
@@ -186,11 +185,10 @@ export default function LandingContractTemplates() {
 
               <Button
                 onClick={handleTemplateClick}
-                className={`w-full mt-auto cursor-pointer ${
-                  template.id === "essential"
-                    ? "bg-teal-500 hover:bg-teal-600 text-white"
-                    : "bg-zinc-700 hover:bg-zinc-600 text-white"
-                }`}
+                className={`w-full mt-auto cursor-pointer ${template.id === "regulated"
+                  ? "bg-teal-500 hover:bg-teal-600 text-white"
+                  : "bg-zinc-700 hover:bg-zinc-600 text-white"
+                  }`}
               >
                 Create token
               </Button>

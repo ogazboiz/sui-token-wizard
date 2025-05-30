@@ -18,14 +18,14 @@ export default function GasEstimatorPage() {
   const templates = [
     { 
       id: "standard", 
-      name: "Standard Token", 
+      name: "Standard Coin", 
       cost: 0.01,
       description: "Perfect for basic use cases with essential functionality",
       features: ["Mintable & Burnable", "Metadata editing", "Low gas fees", "Quick deployment"]
     },
     { 
       id: "regulated", 
-      name: "Regulated Token", 
+      name: "Regulated Coin", 
       cost: 0.02,
       description: "Advanced features for compliance and security",
       features: ["Pausable transfers", "Denylist management", "Metadata editing", "Compliance ready"]
@@ -244,7 +244,7 @@ export default function GasEstimatorPage() {
                       <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
                         <span className="text-lg">😊</span>
                       </div>
-                      Standard Token
+                      Standard Coin
                     </div>
                     <span className="text-blue-400 font-bold">0.01 SUI</span>
                   </CardTitle>
@@ -267,7 +267,7 @@ export default function GasEstimatorPage() {
                       <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center mr-3">
                         <span className="text-lg">😎</span>
                       </div>
-                      Regulated Token
+                      Regulated Coin
                     </div>
                     <span className="text-purple-400 font-bold">0.02 SUI</span>
                   </CardTitle>

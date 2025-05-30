@@ -250,7 +250,7 @@ export default function DenylistTokens({ network, tokenData, isLoading }: TokenP
         <Terminal className="h-4 w-4 text-teal-500" />
         <AlertTitle className="text-white">Feature Not Available</AlertTitle>
         <AlertDescription className="text-zinc-400">
-          The denylist feature is not available for this token. This feature is only available for regulated tokens with the denylist feature enabled.
+          The denylist feature is not available for this token. This feature is only available for regulated coins with the denylist feature enabled.
           <div className="mt-4">
             <Button
               className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white"

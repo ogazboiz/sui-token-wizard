@@ -189,7 +189,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
             <span className="text-xl">😊</span>
           </div>
           <div>
-            <div className="font-medium text-white">Standard Token</div>
+            <div className="font-medium text-white">Standard Coin</div>
             <div className="text-sm text-teal-400">0.01 SUI</div>
           </div>
         </div>

@@ -328,7 +328,7 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
                   )}
                   {(!tokenData?.type || tokenData?.type === "standard") && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
-                      Standard Token
+                      Standard Coin
                     </span>
                   )}
                 </div>

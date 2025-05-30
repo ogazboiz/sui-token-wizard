@@ -532,7 +532,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                   <span className="text-lg">😊</span>
                 </div>
                 <div>
-                  <div className="text-white text-sm font-medium">Standard token</div>
+                  <div className="text-white text-sm font-medium">Standard coin</div>
                   <div className="text-teal-400 text-xs">Price: 0.01 SUI</div>
                 </div>
               </div>
@@ -549,7 +549,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                   <span className="text-lg">😎</span>
                 </div>
                 <div>
-                  <div className="text-white text-sm font-medium">Regulated token</div>
+                  <div className="text-white text-sm font-medium">Regulated coin</div>
                   <div className="text-teal-400 text-xs">Price: 0.02 SUI</div>
                 </div>
               </div>

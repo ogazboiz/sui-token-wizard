@@ -40,7 +40,8 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
   const [mintAmount, setMintAmount] = useState('')
   const [mintRecipient, setMintRecipient] = useState(account?.address || '')
   const [mintSuccess, setMintSuccess] = useState(false)
-  const [coinCap, setCoinCap] = useState(tokenData?.coinCap)
+  const [coinId, setCoinId] = useState(tokenData?.coinId)
+  const [tokenId, setTokenId] = useState(tokenData?.tokenId)
 
   // Handle mint token function
   const handleMint = async (e: React.FormEvent) => {
@@ -77,8 +78,8 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
           if (res.effects?.status.status === "success") {
             console.log("Mint successful:", res)
 
-            const coin = res.effects.created?.[0]?.reference?.objectId;
-            console.log("Coin ID:", coin)
+            const id = res.effects.created?.[0]?.reference?.objectId;
+            console.log("Coin/Token ID:", id)
 
             toast({
               title: "Success",
@@ -87,7 +88,11 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
             setMintSuccess(true);
             setTimeout(() => setMintSuccess(false), 3000);
             setMintAmount('')
-            setCoinCap(coin as string)
+            if (tokenData.type === "closed-loop") {
+              setTokenId(id as string);
+            } else {
+              setCoinId(id as string)
+            }
           }
         },
         onError: (err) => {
@@ -170,18 +175,37 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
                 </Button>
               </div>
             </div>
-            {coinCap && (
+            {coinId && (
               <div className="flex justify-between items-center mt-4">
-                <span className="text-zinc-400 text-sm">Coin Cap:</span>
+                <span className="text-zinc-400 text-sm">Coin Id:</span>
                 <div className="flex items-center">
                   <span className="text-white truncate max-w-[200px]">
-                    {coinCap.substring(0, 6)}...{coinCap.substring(coinCap.length - 4)}
+                    {coinId.substring(0, 6)}...{coinId.substring(coinId.length - 4)}
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 ml-1 cursor-pointer"
-                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${coinCap}`, '_blank')}
+                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${coinId}`, '_blank')}
+                  >
+                    <ExternalLink className="h-3 w-3 text-zinc-400" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            {/* shows this when in closed-loop token */}
+            {tokenId && (
+              <div className="flex justify-between items-center mt-4">
+                <span className="text-zinc-400 text-sm">Token Id:</span>
+                <div className="flex items-center">
+                  <span className="text-white truncate max-w-[200px]">
+                    {tokenId.substring(0, 6)}...{tokenId.substring(tokenId.length - 4)}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-1 cursor-pointer"
+                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${tokenId}`, '_blank')}
                   >
                     <ExternalLink className="h-3 w-3 text-zinc-400" />
                   </Button>

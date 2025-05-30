@@ -19,7 +19,8 @@ export interface TokenData {
     treasuryCap: string;
     metadata: string;
     denyCap?: string;
-    coinCap?: string;
+    coinId?: string;
+    tokenId?: string;
     type: TokenType
     features?: {
         burnable?: boolean;
@@ -44,7 +45,7 @@ const fetchTokenData = async (
     const coinType = await deriveFullCoinType(suiClient, pkgId);
     const metadata = await suiClient.getCoinMetadata({ coinType });
     // const owner = await getPackageOwner(suiClient, pkgId); //make this work
-    const { txId, treasuryCap, denyCap, coinCap } = await getTxIdsAndCaps(suiClient, pkgId, owner, coinType);
+    const { txId, treasuryCap, denyCap, coinId, tokenId } = await getTxIdsAndCaps(suiClient, pkgId, owner, coinType);
 
     const symbol = metadata?.symbol || "";
     const name = metadata?.name || "";
@@ -93,7 +94,8 @@ const fetchTokenData = async (
         txId: txId ?? "",
         treasuryCap: treasuryCap ?? "",
         denyCap: denyCap ?? "",
-        coinCap: coinCap ?? "",
+        coinId: coinId ?? "",
+        tokenId: tokenId ?? "",
         type: tokenType ?? undefined,
         features
     };
@@ -123,7 +125,8 @@ interface TxIdsAndCaps {
     txId: string | null;
     treasuryCap: string | null;
     denyCap?: string | null;
-    coinCap?: string | null;
+    coinId?: string | null;
+    tokenId?: string | null;
 }
 
 export const getTxIdsAndCaps = async (
@@ -244,17 +247,17 @@ export const getTxIdsAndCaps = async (
 
         const denyCap = denyCapObj?.data?.objectId || null;
 
-        // Find CoinCap for the coin type if it exists
-        const coinCapObj = allObjects.find((obj) => {
+        // Find coinId for the coin type if it exists
+        const coinIdObj = allObjects.find((obj) => {
             const objType = obj.data?.type;
             if (!objType) return false;
 
-            // Check for CoinCap with the specific coin type
+            // Check for coinId with the specific coin type
             if (objType.includes(`0x2::coin::Coin<${coinType}>`)) {
                 return true;
             }
 
-            // If coinType doesn't include the package ID, check for CoinCap with any coin type from this package
+            // If coinType doesn't include the package ID, check for coinId with any coin type from this package
             if (!coinType.includes(normalizedPkgId) &&
                 objType.includes('0x2::coin::Coin') &&
                 objType.includes(normalizedPkgId)) {
@@ -264,14 +267,37 @@ export const getTxIdsAndCaps = async (
             return false;
         });
 
-        const coinCap = coinCapObj?.data?.objectId || null;
+        const coinId = coinIdObj?.data?.objectId || null;
+
+        // Find tokenId for the closed loop tokens
+        const tokenIdObj = allObjects.find((obj) => {
+            const objType = obj.data?.type;
+            if (!objType) return false;
+
+            // Check for tokenId with the specific token type
+            if (objType.includes(`0x2::token::Token<${coinType}>`)) {
+                return true;
+            }
+
+            // If coinType doesn't include the package ID, check for tokenId with any token type from this package
+            if (!coinType.includes(normalizedPkgId) &&
+                objType.includes('0x2::token::Token') &&
+                objType.includes(normalizedPkgId)) {
+                return true;
+            }
+
+            return false;
+        });
+
+        const tokenId = tokenIdObj?.data?.objectId || null;
 
 
         return {
             txId,
             treasuryCap,
             denyCap,
-            coinCap,
+            coinId,
+            tokenId,
         };
 
     } catch (error: unknown) {
@@ -280,7 +306,8 @@ export const getTxIdsAndCaps = async (
             txId: null,
             treasuryCap: null,
             denyCap: null,
-            coinCap: null,
+            coinId: null,
+            tokenId: null
         };
     }
 };

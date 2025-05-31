@@ -495,7 +495,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     Creating Token...
                   </div>
                 ) : (
-                  "Create Regulated Token"
+                  "Create Regulated Coin"
                 )}
               </Button>
               <Button

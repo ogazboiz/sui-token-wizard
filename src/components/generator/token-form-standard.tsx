@@ -475,7 +475,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                     Creating Token...
                   </div>
                 ) : (
-                  "Create Token"
+                  "Create Standard Coin"
                 )}
               </Button>
               <Button

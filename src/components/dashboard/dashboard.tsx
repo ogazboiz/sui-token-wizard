@@ -647,17 +647,17 @@ export default function Dashboard({ network }: { network: string }) {
                               {parseInt(token.supply).toLocaleString()}
                             </div>
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap mx-auto">
+                            <div className="text-sm w-full text-zinc-300 font-mono">
+                              {token.decimals}
+                            </div>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-zinc-300 font-mono">
                               {(Number(token.supply) / Math.pow(10, token.decimals || 0)).toLocaleString(undefined, {
                                 minimumFractionDigits: 0,
                                 maximumFractionDigits: Math.min(6, token.decimals || 0),
                               })} {token.symbol}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap mx-auto">
-                            <div className="text-sm w-full text-zinc-300 font-mono">
-                              {token.decimals}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">

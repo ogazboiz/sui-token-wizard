@@ -361,24 +361,12 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
         <span className="text-white">{getActiveToolName()}{getTokenTypeDisplay()}</span>
       </div>
 
-      <div className="grid md:grid-cols-[300px_1fr] gap-6">
-        <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
-          {/* Dashboard/Back Button Section */}
-          <div className="p-3 border-b border-zinc-800 bg-zinc-800/30">
-            <Link
-              href="/dashboard"
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg transition-all duration-200 group"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span className="font-medium">My Dashboard</span>
-              <ArrowLeft className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Link>
-          </div>
-
+      <div className="h-[90vh] grid md:grid-cols-[300px_1fr] gap-6">
+        <div className="sticky top-6 flex flex-col justify-between bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
           {/* Tools Header */}
-          <div className="p-4 border-b border-zinc-800">
-            <h2 className="font-medium text-white flex items-center">
-              Tools{tokenType && (
+          <div className="p-5 border-b border-zinc-800 h-[12%]">
+            <h2 className="font-medium text-white text-xl flex items-center">
+              Tools {tokenType && (
                 <span className={`ml-2 text-xs px-2 py-1 rounded ${tokenType === 'closed-loop' ? 'bg-emerald-500/20 text-emerald-400' :
                   tokenType === 'regulated' ? 'bg-purple-500/20 text-purple-400' :
                     'bg-blue-500/20 text-blue-400'
@@ -389,15 +377,19 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
               )}
               <span className="ml-1 text-orange-400">🔥</span>
             </h2>
-            {packageId && (
-              <p className="text-xs text-zinc-500 mt-1">
+            {packageId ? (
+              <p className="text-sm text-zinc-500 mt-3">
                 Package: {packageId.slice(0, 8)}...{packageId.slice(-6)}
+              </p>
+            ) : (
+              <p className="text-sm text-zinc-500 mt-3">
+                Package: Not Selected
               </p>
             )}
           </div>
 
           {/* Tools List */}
-          <div className="p-2">
+          <div className="p-2 py-10 flex flex-col gap-5 h-full">
             {filteredTools.map((tool) => (
               <button
                 key={tool.id}
@@ -438,19 +430,34 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
           </div>
 
           {/* Footer */}
-          <div className="p-4 mt-4 border-t border-zinc-800">
-            <Button
-              variant="outline"
-              className="w-full text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-600 transition-colors"
-            >
-              Need other tools? Contact us
-            </Button>
+          <div className="flex flex-col justify-center items-center mt-4 border-t border-zinc-800 p-4 gap-4 h-[24%]">
+            {/* Back to Dashboard */}
+            <div>
+              <Link
+                href="/dashboard"
+                className={`w-full flex items-center justify-center gap-2 px-8 py-2.5 hover:text-white rounded-lg transition-all duration-200 group bg-zinc-800 text-zinc-300
+                  }`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="font-medium">My Dashboard</span>
+                <ArrowLeft className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            </div>
+
+            <div>
+              <Button
+                variant="outline"
+                className="w-full text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-600 transition-colors"
+              >
+                Need other tools? Contact us
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div>
+        <div className="overflow-y-auto h-[calc(90vh)]">
           {activeTool === "token-creator" && (
-            <>
+            <div className="scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-zinc-900">
               <motion.div
                 className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mb-8"
                 initial={{ opacity: 0, y: 20 }}
@@ -479,7 +486,7 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
                 selectedTemplate={selectedTemplate}
                 onTemplateSelect={handleTemplateSelect}
               />
-            </>
+            </div>
           )}
           {activeTool === "token-page" && (
             <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />

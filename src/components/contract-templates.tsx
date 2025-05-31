@@ -251,7 +251,7 @@ export default function ContractTemplates({
                     : "bg-zinc-700 hover:bg-zinc-600 text-white"
                 }`}
               >
-                Create token
+                {template.id === "closed-loop" ? "Create token" : "Create coin"}
               </Button>
             </div>
           </motion.div>

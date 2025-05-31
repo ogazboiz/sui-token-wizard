@@ -205,7 +205,7 @@ export default function LandingHeroSection() {
   }
 
   return (
-    <div className="relative w-full h-screen flex items-center justify-center overflow-hidden px-4 sm:px-6">
+    <div className="relative w-full h-[calc(100vh-90px)] flex items-center justify-center overflow-hidden px-4 sm:px-6">
       <motion.div
         className="w-full max-w-4xl relative"
         initial={{ opacity: 0 }}

@@ -146,10 +146,10 @@ const DashboardStats = ({ tokens, nftCollections }: { tokens: Token[], nftCollec
   const totalTokens = tokens.length
   const totalNFTs = nftCollections.length
   const totalSupply = tokens.reduce((sum, token) => sum + parseInt(token.supply || '0'), 0)
-  const totalNFTMinted = nftCollections.reduce((sum, nft) => sum + parseInt(nft.minted || '0'), 0)
+  // const totalNFTMinted = nftCollections.reduce((sum, nft) => sum + parseInt(nft.minted || '0'), 0)
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -201,7 +201,7 @@ const DashboardStats = ({ tokens, nftCollections }: { tokens: Token[], nftCollec
         </div>
       </motion.div>
 
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -216,7 +216,7 @@ const DashboardStats = ({ tokens, nftCollections }: { tokens: Token[], nftCollec
             <ImageIcon className="h-6 w-6 text-orange-400" />
           </div>
         </div>
-      </motion.div>
+      </motion.div> */}
     </div>
   )
 }
@@ -356,10 +356,10 @@ export default function Dashboard({ network }: { network: string }) {
     router.push(`/generator/${network}/token?packageId=${token.packageId}`)
   }
 
-  const handleMintNFT = (collection: NFTCollection) => {
-    console.log("Navigating to NFT mint with package ID:", collection.packageId)
-    router.push(`/nft/mint/${collection.packageId}`)
-  }
+  // const handleMintNFT = (collection: NFTCollection) => {
+  //   console.log("Navigating to NFT mint with package ID:", collection.packageId)
+  //   router.push(`/nft/mint/${collection.packageId}`)
+  // }
 
   const getTokenTypeBadge = (type: 'standard' | 'regulated' | 'closed-loop') => {
     switch (type) {
@@ -796,14 +796,14 @@ export default function Dashboard({ network }: { network: string }) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
-                              <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer">
+                              <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer p-3">
                                 <Link href={`https://suiscan.xyz/${network}/object/${collection.packageId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
-                                  <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                  <ExternalLink size={14} className="mr-4" /> View on Explorer
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => handleMintNFT(collection)}
+                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer p-3"
+                              // onClick={() => handleMintNFT(collection)}
                               >
                                 <ImageIcon size={14} className="mr-2" /> Mint NFT
                               </DropdownMenuItem>
@@ -841,7 +841,7 @@ export default function Dashboard({ network }: { network: string }) {
                           <Button
                             variant="outline"
                             className="flex-1 border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
-                            onClick={() => handleMintNFT(collection)}
+                          // onClick={() => handleMintNFT(collection)}
                           >
                             <ImageIcon className="mr-2 h-3 w-3" />
                             Mint NFT

@@ -506,7 +506,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                     Creating closed-loop token...
                   </div>
                 ) : (
-                  "Create closed-loop token"
+                  "Create Closed-loop Token"
                 )}
               </Button>
               <Button

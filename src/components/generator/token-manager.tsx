@@ -3,7 +3,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText, Loader2, Pause, ScrollText, Droplets } from "lucide-react"
+import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText, Loader2, Pause, ScrollText, Droplets, LayoutDashboard, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
@@ -38,8 +38,6 @@ interface Tool {
   hideForClosedLoop?: boolean
   requiresPolicy?: boolean
 }
-
-// have a return to dashboard somewhere on this page
 
 export default function TokenManager({ network = "testnet" }: TokenManagerProps) {
   const router = useRouter()
@@ -365,6 +363,19 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
 
       <div className="grid md:grid-cols-[300px_1fr] gap-6">
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+          {/* Dashboard/Back Button Section */}
+          <div className="p-3 border-b border-zinc-800 bg-zinc-800/30">
+            <Link 
+              href="/dashboard" 
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg transition-all duration-200 group"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="font-medium">My Dashboard</span>
+              <ArrowLeft className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </Link>
+          </div>
+
+          {/* Tools Header */}
           <div className="p-4 border-b border-zinc-800">
             <h2 className="font-medium text-white flex items-center">
               Tools{tokenType && (
@@ -384,30 +395,57 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
               </p>
             )}
           </div>
+
+          {/* Tools List */}
           <div className="p-2">
             {filteredTools.map((tool) => (
               <button
                 key={tool.id}
-                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${tool.isActive ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-                  } ${tool.comingSoon ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between transition-all duration-200 ${
+                  tool.isActive 
+                    ? "bg-teal-500/20 text-teal-400 border border-teal-500/30" 
+                    : tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender')
+                      ? "text-zinc-600 cursor-not-allowed" 
+                      : tool.comingSoon
+                        ? "text-zinc-500 cursor-not-allowed opacity-70"
+                        : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 cursor-pointer"
+                }`}
                 disabled={tool.comingSoon}
                 onClick={() => !tool.comingSoon && handleToolSelect(tool.id, tool.route)}
               >
                 <div className="flex items-center">
-                  <div className="w-6 h-6 mr-2 flex items-center justify-center">{tool.icon}</div>
-                  <span>{tool.name}</span>
+                  <div className={`w-6 h-6 mr-2 flex items-center justify-center ${
+                    tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-50' : ''
+                  }`}>
+                    {tool.icon}
+                  </div>
+                  <span className={`font-medium ${
+                    tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-70' : ''
+                  }`}>
+                    {tool.name}
+                  </span>
                   {tool.isNew && (
                     <span className="ml-2 text-xs bg-teal-500/20 text-teal-400 px-1.5 py-0.5 rounded font-medium">
                       New
                     </span>
                   )}
+                  {tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') && (
+                    <span className="ml-2 text-xs bg-zinc-700/50 text-zinc-500 px-1.5 py-0.5 rounded font-medium border border-zinc-700/30">
+                      Soon
+                    </span>
+                  )}
                 </div>
-                <ChevronRight className="w-4 h-4 opacity-50" />
+                {!tool.comingSoon && <ChevronRight className="w-4 h-4 opacity-50" />}
               </button>
             ))}
           </div>
+
+          {/* Footer */}
           <div className="p-4 mt-4 border-t border-zinc-800">
-            <Button variant="outline" className="w-full text-zinc-400 border-zinc-700 hover:text-white">
+            <Button 
+              variant="outline" 
+              className="w-full text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-600 transition-colors"
+            >
               Need other tools? Contact us
             </Button>
           </div>

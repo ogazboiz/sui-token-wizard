@@ -1,18 +1,32 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Wallet, Coins, ImageIcon, ExternalLink, Copy, MoreHorizontal, PlusCircle, ArrowUpRight, Terminal, Loader2 } from "lucide-react"
+import { 
+  Wallet, 
+  Coins, 
+  ImageIcon, 
+  ExternalLink, 
+  Copy, 
+  MoreHorizontal, 
+  PlusCircle, 
+  ArrowUpRight, 
+  Terminal, 
+  Loader2,
+  TrendingUp,
+  Eye,
+  Settings,
+  AlertCircle
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { useCurrentAccount, useSuiClient, ConnectButton } from "@mysten/dapp-kit"
 import { getMetadataField, useGetAllCoinsAndTokensByOwner, useGetAllNftsByOwner } from "../hooks/getData"
-import { ClipLoader } from "react-spinners"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import Link from "next/link"
 import { useWalletConnection } from "@/components/hooks/useWalletConnection"
@@ -28,7 +42,7 @@ interface Token {
   network: string
   supply: string
   address: string
-  packageId: string // Extract package ID from coinType
+  packageId: string
   createdAt: string
   type: 'standard' | 'regulated' | 'closed-loop'
   status: string
@@ -42,7 +56,7 @@ interface NFTCollection {
   supply: string;
   minted: string;
   address: string;
-  packageId: string; // Extract package ID from objectId
+  packageId: string;
   owner: string | {
     AddressOwner: string;
   } | {
@@ -55,6 +69,158 @@ interface NFTCollection {
   createdAt: string;
   image: string;
   status: string;
+}
+
+// Skeleton Components
+const TokenTableSkeleton = () => (
+  <div className="overflow-x-auto">
+    <table className="w-full">
+      <thead>
+        <tr className="border-b border-zinc-800">
+          <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Token</th>
+          <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Network</th>
+          <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Supply</th>
+          <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Type</th>
+          <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Package ID</th>
+          <th className="px-6 py-4 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-zinc-800">
+        {[...Array(3)].map((_, i) => (
+          <tr key={i} className="animate-pulse">
+            <td className="px-6 py-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 rounded-full bg-zinc-700 mr-3"></div>
+                <div>
+                  <div className="h-4 bg-zinc-700 rounded w-24 mb-1"></div>
+                  <div className="h-3 bg-zinc-800 rounded w-16"></div>
+                </div>
+              </div>
+            </td>
+            <td className="px-6 py-4">
+              <div className="h-6 bg-zinc-700 rounded-full w-20"></div>
+            </td>
+            <td className="px-6 py-4">
+              <div className="h-4 bg-zinc-700 rounded w-16"></div>
+            </td>
+            <td className="px-6 py-4">
+              <div className="h-6 bg-zinc-700 rounded-full w-24"></div>
+            </td>
+            <td className="px-6 py-4">
+              <div className="h-4 bg-zinc-700 rounded w-32"></div>
+            </td>
+            <td className="px-6 py-4 text-right">
+              <div className="h-8 w-8 bg-zinc-700 rounded ml-auto"></div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)
+
+const NFTGridSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+    {[...Array(6)].map((_, i) => (
+      <div key={i} className="bg-zinc-800 rounded-xl overflow-hidden border border-zinc-700 animate-pulse">
+        <div className="h-40 bg-zinc-700"></div>
+        <div className="p-4">
+          <div className="h-6 bg-zinc-700 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-zinc-800 rounded w-1/2 mb-4"></div>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <div className="bg-zinc-900 rounded-lg p-2">
+              <div className="h-3 bg-zinc-800 rounded w-12 mb-1"></div>
+              <div className="h-4 bg-zinc-700 rounded w-16"></div>
+            </div>
+            <div className="bg-zinc-900 rounded-lg p-2">
+              <div className="h-3 bg-zinc-800 rounded w-12 mb-1"></div>
+              <div className="h-4 bg-zinc-700 rounded w-16"></div>
+            </div>
+          </div>
+          <div className="h-9 bg-zinc-700 rounded w-full"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+)
+
+const DashboardStats = ({ tokens, nftCollections }: { tokens: Token[], nftCollections: NFTCollection[] }) => {
+  const totalTokens = tokens.length
+  const totalNFTs = nftCollections.length
+  const totalSupply = tokens.reduce((sum, token) => sum + parseInt(token.supply || '0'), 0)
+  const totalNFTMinted = nftCollections.reduce((sum, nft) => sum + parseInt(nft.minted || '0'), 0)
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-zinc-900 rounded-xl border border-zinc-800 p-6"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-zinc-400 text-sm font-medium">Total Tokens</p>
+            <p className="text-2xl font-bold text-white">{totalTokens}</p>
+          </div>
+          <div className="bg-teal-500/20 p-3 rounded-lg">
+            <Coins className="h-6 w-6 text-teal-400" />
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-zinc-900 rounded-xl border border-zinc-800 p-6"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-zinc-400 text-sm font-medium">NFT Collections</p>
+            <p className="text-2xl font-bold text-white">{totalNFTs}</p>
+          </div>
+          <div className="bg-purple-500/20 p-3 rounded-lg">
+            <ImageIcon className="h-6 w-6 text-purple-400" />
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-zinc-900 rounded-xl border border-zinc-800 p-6"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-zinc-400 text-sm font-medium">Token Supply</p>
+            <p className="text-2xl font-bold text-white">{totalSupply.toLocaleString()}</p>
+          </div>
+          <div className="bg-blue-500/20 p-3 rounded-lg">
+            <TrendingUp className="h-6 w-6 text-blue-400" />
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-zinc-900 rounded-xl border border-zinc-800 p-6"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-zinc-400 text-sm font-medium">NFTs Minted</p>
+            <p className="text-2xl font-bold text-white">{totalNFTMinted.toLocaleString()}</p>
+          </div>
+          <div className="bg-orange-500/20 p-3 rounded-lg">
+            <ImageIcon className="h-6 w-6 text-orange-400" />
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
 }
 
 export default function Dashboard({ network }: { network: string }) {
@@ -98,7 +264,7 @@ export default function Dashboard({ network }: { network: string }) {
 
                   return {
                     id: `token-${index}`,
-                    name: tokenMetadata?.name?.split("::") || "Unknown Token",
+                    name: tokenMetadata?.name || "Unknown Token",
                     symbol: tokenMetadata?.symbol || "UNK",
                     network,
                     supply: token.balance || "0",
@@ -107,7 +273,7 @@ export default function Dashboard({ network }: { network: string }) {
                     address: token.coinType,
                     packageId,
                     type: tokenType,
-                    createdAt: new Date().toISOString().split("T")[0],
+                    
                     status: "active",
                   };
                 } catch (error) {
@@ -143,7 +309,7 @@ export default function Dashboard({ network }: { network: string }) {
               supply: fields.supply?.toString() || "10000",
               minted: fields.minted?.toString() || "0",
               address: token.data?.objectId || "",
-              packageId, // Store the extracted package ID
+              packageId,
               owner: typedOwner,
               createdAt: new Date().toISOString().split("T")[0],
               image:
@@ -155,11 +321,11 @@ export default function Dashboard({ network }: { network: string }) {
           });
 
           // @ts-expect-error: type interface ish
-          setTokens(filteredTokens)
+          setTokens(filteredTokens.filter(Boolean))
           setNftCollections(filteredNfts || [])
         }
       } catch (err) {
-        setError("Failed to load token data")
+        setError("Failed to load dashboard data")
         console.error("Error fetching token data:", err)
       } finally {
         setIsLoading(false)
@@ -236,385 +402,496 @@ export default function Dashboard({ network }: { network: string }) {
     }
   }
 
+  // Loading state
   if (!isReady) {
     return (
-      <div className="flex justify-center items-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
-        <span className="ml-4 text-zinc-300">Checking wallet connection...</span>
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+          <span className="ml-4 text-zinc-300">Checking wallet connection...</span>
+        </div>
       </div>
     )
   }
 
+  // Not connected state
   if (!isConnected) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-8">
-            <Wallet className="h-16 w-16 text-zinc-700 mx-auto mb-6" />
+          <motion.div 
+            className="bg-zinc-900 rounded-xl border border-zinc-800 p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="bg-zinc-800 rounded-full p-6 w-fit mx-auto mb-6">
+              <Wallet className="h-16 w-16 text-zinc-400" />
+            </div>
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">Connect Your Wallet</h1>
             <p className="text-zinc-400 mb-8">
-              You need to connect your wallet to view your dashboard and manage your tokens and NFT collections.
+              Connect your wallet to view your dashboard and manage your tokens and NFT collections.
             </p>
-            <Alert className="bg-zinc-800 border-zinc-700 mb-6">
-              <Terminal className="h-4 w-4 text-teal-500" />
+            <Alert className="bg-zinc-800/50 border-zinc-700 mb-8 text-left">
+              <AlertCircle className="h-4 w-4 text-teal-500" />
               <AlertTitle className="text-white">Wallet Required</AlertTitle>
               <AlertDescription className="text-zinc-400">
-                Connect your wallet to access your personal dashboard with all your tokens and NFT collections.
+                Your dashboard shows all tokens and NFT collections created with your connected wallet address.
               </AlertDescription>
             </Alert>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <ConnectButton
                 connectText="Connect Wallet"
-                className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white px-8 py-3"
+                className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white px-8 py-3 rounded-lg font-medium"
               />
               <Button
                 variant="outline"
-                className="border-zinc-700 text-zinc-300 cursor-pointer hover:text-white px-8 py-3"
+                className="border-zinc-700 text-zinc-300 cursor-pointer hover:text-white hover:border-zinc-600 px-8 py-3"
                 onClick={() => router.push("/")}
               >
                 Back to Home
               </Button>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     )
   }
 
-  if (isLoading || coinsLoading) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <ClipLoader size={40} color="#14b8a6" />
-        <span className="ml-4 text-zinc-300">Loading token data...</span>
-      </div>
-    )
-  }
-
+  // Error state
   if (error) {
     return (
-      <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
-        <Terminal className="h-4 w-4 text-teal-500" />
-        <AlertTitle className="text-white">Error</AlertTitle>
-        <AlertDescription className="text-zinc-400">
-          {error}. Please try again or contact support.
-          <div className="mt-4">
+      <div className="container mx-auto px-4 py-12">
+        <Alert className="bg-zinc-900 border-zinc-800 max-w-xl mx-auto">
+          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertTitle className="text-white">Error Loading Dashboard</AlertTitle>
+          <AlertDescription className="text-zinc-400 mb-4">
+            {error}. Please try refreshing the page or contact support if the issue persists.
+          </AlertDescription>
+          <div className="flex gap-3">
             <Button
               className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white"
-              onClick={() => router.push(`/generator/${network}`)}
+              onClick={() => window.location.reload()}
             >
-              Create a Token
+              Refresh Page
+            </Button>
+            <Button
+              variant="outline"
+              className="border-zinc-700 text-zinc-300 cursor-pointer hover:text-white"
+              onClick={() => router.push("/generate")}
+            >
+              Create Token
             </Button>
           </div>
-        </AlertDescription>
-      </Alert>
+        </Alert>
+      </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <motion.div 
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">My Dashboard</h1>
-          <p className="text-zinc-400 mt-1">Manage your tokens and NFT collections</p>
-          <p className="text-zinc-500 mt-1 text-sm">
-            Connected: {account?.address.slice(0, 6)}...{account?.address.slice(-4)}
-          </p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">My Dashboard</h1>
+          <p className="text-zinc-400">Manage your tokens and NFT collections</p>
+          <div className="flex items-center mt-2 gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <p className="text-zinc-500 text-sm font-mono">
+              {account?.address.slice(0, 8)}...{account?.address.slice(-6)}
+            </p>
+            <button
+              className="text-zinc-500 hover:text-zinc-300 cursor-pointer"
+              onClick={() => handleCopyAddress(account?.address || "")}
+            >
+              <Copy size={14} />
+            </button>
+          </div>
         </div>
         <div className="flex gap-3">
           <Button
-            variant="outline"
-            className="border-zinc-700 text-zinc-300 cursor-pointer hover:text-white"
+            className="bg-teal-500 hover:bg-teal-600 text-white cursor-pointer"
             onClick={() => router.push("/generate")}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
             Create Token
           </Button>
           <Button
-            variant="outline"
-            className="border-zinc-700 text-zinc-300 cursor-pointer hover:text-white"
+            className="bg-purple-500 hover:bg-purple-600 text-white cursor-pointer"
             onClick={() => router.push("/nft/generate")}
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <ImageIcon className="mr-2 h-4 w-4" />
             Create NFT
           </Button>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+      {/* Stats Cards */}
+      {!isLoading && !coinsLoading && (
+        <DashboardStats tokens={tokens} nftCollections={nftCollections} />
+      )}
+
+      {/* Main Content */}
+      <motion.div 
+        className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden shadow-xl"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b border-zinc-800">
-            <TabsList className="flex h-14 bg-transparent border-b border-zinc-800">
-              <TabsTrigger
-                value="tokens"
-                className="flex-1 h-full  data-[state=active]:border-b-2 data-[state=active]:border-teal-500 data-[state=active]:shadow-none rounded-none"
+          {/* Custom Tab Header */}
+          <div className="p-6 pb-0">
+            <div className="flex space-x-1 bg-zinc-800/50 p-1 rounded-lg w-fit">
+              <button
+                onClick={() => setActiveTab("tokens")}
+                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                  activeTab === "tokens"
+                    ? "bg-teal-500 text-white shadow-lg shadow-teal-500/25"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"
+                }`}
               >
                 <Coins className="mr-2 h-4 w-4" />
-                Tokens
-              </TabsTrigger>
-              <TabsTrigger
-                value="nfts"
-                className="flex-1 h-full data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-purple-500 data-[state=active]:shadow-none rounded-none"
+                Tokens ({tokens.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("nfts")}
+                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                  activeTab === "nfts"
+                    ? "bg-purple-500 text-white shadow-lg shadow-purple-500/25"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"
+                }`}
               >
                 <ImageIcon className="mr-2 h-4 w-4" />
-                NFT Collections
-              </TabsTrigger>
-            </TabsList>
+                NFT Collections ({nftCollections.length})
+              </button>
+            </div>
           </div>
 
-          <TabsContent value="tokens" className="p-0">
-            {tokens.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-zinc-800">
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Token
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Network
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Supply
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Token Type
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Decimals
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Package ID
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Address
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-4 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800">
-                    {tokens.map((token) => (
-                      <motion.tr
-                        key={token.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className="hover:bg-zinc-800/50"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-full bg-teal-500 capitalize flex items-center justify-center text-white font-bold mr-3">
-                              {token.symbol.charAt(0)}
+          {/* Tab Content */}
+          <TabsContent value="tokens" className="p-0 mt-6">
+            <AnimatePresence mode="wait">
+              {isLoading || coinsLoading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <TokenTableSkeleton />
+                </motion.div>
+              ) : tokens.length > 0 ? (
+                <motion.div
+                  key="tokens"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="overflow-x-auto"
+                >
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-zinc-800">
+                        <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                          Token
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                          Network
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                          Balance
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                          Package ID
+                        </th>
+                        <th className="px-6 py-4 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {tokens.map((token, index) => (
+                        <motion.tr
+                          key={token.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="hover:bg-zinc-800/30 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-500 to-blue-500 flex items-center justify-center text-white font-bold mr-3">
+                                {token.symbol.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-white">{token.name}</div>
+                                <div className="text-xs text-zinc-400">{token.symbol}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="text-sm font-medium text-white capitalize">{token.name}</div>
-                              <div className="text-xs text-zinc-400 capitalize">{token.symbol}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant="outline" className={getNetworkBadgeColor(token.network)}>
+                              {token.network}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-zinc-300 font-mono">
+                              {parseInt(token.supply).toLocaleString()}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="outline" className={getNetworkBadgeColor(token.network)}>
-                            {token.network}
+                            <div className="text-xs text-zinc-500">
+                              {token.decimals} decimals
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant="outline" className={getTokenTypeBadge(token.type)}>
+                              {getTokenTypeLabel(token.type)}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className="text-sm text-zinc-400 font-mono">
+                                {token.packageId.slice(0, 8)}...{token.packageId.slice(-6)}
+                              </span>
+                              <button
+                                className="ml-2 text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
+                                onClick={() => handleCopyAddress(token.packageId)}
+                              >
+                                <Copy size={14} />
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-zinc-400 cursor-pointer hover:text-white hover:bg-zinc-700 transition-colors">
+                                  <MoreHorizontal size={16} />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
+                                <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer">
+                                  <Link href={`https://suiscan.xyz/${network}/object/${token.packageId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
+                                    <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                                  onClick={() => handleMintTokens(token)}
+                                >
+                                  <Coins size={14} className="mr-2" /> Mint Tokens
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                                  onClick={() => handleManageToken(token)}
+                                >
+                                  <Settings size={14} className="mr-2" /> Manage Token
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex flex-col items-center justify-center py-16 px-6"
+                >
+                  <div className="bg-zinc-800 rounded-full p-6 mb-6">
+                    <Coins className="h-12 w-12 text-zinc-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">No tokens yet</h3>
+                  <p className="text-zinc-400 text-center max-w-md mb-8">
+                    You haven't created any tokens yet. Start building your token ecosystem by creating your first token.
+                  </p>
+                  <Button 
+                    onClick={() => router.push("/generate")} 
+                    className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white px-8 py-3"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Your First Token
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </TabsContent>
+
+          <TabsContent value="nfts" className="p-0 mt-6">
+            <AnimatePresence mode="wait">
+              {isLoading || coinsLoading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <NFTGridSkeleton />
+                </motion.div>
+              ) : nftCollections.length > 0 ? (
+                <motion.div
+                  key="nfts"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"
+                >
+                  {nftCollections.map((collection, index) => (
+                    <motion.div
+                      key={collection.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className="bg-zinc-800 rounded-xl overflow-hidden border border-zinc-700 hover:border-zinc-600 transition-all duration-300 hover:shadow-xl group"
+                    >
+                      <div className="h-48 bg-zinc-700 relative overflow-hidden">
+                        <Image
+                          src={collection.image}
+                          alt={collection.name}
+                          width={400}
+                          height={192}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute top-3 right-3">
+                          <Badge variant="outline" className={getNetworkBadgeColor(collection.network)}>
+                            {collection.network}
                           </Badge>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">{token.supply}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="outline" className={getTokenTypeBadge(token.type)}>
-                            {getTokenTypeLabel(token.type)}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">{token.decimals}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <span className="text-sm text-zinc-400 font-mono">
-                              {token.packageId.slice(0, 6)}...{token.packageId.slice(-4)}
-                            </span>
+                        </div>
+                        <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="flex gap-2">
                             <button
-                              className="ml-2 text-zinc-500 cursor-pointer hover:text-zinc-300"
-                              onClick={() => handleCopyAddress(token.packageId)}
+                              className="bg-black/50 backdrop-blur-sm p-2 rounded-lg text-white hover:bg-black/70 transition-colors"
+                              onClick={() => handleCopyAddress(collection.packageId)}
                             >
                               <Copy size={14} />
                             </button>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <span className="text-sm text-zinc-400 font-mono">
-                              {token.address.slice(0, 6)}...{token.address.slice(-4)}
-                            </span>
-                            <button
-                              className="ml-2 text-zinc-500 cursor-pointer hover:text-zinc-300"
-                              onClick={() => handleCopyAddress(token.address)}
+                            <Link
+                              href={`https://suiscan.xyz/${network}/object/${collection.packageId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-black/50 backdrop-blur-sm p-2 rounded-lg text-white hover:bg-black/70 transition-colors"
                             >
-                              <Copy size={14} />
-                            </button>
+                              <ExternalLink size={14} />
+                            </Link>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{token.createdAt}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                        </div>
+                      </div>
+                      
+                      <div className="p-5">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-white mb-1 capitalize">{collection.name}</h3>
+                            <p className="text-sm text-zinc-400 capitalize">{collection.symbol}</p>
+                          </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-zinc-400 cursor-pointer hover:text-white">
+                              <Button variant="ghost" size="icon" className="text-zinc-400 cursor-pointer hover:text-white hover:bg-zinc-700 transition-colors h-8 w-8">
                                 <MoreHorizontal size={16} />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
-                              <DropdownMenuItem
-                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                              >
-                                <Link href={`https://suiscan.xyz/${network}/object/${token.packageId}`} target="_blank" rel="noopener noreferrer" className="flex">
+                              <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer">
+                                <Link href={`https://suiscan.xyz/${network}/object/${collection.packageId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
                                   <ExternalLink size={14} className="mr-2" /> View on Explorer
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => handleMintTokens(token)}
+                                onClick={() => handleMintNFT(collection)}
                               >
-                                <Coins size={14} className="mr-2" /> Mint Tokens
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => handleManageToken(token)}
-                              >
-                                <Terminal size={14} className="mr-2" /> Manage Token
+                                <ImageIcon size={14} className="mr-2" /> Mint NFT
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Wallet className="h-16 w-16 text-zinc-700 mb-4" />
-                <h3 className="text-xl font-medium text-white mb-2">No tokens yet</h3>
-                <p className="text-zinc-400 text-center max-w-md mb-6">
-                  You haven&apos;t created any tokens yet. Create your first token to get started.
-                </p>
-                <Button onClick={() => router.push("/generate")} className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white">
-                  Create Token
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="nfts" className="p-0">
-            {nftCollections.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-                {nftCollections.map((collection) => (
-                  <motion.div
-                    key={collection.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-zinc-800 rounded-xl overflow-hidden border border-zinc-700"
-                  >
-                    <div className="h-40 bg-zinc-700 relative">
-                      <Image
-                        src={collection.image}
-                        alt={collection.name}
-                        width={400}
-                        height={160}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-3 right-3">
-                        <Badge variant="outline" className={getNetworkBadgeColor(collection.network)}>
-                          {collection.network}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="text-lg font-bold text-white capitalize">{collection.name}</h3>
-                          <p className="text-sm text-zinc-400 capitalize">{collection.symbol}</p>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-zinc-400 cursor-pointer hover:text-white h-8 w-8">
-                              <MoreHorizontal size={16} />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
-                            <DropdownMenuItem
-                              className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="bg-zinc-900 rounded-lg p-3">
+                            <p className="text-xs text-zinc-500 mb-1">Total Supply</p>
+                            <p className="text-sm font-bold text-white">{parseInt(collection.supply).toLocaleString()}</p>
+                          </div>
+                          <div className="bg-zinc-900 rounded-lg p-3">
+                            <p className="text-xs text-zinc-500 mb-1">Minted</p>
+                            <p className="text-sm font-bold text-white">{parseInt(collection.minted).toLocaleString()}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs text-zinc-500 mb-4">
+                          <div className="flex items-center">
+                            <span className="font-mono text-zinc-400">
+                              {collection.packageId.slice(0, 8)}...{collection.packageId.slice(-6)}
+                            </span>
+                            <button
+                              className="ml-2 text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
+                              onClick={() => handleCopyAddress(collection.packageId)}
                             >
-                              <Link href={`https://suiscan.xyz/${network}/object/${collection.packageId}`} target="_blank" rel="noopener noreferrer" className="flex">
-                                <ExternalLink size={14} className="mr-2" /> View on Explorer
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                              onClick={() => handleMintNFT(collection)}
-                            >
-                              <ImageIcon size={14} className="mr-2" /> Mint NFT
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        <div className="bg-zinc-900 rounded-lg p-2">
-                          <p className="text-xs text-zinc-500">Supply</p>
-                          <p className="text-sm font-medium text-white">{collection.supply}</p>
+                              <Copy size={12} />
+                            </button>
+                          </div>
+                         
                         </div>
-                        <div className="bg-zinc-900 rounded-lg p-2">
-                          <p className="text-xs text-zinc-500">Minted</p>
-                          <p className="text-sm font-medium text-white">{collection.minted}</p>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center justify-between text-xs text-zinc-500 mb-3">
-                        <div className="flex items-center">
-                          <span className="font-mono text-zinc-300">
-                            {collection.packageId.slice(0, 6)}...{collection.packageId.slice(-4)}
-                          </span>
-                          <button
-                            className="ml-1 text-zinc-500 cursor-pointer hover:text-zinc-300"
-                            onClick={() => handleCopyAddress(collection.packageId)}
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1 border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
+                            onClick={() => handleMintNFT(collection)}
                           >
-                            <Copy size={12} />
-                          </button>
+                            <ImageIcon className="mr-2 h-3 w-3" />
+                            Mint NFT
+                          </Button>
+                          <Link href={`https://suiscan.xyz/${network}/object/${collection.packageId}`} target="_blank" rel="noopener noreferrer">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </Link>
                         </div>
-                        <span>{collection.createdAt}</span>
                       </div>
-
-                      <Link href={`https://suiscan.xyz/${network}/object/${collection.packageId}`} className="w-full">
-                        <Button
-                          variant="outline"
-                          className="w-full border-zinc-700 text-zinc-300 hover:text-white"
-                        >
-                          View Collection <ArrowUpRight className="ml-2 h-3 w-3" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16">
-                <ImageIcon className="h-16 w-16 text-zinc-700 mb-4" />
-                <h3 className="text-xl font-medium text-white mb-2">No NFT collections yet</h3>
-                <p className="text-zinc-400 text-center max-w-md mb-6">
-                  You haven&apos;t created any NFT collections yet. Create your first collection to get started.
-                </p>
-                <Button
-                  onClick={() => router.push("/nft/generate")}
-                  className="bg-purple-500 hover:bg-purple-600 cursor-pointer text-white"
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex flex-col items-center justify-center py-16 px-6"
                 >
-                  Create NFT Collection
-                </Button>
-              </div>
-            )}
+                  <div className="bg-zinc-800 rounded-full p-6 mb-6">
+                    <ImageIcon className="h-12 w-12 text-zinc-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">No NFT collections yet</h3>
+                  <p className="text-zinc-400 text-center max-w-md mb-8">
+                    You haven't created any NFT collections yet. Launch your first collection and start minting unique digital assets.
+                  </p>
+                  <Button
+                    onClick={() => router.push("/nft/generate")}
+                    className="bg-purple-500 hover:bg-purple-600 cursor-pointer text-white px-8 py-3"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Your First Collection
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </TabsContent>
         </Tabs>
-      </div>
+      </motion.div>
     </div>
   )
 }

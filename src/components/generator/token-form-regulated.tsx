@@ -39,12 +39,13 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
     initialSupply: "",
     maxSupply: "",
   });
-  const [features, setFeatures] = useState({
-    burnable: true,
-    mintable: true,
-    pausable: true,
-    denylist: true,
-  });
+  
+  // Regulated token features - only pausable is toggleable
+  const [pausable, setPausable] = useState(true);
+  const burnable = true; // Always enabled for regulated tokens
+  const mintable = true; // Always enabled for regulated tokens
+  const denylist = true; // Always enabled for regulated tokens
+
   const [customDecimals, setCustomDecimals] = useState(false);
   const [isCreatingToken, setIsCreatingToken] = useState(false);
 
@@ -59,10 +60,6 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
 
   const handleInputChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-  };
-
-  const handleFeatureChange = (feature: keyof typeof features) => (checked: boolean) => {
-    setFeatures((prev) => ({ ...prev, [feature]: checked }));
   };
 
   const validateForm = () => {
@@ -170,7 +167,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
     setIsCreatingToken(true);
 
     try {
-      const updateFn = features.pausable ? updatePRegCoin : updateURegCoin;
+      const updateFn = pausable ? updatePRegCoin : updateURegCoin;
       const { updatedBytes } = await updateFn(
         formData.tokenName,
         formData.tokenSymbol,
@@ -209,7 +206,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
           </div>
           <div>
             <div className="font-medium text-white">Regulated Token</div>
-            <div className="text-sm text-teal-400">0.02 SUI</div>
+            <div className="text-sm text-purple-400">0.02 SUI</div>
           </div>
         </div>
       </div>
@@ -243,7 +240,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     value={formData.tokenName}
                     onChange={handleInputChange("tokenName")}
                     placeholder="My Awesome Token"
-                    className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
+                    className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-purple-500"
                   />
                 </div>
                 <div>
@@ -265,7 +262,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     value={formData.tokenSymbol}
                     onChange={handleInputChange("tokenSymbol")}
                     placeholder="AWE"
-                    className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
+                    className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-purple-500"
                   />
                 </div>
               </div>
@@ -276,7 +273,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     id="customDecimals"
                     checked={customDecimals}
                     onCheckedChange={setCustomDecimals}
-                    className="data-[state=checked]:bg-teal-500"
+                    className="data-[state=checked]:bg-purple-500"
                   />
                   <Label htmlFor="customDecimals" className="ml-2 text-zinc-300">Custom Decimals</Label>
                 </div>
@@ -288,7 +285,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     value={formData.decimals}
                     onChange={handleInputChange("decimals")}
                     placeholder="9"
-                    className="w-24 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
+                    className="w-24 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-purple-500"
                     min="0"
                   />
                 )}
@@ -313,102 +310,56 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                   value={formData.description}
                   onChange={handleInputChange("description")}
                   placeholder="A regulated coin with advanced features"
-                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
+                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-purple-500"
                 />
                 <p className="mt-1 text-xs text-zinc-500">A brief description of your token&apos;s purpose</p>
               </div>
 
-              {/* <div>
-                <Label htmlFor="initialSupply" className="flex items-center text-zinc-300">
-                  Initial Supply*
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-48 text-xs">The initial number of tokens created in your wallet</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </Label>
-                <Input
-                  id="initialSupply"
-                  type="number"
-                  value={formData.initialSupply}
-                  onChange={handleInputChange("initialSupply")}
-                  placeholder="1000000000"
-                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
-                  min="0"
-                />
-                <p className="mt-1 text-xs text-zinc-500">The initial number of tokens created in your wallet</p>
-              </div>
-
-              <div>
-                <Label htmlFor="maxSupply" className="flex items-center text-zinc-300">
-                  Max Supply*
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-48 text-xs">The maximum number of tokens available</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </Label>
-                <Input
-                  id="maxSupply"
-                  type="number"
-                  value={formData.maxSupply}
-                  onChange={handleInputChange("maxSupply")}
-                  placeholder="1000000000"
-                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
-                  min="0"
-                />
-                <p className="mt-1 text-xs text-zinc-500">The maximum number of tokens available</p>
-              </div> */}
-
               <div className="border-t border-zinc-700 pt-4">
-                <h4 className="mb-3 font-medium text-white">Token Features</h4>
+                <h4 className="mb-3 font-medium text-white flex items-center">
+                  Regulated Token Features
+                  <span className="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded font-medium">
+                    Advanced
+                  </span>
+                </h4>
                 <div className="space-y-4">
+                  {/* Burnable - Always enabled */}
                   <div className="flex items-center">
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Flame className="mr-2 h-4 w-4 text-orange-400" />
-                        <Label htmlFor="burnable" className="cursor-pointer text-zinc-300">Burnable</Label>
+                        <Label className="text-zinc-300">Burnable</Label>
                       </div>
                       <p className="ml-6 mt-1 text-xs text-zinc-500">
                         Allows tokens to be burned to reduce circulating supply
                       </p>
                     </div>
                     <Switch
-                      id="burnable"
-                      checked={features.burnable}
-                      onCheckedChange={handleFeatureChange("burnable")}
-                      className="data-[state=checked]:bg-teal-500"
+                      checked={burnable}
+                      disabled={true}
+                      className="data-[state=checked]:bg-purple-500 opacity-100"
                     />
                   </div>
 
+                  {/* Mintable - Always enabled */}
                   <div className="flex items-center">
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Coins className="mr-2 h-4 w-4 text-yellow-400" />
-                        <Label htmlFor="mintable" className="cursor-pointer text-zinc-300">Mintable</Label>
+                        <Label className="text-zinc-300">Mintable</Label>
                       </div>
                       <p className="ml-6 mt-1 text-xs text-zinc-500">
                         Allows creating new tokens after deployment
                       </p>
                     </div>
                     <Switch
-                      id="mintable"
-                      checked={features.mintable}
-                      onCheckedChange={handleFeatureChange("mintable")}
-                      className="data-[state=checked]:bg-teal-500"
+                      checked={mintable}
+                      disabled={true}
+                      className="data-[state=checked]:bg-purple-500 opacity-100"
                     />
                   </div>
 
+                  {/* Pausable - User can toggle */}
                   <div className="flex items-center">
                     <div className="flex-1">
                       <div className="flex items-center">
@@ -421,29 +372,36 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     </div>
                     <Switch
                       id="pausable"
-                      checked={features.pausable}
-                      onCheckedChange={handleFeatureChange("pausable")}
-                      className="data-[state=checked]:bg-teal-500"
+                      checked={pausable}
+                      onCheckedChange={setPausable}
+                      className="data-[state=checked]:bg-purple-500"
                     />
                   </div>
 
+                  {/* Denylist - Always enabled */}
                   <div className="flex items-center">
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Shield className="mr-2 h-4 w-4 text-red-400" />
-                        <Label htmlFor="denylist" className="cursor-pointer text-zinc-300">Denylist</Label>
+                        <Label className="text-zinc-300">Denylist</Label>
                       </div>
                       <p className="ml-6 mt-1 text-xs text-zinc-500">
                         Allows blocking specific addresses from transferring tokens
                       </p>
                     </div>
                     <Switch
-                      id="denylist"
-                      checked={features.denylist}
-                      onCheckedChange={handleFeatureChange("denylist")}
-                      className="data-[state=checked]:bg-teal-500"
+                      checked={denylist}
+                      disabled={true}
+                      className="data-[state=checked]:bg-purple-500 opacity-100"
                     />
                   </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <p className="text-purple-400 text-sm font-medium">🛡️ Regulatory Features</p>
+                  <p className="text-zinc-400 text-xs mt-1">
+                    Core regulatory features (Burnable, Mintable, Denylist) are included by default. Pausable functionality can be customized based on your needs.
+                  </p>
                 </div>
               </div>
             </div>
@@ -460,7 +418,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     Creating Token...
                   </div>
                 ) : (
-                  "Create Token"
+                  "Create Regulated Token"
                 )}
               </Button>
               <Button
@@ -475,7 +433,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
 
             <div className="flex items-center justify-between pt-2 text-sm">
               <div className="text-zinc-400">
-                Price: <span className="text-teal-400">0.02 SUI</span>
+                Price: <span className="text-purple-400">0.02 SUI</span>
               </div>
               <Button variant="link" className="h-auto cursor-pointer p-0 text-purple-400">
                 Activate Promocode
@@ -488,7 +446,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
           <h3 className="mb-4 text-center font-medium text-white">Other Templates</h3>
           <div className="grid grid-cols-2 gap-4">
             <div
-              className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 p-4 transition-colors hover:border-teal-500"
+              className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 p-4 transition-colors hover:border-purple-500"
               onClick={() => onSwitchTemplate("standard")}
             >
               <div className="mb-2 flex items-center">
@@ -503,7 +461,7 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
               <div className="text-xs text-purple-400 hover:text-purple-300">Switch to this template</div>
             </div>
             <div
-              className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 p-4 transition-colors hover:border-teal-500"
+              className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 p-4 transition-colors hover:border-purple-500"
               onClick={() => onSwitchTemplate("closed-loop")}
             >
               <div className="mb-2 flex items-center">

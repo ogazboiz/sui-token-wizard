@@ -2,7 +2,7 @@
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, HelpCircle, Flame, Shield, Loader2, Users, Lock } from "lucide-react"
+import { ArrowLeft, HelpCircle, Flame, Shield, Loader2, Users, Lock, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -34,16 +34,16 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
   const [tokenSymbol, setTokenSymbol] = useState("")
   const [customDecimals, setCustomDecimals] = useState(false)
   const [decimals, setDecimals] = useState("9")
-  // const [initialSupply, setInitialSupply] = useState("")
-  // const [maxSupply, setMaxSupply] = useState("")
   const [description, setDescription] = useState("")
-  const [burnable, setBurnable] = useState(true)
-  const [mintable, setMintable] = useState(true)
-  const [denylist, setDenylist] = useState(true)
-  const [allowlist, setAllowlist] = useState(true)
-  const [transferRestrictions, setTransferRestrictions] = useState(true)
   const [, setTokenCreated] = useState(false);
   const [isCreatingToken, setIsCreatingToken] = useState(false)
+
+  // Closed-loop features are always enabled
+  const burnable = true
+  const mintable = true
+  const denylist = true
+  const allowlist = true
+  const transferRestrictions = true
 
   const getNetworkName = () => {
     switch (network) {
@@ -324,68 +324,19 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                 </p>
               </div>
 
-              {/* <div>
-                <Label htmlFor="initialSupply" className="text-zinc-300 flex items-center">
-                  Initial supply*
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-[200px] text-xs">
-                          The initial number of tokens created in your wallet
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </Label>
-                <Input
-                  id="initialSupply"
-                  type="number"
-                  value={initialSupply}
-                  onChange={(e) => setInitialSupply(e.target.value)}
-                  placeholder="1000000"
-                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-emerald-500 mt-1"
-                />
-                <p className="text-zinc-500 text-xs mt-1">
-                  Initial tokens for your controlled ecosystem
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="maxSupply" className="text-zinc-300 flex items-center">
-                  Max supply*
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-3.5 w-3.5 text-zinc-500 ml-1" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-[200px] text-xs">The maximum number of tokens that can exist</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </Label>
-                <Input
-                  id="maxSupply"
-                  type="number"
-                  value={maxSupply}
-                  onChange={(e) => setMaxSupply(e.target.value)}
-                  placeholder="10000000"
-                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-emerald-500 mt-1"
-                />
-                <p className="text-zinc-500 text-xs mt-1">Maximum ecosystem capacity</p>
-              </div> */}
-
               <div className="border-t border-zinc-700 pt-4">
-                <h4 className="text-white font-medium mb-3">Closed-Loop Features</h4>
+                <h4 className="text-white font-medium mb-3 flex items-center">
+                  Closed-Loop Features
+                  <span className="ml-2 text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded font-medium">
+                    All Included
+                  </span>
+                </h4>
                 <div className="space-y-4">
                   <div className="flex items-center">
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Flame className="h-4 w-4 text-orange-400 mr-2" />
-                        <Label htmlFor="burnable" className="text-zinc-300 cursor-pointer">
+                        <Label className="text-zinc-300">
                           Burnable
                         </Label>
                       </div>
@@ -394,10 +345,9 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                       </p>
                     </div>
                     <Switch
-                      id="burnable"
                       checked={burnable}
-                      onCheckedChange={setBurnable}
-                      className="data-[state=checked]:bg-emerald-500"
+                      disabled={true}
+                      className="data-[state=checked]:bg-emerald-500 opacity-100"
                     />
                   </div>
 
@@ -405,7 +355,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Coins className="h-4 w-4 text-yellow-400 mr-2" />
-                        <Label htmlFor="mintable" className="text-zinc-300 cursor-pointer">
+                        <Label className="text-zinc-300">
                           Mintable
                         </Label>
                       </div>
@@ -414,10 +364,9 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                       </p>
                     </div>
                     <Switch
-                      id="mintable"
                       checked={mintable}
-                      onCheckedChange={setMintable}
-                      className="data-[state=checked]:bg-emerald-500"
+                      disabled={true}
+                      className="data-[state=checked]:bg-emerald-500 opacity-100"
                     />
                   </div>
 
@@ -425,7 +374,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Shield className="h-4 w-4 text-red-400 mr-2" />
-                        <Label htmlFor="denylist" className="text-zinc-300 cursor-pointer">
+                        <Label className="text-zinc-300">
                           Denylist
                         </Label>
                       </div>
@@ -434,10 +383,9 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                       </p>
                     </div>
                     <Switch
-                      id="denylist"
                       checked={denylist}
-                      onCheckedChange={setDenylist}
-                      className="data-[state=checked]:bg-emerald-500"
+                      disabled={true}
+                      className="data-[state=checked]:bg-emerald-500 opacity-100"
                     />
                   </div>
 
@@ -445,7 +393,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 text-green-400 mr-2" />
-                        <Label htmlFor="allowlist" className="text-zinc-300 cursor-pointer">
+                        <Label className="text-zinc-300">
                           Allowlist
                         </Label>
                       </div>
@@ -454,10 +402,9 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                       </p>
                     </div>
                     <Switch
-                      id="allowlist"
                       checked={allowlist}
-                      onCheckedChange={setAllowlist}
-                      className="data-[state=checked]:bg-emerald-500"
+                      disabled={true}
+                      className="data-[state=checked]:bg-emerald-500 opacity-100"
                     />
                   </div>
 
@@ -465,7 +412,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                     <div className="flex-1">
                       <div className="flex items-center">
                         <Lock className="h-4 w-4 text-purple-400 mr-2" />
-                        <Label htmlFor="transferRestrictions" className="text-zinc-300 cursor-pointer">
+                        <Label className="text-zinc-300">
                           Transfer Restrictions
                         </Label>
                       </div>
@@ -474,12 +421,18 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                       </p>
                     </div>
                     <Switch
-                      id="transferRestrictions"
                       checked={transferRestrictions}
-                      onCheckedChange={setTransferRestrictions}
-                      className="data-[state=checked]:bg-emerald-500"
+                      disabled={true}
+                      className="data-[state=checked]:bg-emerald-500 opacity-100"
                     />
                   </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                  <p className="text-emerald-400 text-sm font-medium">✨ Premium Features Included</p>
+                  <p className="text-zinc-400 text-xs mt-1">
+                    All advanced features are automatically enabled for your closed-loop token, giving you complete control over your ecosystem.
+                  </p>
                 </div>
               </div>
             </div>

@@ -19,7 +19,7 @@ export default function NetworkGeneratorPage({ params }: NetworkPageProps) {
 
   return (
     <main className="min-h-screen bg-zinc-950">
-      <Navbar />
+    
       <Suspense
         fallback={
           <div className="h-screen flex items-center justify-center">

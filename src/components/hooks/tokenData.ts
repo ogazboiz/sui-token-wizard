@@ -32,17 +32,22 @@ export interface TokenData {
     };
 }
 
+// const derifType = deriveCoinType(suiClient, tokenData);
+
 const fetchTokenData = async (
     suiClient: SuiClient,
     pkgId: string,
     owner: string,
     tokenType: TokenType,
 ): Promise<TokenData> => {
-    console.log("token type here", tokenType);
+    // console.log("token type here hi", tokenType);
     if (!pkgId) {
         throw new Error("pkgId is required in tokenData");
     }
     const coinType = await deriveFullCoinType(suiClient, pkgId);
+    const isPausable = coinType.includes("p_regulated_coin")
+    // console.log("coinType here hello", coinType);
+
     const metadata = await suiClient.getCoinMetadata({ coinType });
     // const owner = await getPackageOwner(suiClient, pkgId); //make this work
     const { txId, treasuryCap, denyCap, coinId, tokenId } = await getTxIdsAndCaps(suiClient, pkgId, owner, coinType);
@@ -67,7 +72,7 @@ const fetchTokenData = async (
                 ? {
                     burnable: true,
                     mintable: true,
-                    pausable: true,
+                    pausable: isPausable,
                     denylist: true,
                     allowlist: false,
                     transferRestrictions: false,

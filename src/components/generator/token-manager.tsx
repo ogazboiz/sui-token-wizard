@@ -134,27 +134,24 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
       comingSoon: !hasCreatedToken,
       route: `/generator/${network}/token${packageId ? `?packageId=${packageId}` : ''}`,
     },
-    // CLOSED-LOOP ONLY TOOLS
+    // UNIVERSAL TOOLS (Available for all token types)
     {
-      id: "policy",
-      name: "Token Policy",
-      icon: <ScrollText className="w-5 h-5" />,
-      isActive: activeTool === "policy",
-      isNew: hasCreatedToken && tokenType === "closed-loop",
-      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
-      route: `/generator/${network}/policy${packageId ? `?packageId=${packageId}` : ''}`,
-      showOnlyForClosedLoop: true,
+      id: "mint-tokens",
+      name: "Mint Tokens",
+      icon: <Coins className="w-5 h-5" />,
+      isActive: activeTool === "mint-tokens",
+      isNew: hasCreatedToken,
+      comingSoon: !hasCreatedToken,
+      route: `/generator/${network}/mint${packageId ? `?packageId=${packageId}` : ''}`,
     },
     {
-      id: "action-requests",
-      name: "Action Requests",
-      icon: <Plus className="w-5 h-5" />,
-      isActive: activeTool === "action-requests",
-      isNew: hasCreatedToken && tokenType === "closed-loop" && hasPolicyCreated,
-      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
-      route: `/generator/${network}/action-requests${packageId ? `?packageId=${packageId}` : ''}`,
-      showOnlyForClosedLoop: true,
-      requiresPolicy: true,
+      id: "burn-tokens",
+      name: "Burn Tokens",
+      icon: <Flame className="w-5 h-5" />,
+      isActive: activeTool === "burn-tokens",
+      isNew: hasCreatedToken,
+      comingSoon: !hasCreatedToken,
+      route: `/generator/${network}/burn${packageId ? `?packageId=${packageId}` : ''}`,
     },
     // REGULATED ONLY TOOLS
     {
@@ -177,24 +174,27 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
       route: `/generator/${network}/pausable${packageId ? `?packageId=${packageId}` : ''}`,
       showOnlyForRegulated: true,
     },
-    // UNIVERSAL TOOLS (Available for all token types)
+    // CLOSED-LOOP ONLY TOOLS
     {
-      id: "mint-tokens",
-      name: "Mint Tokens",
-      icon: <Coins className="w-5 h-5" />,
-      isActive: activeTool === "mint-tokens",
-      isNew: hasCreatedToken,
-      comingSoon: !hasCreatedToken,
-      route: `/generator/${network}/mint${packageId ? `?packageId=${packageId}` : ''}`,
+      id: "policy",
+      name: "Token Policy",
+      icon: <ScrollText className="w-5 h-5" />,
+      isActive: activeTool === "policy",
+      isNew: hasCreatedToken && tokenType === "closed-loop",
+      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
+      route: `/generator/${network}/policy${packageId ? `?packageId=${packageId}` : ''}`,
+      showOnlyForClosedLoop: true,
     },
     {
-      id: "burn-tokens",
-      name: "Burn Tokens",
-      icon: <Flame className="w-5 h-5" />,
-      isActive: activeTool === "burn-tokens",
-      isNew: hasCreatedToken,
-      comingSoon: !hasCreatedToken,
-      route: `/generator/${network}/burn${packageId ? `?packageId=${packageId}` : ''}`,
+      id: "action-requests",
+      name: "Action Requests",
+      icon: <Plus className="w-5 h-5" />,
+      isActive: activeTool === "action-requests",
+      isNew: hasCreatedToken && tokenType === "closed-loop" && hasPolicyCreated,
+      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
+      route: `/generator/${network}/action-requests${packageId ? `?packageId=${packageId}` : ''}`,
+      showOnlyForClosedLoop: true,
+      requiresPolicy: true,
     },
     // COMING SOON TOOLS
     {
@@ -361,24 +361,12 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
         <span className="text-white">{getActiveToolName()}{getTokenTypeDisplay()}</span>
       </div>
 
-      <div className="grid md:grid-cols-[300px_1fr] gap-6">
-        <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
-          {/* Dashboard/Back Button Section */}
-          <div className="p-3 border-b border-zinc-800 bg-zinc-800/30">
-            <Link 
-              href="/dashboard" 
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg transition-all duration-200 group"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span className="font-medium">My Dashboard</span>
-              <ArrowLeft className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Link>
-          </div>
-
+      <div className="h-[90vh] grid md:grid-cols-[300px_1fr] gap-6">
+        <div className="sticky top-6 flex flex-col justify-between bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
           {/* Tools Header */}
-          <div className="p-4 border-b border-zinc-800">
-            <h2 className="font-medium text-white flex items-center">
-              Tools{tokenType && (
+          <div className="p-5 border-b border-zinc-800 h-[12%]">
+            <h2 className="font-medium text-white text-xl flex items-center">
+              Tools {tokenType && (
                 <span className={`ml-2 text-xs px-2 py-1 rounded ${tokenType === 'closed-loop' ? 'bg-emerald-500/20 text-emerald-400' :
                   tokenType === 'regulated' ? 'bg-purple-500/20 text-purple-400' :
                     'bg-blue-500/20 text-blue-400'
@@ -389,39 +377,40 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
               )}
               <span className="ml-1 text-orange-400">🔥</span>
             </h2>
-            {packageId && (
-              <p className="text-xs text-zinc-500 mt-1">
+            {packageId ? (
+              <p className="text-sm text-zinc-500 mt-3">
                 Package: {packageId.slice(0, 8)}...{packageId.slice(-6)}
+              </p>
+            ) : (
+              <p className="text-sm text-zinc-500 mt-3">
+                Package: Not Selected
               </p>
             )}
           </div>
 
           {/* Tools List */}
-          <div className="p-2">
+          <div className="p-2 py-10 flex flex-col gap-5 h-full">
             {filteredTools.map((tool) => (
               <button
                 key={tool.id}
-                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between transition-all duration-200 ${
-                  tool.isActive 
-                    ? "bg-teal-500/20 text-teal-400 border border-teal-500/30" 
-                    : tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender')
-                      ? "text-zinc-600 cursor-not-allowed" 
-                      : tool.comingSoon
-                        ? "text-zinc-500 cursor-not-allowed opacity-70"
-                        : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 cursor-pointer"
-                }`}
+                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between transition-all duration-200 ${tool.isActive
+                  ? "bg-teal-500/20 text-teal-400 border border-teal-500/30"
+                  : tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender')
+                    ? "text-zinc-600 cursor-not-allowed"
+                    : tool.comingSoon
+                      ? "text-zinc-500 cursor-not-allowed opacity-70"
+                      : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 cursor-pointer"
+                  }`}
                 disabled={tool.comingSoon}
                 onClick={() => !tool.comingSoon && handleToolSelect(tool.id, tool.route)}
               >
                 <div className="flex items-center">
-                  <div className={`w-6 h-6 mr-2 flex items-center justify-center ${
-                    tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-50' : ''
-                  }`}>
+                  <div className={`w-6 h-6 mr-2 flex items-center justify-center ${tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-50' : ''
+                    }`}>
                     {tool.icon}
                   </div>
-                  <span className={`font-medium ${
-                    tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-70' : ''
-                  }`}>
+                  <span className={`font-medium ${tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-70' : ''
+                    }`}>
                     {tool.name}
                   </span>
                   {tool.isNew && (
@@ -441,19 +430,34 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
           </div>
 
           {/* Footer */}
-          <div className="p-4 mt-4 border-t border-zinc-800">
-            <Button 
-              variant="outline" 
-              className="w-full text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-600 transition-colors"
-            >
-              Need other tools? Contact us
-            </Button>
+          <div className="flex flex-col justify-center items-center mt-4 border-t border-zinc-800 p-4 gap-4 h-[24%]">
+            {/* Back to Dashboard */}
+            <div>
+              <Link
+                href="/dashboard"
+                className={`w-full flex items-center justify-center gap-2 px-8 py-2.5 hover:text-white rounded-lg transition-all duration-200 group bg-zinc-800 text-zinc-300
+                  }`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="font-medium">My Dashboard</span>
+                <ArrowLeft className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            </div>
+
+            <div>
+              <Button
+                variant="outline"
+                className="w-full text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-600 transition-colors"
+              >
+                Need other tools? Contact us
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div>
+        <div className="overflow-y-auto h-[calc(90vh)]">
           {activeTool === "token-creator" && (
-            <>
+            <div className="scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-zinc-900">
               <motion.div
                 className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mb-8"
                 initial={{ opacity: 0, y: 20 }}
@@ -482,16 +486,10 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
                 selectedTemplate={selectedTemplate}
                 onTemplateSelect={handleTemplateSelect}
               />
-            </>
+            </div>
           )}
           {activeTool === "token-page" && (
             <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
-          )}
-          {activeTool === "policy" && (
-            <PolicyTokens network={network} tokenData={tokenData} />
-          )}
-          {activeTool === "action-requests" && (
-            <ActionRequests network={network} tokenData={tokenData} />
           )}
           {activeTool === "mint-tokens" && (
             <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
@@ -504,6 +502,12 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
           )}
           {activeTool === "pausable" && (
             <PausableTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
+          )}
+          {activeTool === "policy" && (
+            <PolicyTokens network={network} tokenData={tokenData} />
+          )}
+          {activeTool === "action-requests" && (
+            <ActionRequests network={network} tokenData={tokenData} />
           )}
         </div>
       </div>

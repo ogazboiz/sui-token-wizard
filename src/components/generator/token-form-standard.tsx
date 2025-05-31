@@ -2,7 +2,7 @@
 
 import React, { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, HelpCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Flame, HelpCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { normalizeSuiObjectId } from "@mysten/sui/utils";
 import { useRouter } from "next/navigation";
 import { useUpdateCoin } from "../hooks/updateCoin";
+import { Coins } from "../ui/icons";
 
 interface TokenFormStandardProps {
   network: "mainnet" | "testnet" | "devnet";
@@ -35,10 +36,15 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
     description: "",
     decimals: "9",
     initialSupply: "",
-    maxSupply: "",
+    // maxSupply: "",
   });
   const [customDecimals, setCustomDecimals] = useState(false);
   const [isCreatingToken, setIsCreatingToken] = useState(false);
+
+
+  // Custom supply features
+  const burnable = true
+  const mintable = true
 
   const getNetworkName = () => {
     const networkNames: Record<string, string> = {
@@ -54,8 +60,8 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
   };
 
   const validateForm = () => {
-    const { tokenName, tokenSymbol, description, decimals } = formData;
-    if (!tokenName || !tokenSymbol || !description || !decimals) {
+    const { tokenName, tokenSymbol, description, decimals, initialSupply } = formData;
+    if (!tokenName || !tokenSymbol || !description || !decimals || !initialSupply) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -124,8 +130,14 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
           console.log({ owner, pkgId, treasuryCap, metadata });
 
           toast({
-            title: "Token created successfully!",
-            description: "Your token has been created and is ready to use.",
+            title: "Coin created successfully!",
+            description: "Your standard coin has been created and is ready to use.",
+          });
+
+          await mintCoin({
+            pkgId: pkgId,
+            treasuryCap: treasuryCap,
+            initialSupply: formData.initialSupply,
           });
 
           setTimeout(() => {
@@ -144,6 +156,51 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
       }
     );
   };
+
+  const mintCoin = async ({
+    pkgId,
+    treasuryCap,
+    initialSupply,
+  }: {
+    pkgId: string;
+    treasuryCap: string;
+    initialSupply: string;
+  }) => {
+    if (!account) return;
+
+    const tx = new Transaction();
+    tx.setGasBudget(100_000_000);
+
+    tx.moveCall({
+      target: `${pkgId}::my_coin::mint`,
+      arguments: [
+        tx.object(treasuryCap),
+        tx.pure.u64(initialSupply),
+        tx.pure.address(account.address),
+      ],
+    });
+
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Minted coins!",
+            description: `Minted ${initialSupply} coins to your wallet.`,
+          });
+        },
+        onError: (err) => {
+          toast({
+            title: "Minting failed",
+            description: "There was a problem minting the coins.",
+            variant: "destructive",
+          });
+          console.error("Minting error:", err);
+        },
+      }
+    );
+  };
+
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -298,7 +355,7 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                 <p className="mt-1 text-xs text-zinc-500">A brief description of your token&#39;s purpose</p>
               </div>
 
-              {/* <div>
+              <div>
                 <Label htmlFor="initialSupply" className="flex items-center text-zinc-300">
                   Initial Supply*
                   <TooltipProvider>
@@ -321,10 +378,10 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                   className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
                   min="0"
                 />
-                <p className="mt-1 text-xs text-zinc-500">The initial number of tokens created in your wallet</p>
+                <p className="mt-1 text-xs text-zinc-500">The initial number of tokens to be minted to your wallet</p>
               </div>
 
-              <div>
+              {/* <div>
                 <Label htmlFor="maxSupply" className="flex items-center text-zinc-300">
                   Max Supply*
                   <TooltipProvider>
@@ -349,6 +406,61 @@ export default function TokenFormStandard({ network, onBack, onSwitchTemplate }:
                 />
                 <p className="mt-1 text-xs text-zinc-500">The maximum number of tokens available</p>
               </div> */}
+
+              <div className="border-t border-zinc-700 pt-4">
+                <h4 className="text-white font-medium mb-3 flex items-center">
+                  Standard Features
+                  <span className="ml-2 text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded font-medium">
+                    Supply
+                  </span>
+                </h4>
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <div className="flex-1">
+                      <div className="flex items-center">
+                        <Coins className="h-4 w-4 text-yellow-400 mr-2" />
+                        <Label className="text-zinc-300">
+                          Mintable
+                        </Label>
+                      </div>
+                      <p className="text-zinc-500 text-xs mt-1 ml-6">
+                        Create new tokens for ecosystem growth and rewards
+                      </p>
+                    </div>
+                    <Switch
+                      checked={mintable}
+                      disabled={true}
+                      className="data-[state=checked]:bg-emerald-500 opacity-100"
+                    />
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="flex-1">
+                      <div className="flex items-center">
+                        <Flame className="h-4 w-4 text-orange-400 mr-2" />
+                        <Label className="text-zinc-300">
+                          Burnable
+                        </Label>
+                      </div>
+                      <p className="text-zinc-500 text-xs mt-1 ml-6">
+                        Remove tokens from circulation for deflationary mechanics
+                      </p>
+                    </div>
+                    <Switch
+                      checked={burnable}
+                      disabled={true}
+                      className="data-[state=checked]:bg-emerald-500 opacity-100"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                  <p className="text-emerald-400 text-sm font-medium">✨ Supply Features Included</p>
+                  <p className="text-zinc-400 text-xs mt-1">
+                    Core features are automatically enabled for your standard token, giving you full control over your token&apos;s supply.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2 pt-4">

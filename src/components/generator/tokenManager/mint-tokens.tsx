@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { ClipLoader } from "react-spinners"
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit"
 import { Transaction } from '@mysten/sui/transactions'
 import {
   Card,
@@ -26,7 +26,6 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
   const { toast } = useToast()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
-  const account = useCurrentAccount()
   let derivedCoinType: string | undefined;
 
   if (tokenData) {
@@ -38,7 +37,7 @@ export default function MintTokens({ network, tokenData, isLoading }: TokenPageP
 
   // Mint state
   const [mintAmount, setMintAmount] = useState('')
-  const [mintRecipient, setMintRecipient] = useState(account?.address || '')
+  const [mintRecipient, setMintRecipient] = useState('')
   const [mintSuccess, setMintSuccess] = useState(false)
   const [coinId, setCoinId] = useState(tokenData?.coinId)
   const [tokenId, setTokenId] = useState(tokenData?.tokenId)

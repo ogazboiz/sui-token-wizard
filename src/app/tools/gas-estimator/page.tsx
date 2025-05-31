@@ -16,30 +16,30 @@ export default function GasEstimatorPage() {
   const [usdValue, setUsdValue] = useState(2)
 
   const templates = [
-    { 
-      id: "standard", 
-      name: "Standard Coin", 
-      cost: 0.01,
+    {
+      id: "standard",
+      name: "Standard Coin",
+      cost: 0.02,
       description: "Perfect for basic use cases with essential functionality",
       features: ["Mintable & Burnable", "Metadata editing", "Low gas fees", "Quick deployment"]
     },
-    { 
-      id: "regulated", 
-      name: "Regulated Coin", 
-      cost: 0.02,
+    {
+      id: "regulated",
+      name: "Regulated Coin",
+      cost: 0.03,
       description: "Advanced features for compliance and security",
       features: ["Pausable transfers", "Denylist management", "Metadata editing", "Compliance ready"]
     },
-    { 
-      id: "closed-loop", 
-      name: "Closed-Loop Token", 
-      cost: 0.05,
+    {
+      id: "closed-loop",
+      name: "Closed-Loop Token",
+      cost: 0.02,
       description: "Governance-controlled tokens with policy management",
       features: ["Policy governance", "Action requests", "Immutable metadata", "Enterprise grade"]
     },
   ]
 
-  const suiToUsdRate = 2.10 // More realistic SUI/USD rate
+  const suiToUsdRate = 3.10 // More realistic SUI/USD rate
 
   const updateEstimate = (template: string, count: number) => {
     const selectedTemplate = templates.find((t) => t.id === template)
@@ -67,7 +67,7 @@ export default function GasEstimatorPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
-      <Navbar/>
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="flex mt-4 items-center text-sm text-zinc-400 mb-8">
@@ -121,7 +121,7 @@ export default function GasEstimatorPage() {
                     <label className="block text-zinc-300 text-lg font-medium mb-4">Token Type</label>
                     <div className="relative">
                       <Select value={tokenTemplate} onValueChange={handleTemplateChange}>
-                        <SelectTrigger className="bg-zinc-800 border-zinc-600 text-white h-16 text-lg">
+                        <SelectTrigger className="bg-zinc-800 border-zinc-600 text-white h-16 text-">
                           <div className="flex items-center justify-between w-full">
                             <ChevronLeft className="w-6 h-6 text-zinc-400" />
                             <SelectValue />
@@ -140,7 +140,7 @@ export default function GasEstimatorPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     {/* Template Description */}
                     {selectedTemplate && (
                       <div className="mt-4 p-4 bg-zinc-800 rounded-lg">
@@ -159,29 +159,29 @@ export default function GasEstimatorPage() {
                   {/* Number of Creations */}
                   <div>
                     <label className="block text-zinc-300 text-lg font-medium mb-4">Number of tokens</label>
-                    <div className="flex items-center bg-zinc-800 rounded-lg border border-zinc-600 h-16">
+                    <div className="flex items-center bg-zinc-800 rounded-lg border border-zinc-600">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-14 w-14 text-zinc-400 hover:text-white hover:bg-zinc-700"
+                        className="h-9 w-14 text-zinc-400 hover:text-white hover:bg-zinc-700"
                         onClick={decrementCount}
                         disabled={creationCount <= 1}
                       >
                         <Minus className="w-6 h-6" />
                       </Button>
                       <div className="flex-1 text-center">
-                        <span className="text-2xl font-bold text-white">{creationCount}</span>
+                        <span className="text- font-bold text-white">{creationCount}</span>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-14 w-14 text-zinc-400 hover:text-white hover:bg-zinc-700"
+                        className="h-9 w-14 text-zinc-400 hover:text-white hover:bg-zinc-700"
                         onClick={incrementCount}
                       >
                         <Plus className="w-6 h-6" />
                       </Button>
                     </div>
-                    
+
                     {/* Calculation breakdown */}
                     <div className="mt-4 p-4 bg-zinc-800 rounded-lg">
                       <div className="text-zinc-300 text-sm">
@@ -210,10 +210,10 @@ export default function GasEstimatorPage() {
                 </div>
 
                 {/* Action Button */}
-                <div className="text-center mt-8">
-                  <p className="text-zinc-300 text-lg mb-6">Ready to create your token?</p>
+                <div className="text-center mt-">
+                  <p className="text-zinc-300 mb-6">Ready to create your token?</p>
                   <Button
-                    className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-lg font-medium rounded-lg"
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-lg font-medium rounded-lg cursor-pointer"
                     onClick={() => (window.location.href = "/generate")}
                   >
                     Create Token Now

@@ -2,19 +2,17 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Wallet, 
-  Coins, 
-  ImageIcon, 
-  ExternalLink, 
-  Copy, 
-  MoreHorizontal, 
-  PlusCircle, 
-  ArrowUpRight, 
-  Terminal, 
+import {
+  Wallet,
+  Coins,
+  ImageIcon,
+  ExternalLink,
+  Copy,
+  MoreHorizontal,
+  PlusCircle,
   Loader2,
   TrendingUp,
   Eye,
@@ -148,10 +146,10 @@ const DashboardStats = ({ tokens, nftCollections }: { tokens: Token[], nftCollec
   const totalTokens = tokens.length
   const totalNFTs = nftCollections.length
   const totalSupply = tokens.reduce((sum, token) => sum + parseInt(token.supply || '0'), 0)
-  const totalNFTMinted = nftCollections.reduce((sum, nft) => sum + parseInt(nft.minted || '0'), 0)
+  // const totalNFTMinted = nftCollections.reduce((sum, nft) => sum + parseInt(nft.minted || '0'), 0)
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -203,7 +201,7 @@ const DashboardStats = ({ tokens, nftCollections }: { tokens: Token[], nftCollec
         </div>
       </motion.div>
 
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -218,7 +216,7 @@ const DashboardStats = ({ tokens, nftCollections }: { tokens: Token[], nftCollec
             <ImageIcon className="h-6 w-6 text-orange-400" />
           </div>
         </div>
-      </motion.div>
+      </motion.div> */}
     </div>
   )
 }
@@ -267,13 +265,13 @@ export default function Dashboard({ network }: { network: string }) {
                     name: tokenMetadata?.name || "Unknown Token",
                     symbol: tokenMetadata?.symbol || "UNK",
                     network,
-                    supply: token.balance || "0",
+                    supply: token.balance,
                     decimals: tokenMetadata?.decimals || 0,
                     description: tokenMetadata?.description || "No description",
                     address: token.coinType,
                     packageId,
                     type: tokenType,
-                    
+
                     status: "active",
                   };
                 } catch (error) {
@@ -358,10 +356,10 @@ export default function Dashboard({ network }: { network: string }) {
     router.push(`/generator/${network}/token?packageId=${token.packageId}`)
   }
 
-  const handleMintNFT = (collection: NFTCollection) => {
-    console.log("Navigating to NFT mint with package ID:", collection.packageId)
-    router.push(`/nft/mint/${collection.packageId}`)
-  }
+  // const handleMintNFT = (collection: NFTCollection) => {
+  //   console.log("Navigating to NFT mint with package ID:", collection.packageId)
+  //   router.push(`/nft/mint/${collection.packageId}`)
+  // }
 
   const getTokenTypeBadge = (type: 'standard' | 'regulated' | 'closed-loop') => {
     switch (type) {
@@ -419,7 +417,7 @@ export default function Dashboard({ network }: { network: string }) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto text-center">
-          <motion.div 
+          <motion.div
             className="bg-zinc-900 rounded-xl border border-zinc-800 p-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -491,7 +489,7 @@ export default function Dashboard({ network }: { network: string }) {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <motion.div 
+      <motion.div
         className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -537,7 +535,7 @@ export default function Dashboard({ network }: { network: string }) {
       )}
 
       {/* Main Content */}
-      <motion.div 
+      <motion.div
         className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden shadow-xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -549,22 +547,20 @@ export default function Dashboard({ network }: { network: string }) {
             <div className="flex space-x-1 bg-zinc-800/50 p-1 rounded-lg w-fit">
               <button
                 onClick={() => setActiveTab("tokens")}
-                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
-                  activeTab === "tokens"
-                    ? "bg-teal-500 text-white shadow-lg shadow-teal-500/25"
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"
-                }`}
+                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === "tokens"
+                  ? "bg-teal-500 text-white shadow-lg shadow-teal-500/25"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"
+                  }`}
               >
                 <Coins className="mr-2 h-4 w-4" />
                 Tokens ({tokens.length})
               </button>
               <button
                 onClick={() => setActiveTab("nfts")}
-                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
-                  activeTab === "nfts"
-                    ? "bg-purple-500 text-white shadow-lg shadow-purple-500/25"
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"
-                }`}
+                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === "nfts"
+                  ? "bg-purple-500 text-white shadow-lg shadow-purple-500/25"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"
+                  }`}
               >
                 <ImageIcon className="mr-2 h-4 w-4" />
                 NFT Collections ({nftCollections.length})
@@ -600,6 +596,12 @@ export default function Dashboard({ network }: { network: string }) {
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                           Network
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                          Supply
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                          Decimals
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                           Balance
@@ -644,8 +646,18 @@ export default function Dashboard({ network }: { network: string }) {
                             <div className="text-sm text-zinc-300 font-mono">
                               {parseInt(token.supply).toLocaleString()}
                             </div>
-                            <div className="text-xs text-zinc-500">
-                              {token.decimals} decimals
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap mx-auto">
+                            <div className="text-sm w-full text-zinc-300 font-mono">
+                              {token.decimals}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-zinc-300 font-mono">
+                              {(Number(token.supply) / Math.pow(10, token.decimals || 0)).toLocaleString(undefined, {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: Math.min(6, token.decimals || 0),
+                              })} {token.symbol}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -673,20 +685,20 @@ export default function Dashboard({ network }: { network: string }) {
                                   <MoreHorizontal size={16} />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
-                                <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer">
+                              <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700 p-0">
+                                <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer p-3">
                                   <Link href={`https://suiscan.xyz/${network}/object/${token.packageId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
-                                    <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                    <ExternalLink size={14} className="mr-4" /> View on Explorer
                                   </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                                  className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer p-3"
                                   onClick={() => handleMintTokens(token)}
                                 >
                                   <Coins size={14} className="mr-2" /> Mint Tokens
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
+                                  className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer p-3"
                                   onClick={() => handleManageToken(token)}
                                 >
                                   <Settings size={14} className="mr-2" /> Manage Token
@@ -712,10 +724,10 @@ export default function Dashboard({ network }: { network: string }) {
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">No tokens yet</h3>
                   <p className="text-zinc-400 text-center max-w-md mb-8">
-                    You haven't created any tokens yet. Start building your token ecosystem by creating your first token.
+                    You haven&apos;t created any tokens yet. Start building your token ecosystem by creating your first token.
                   </p>
-                  <Button 
-                    onClick={() => router.push("/generate")} 
+                  <Button
+                    onClick={() => router.push("/generate")}
                     className="bg-teal-500 cursor-pointer hover:bg-teal-600 text-white px-8 py-3"
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -786,7 +798,7 @@ export default function Dashboard({ network }: { network: string }) {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="p-5">
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1">
@@ -800,14 +812,14 @@ export default function Dashboard({ network }: { network: string }) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
-                              <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer">
+                              <DropdownMenuItem className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer p-3">
                                 <Link href={`https://suiscan.xyz/${network}/object/${collection.packageId}`} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
-                                  <ExternalLink size={14} className="mr-2" /> View on Explorer
+                                  <ExternalLink size={14} className="mr-4" /> View on Explorer
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer"
-                                onClick={() => handleMintNFT(collection)}
+                                className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-700 cursor-pointer p-3"
+                              // onClick={() => handleMintNFT(collection)}
                               >
                                 <ImageIcon size={14} className="mr-2" /> Mint NFT
                               </DropdownMenuItem>
@@ -838,14 +850,14 @@ export default function Dashboard({ network }: { network: string }) {
                               <Copy size={12} />
                             </button>
                           </div>
-                         
+
                         </div>
 
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
                             className="flex-1 border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
-                            onClick={() => handleMintNFT(collection)}
+                          // onClick={() => handleMintNFT(collection)}
                           >
                             <ImageIcon className="mr-2 h-3 w-3" />
                             Mint NFT
@@ -877,7 +889,7 @@ export default function Dashboard({ network }: { network: string }) {
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">No NFT collections yet</h3>
                   <p className="text-zinc-400 text-center max-w-md mb-8">
-                    You haven't created any NFT collections yet. Launch your first collection and start minting unique digital assets.
+                    You haven&apos;t created any NFT collections yet. Launch your first collection and start minting unique digital assets.
                   </p>
                   <Button
                     onClick={() => router.push("/nft/generate")}

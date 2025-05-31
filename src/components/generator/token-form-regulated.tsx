@@ -37,9 +37,9 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
     description: "",
     decimals: "9",
     initialSupply: "",
-    maxSupply: "",
+    // maxSupply: "",
   });
-  
+
   // Regulated token features - only pausable is toggleable
   const [pausable, setPausable] = useState(true);
   const burnable = true; // Always enabled for regulated tokens
@@ -63,8 +63,8 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
   };
 
   const validateForm = () => {
-    const { tokenName, tokenSymbol, description, decimals } = formData;
-    if (!tokenName || !tokenSymbol || !description || !decimals) {
+    const { tokenName, tokenSymbol, description, decimals, initialSupply } = formData;
+    if (!tokenName || !tokenSymbol || !description || !decimals || !initialSupply) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -139,8 +139,14 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
           setIsCreatingToken(false);
 
           toast({
-            title: "Token created successfully!",
+            title: "Coin created successfully!",
             description: "Your regulated coin has been created and is ready to use.",
+          });
+
+          await mintCoin({
+            pkgId: pkgId,
+            treasuryCap: treasuryCap,
+            initialSupply: formData.initialSupply,
           });
 
           setTimeout(() => {
@@ -155,6 +161,50 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
             variant: "destructive",
           });
           console.error("Publish transaction failed:", err);
+        },
+      }
+    );
+  };
+
+  const mintCoin = async ({
+    pkgId,
+    treasuryCap,
+    initialSupply,
+  }: {
+    pkgId: string;
+    treasuryCap: string;
+    initialSupply: string;
+  }) => {
+    if (!account) return;
+
+    const tx = new Transaction();
+    tx.setGasBudget(100_000_000);
+
+    tx.moveCall({
+      target: `${pkgId}::${pausable ? "p_regulated_coin" : "u_regulated_coin"}::mint`,
+      arguments: [
+        tx.object(treasuryCap),
+        tx.pure.u64(initialSupply),
+        tx.pure.address(account.address),
+      ],
+    });
+
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Minted coins!",
+            description: `Minted ${initialSupply} coins to your wallet.`,
+          });
+        },
+        onError: (err) => {
+          toast({
+            title: "Minting failed",
+            description: "There was a problem minting the coins.",
+            variant: "destructive",
+          });
+          console.error("Minting error:", err);
         },
       }
     );
@@ -315,6 +365,32 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                 <p className="mt-1 text-xs text-zinc-500">A brief description of your token&apos;s purpose</p>
               </div>
 
+              <div>
+                <Label htmlFor="initialSupply" className="flex items-center text-zinc-300">
+                  Initial Supply*
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="w-48 text-xs">The initial number of tokens created in your wallet</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <Input
+                  id="initialSupply"
+                  type="number"
+                  value={formData.initialSupply}
+                  onChange={handleInputChange("initialSupply")}
+                  placeholder="1000000000"
+                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
+                  min="0"
+                />
+                <p className="mt-1 text-xs text-zinc-500">The initial number of tokens to be minted to your wallet</p>
+              </div>
+
               <div className="border-t border-zinc-700 pt-4">
                 <h4 className="mb-3 font-medium text-white flex items-center">
                   Regulated Token Features
@@ -323,6 +399,25 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                   </span>
                 </h4>
                 <div className="space-y-4">
+
+                  {/* Mintable - Always enabled */}
+                  <div className="flex items-center">
+                    <div className="flex-1">
+                      <div className="flex items-center">
+                        <Coins className="mr-2 h-4 w-4 text-yellow-400" />
+                        <Label className="text-zinc-300">Mintable</Label>
+                      </div>
+                      <p className="ml-6 mt-1 text-xs text-zinc-500">
+                        Allows creating new tokens after deployment
+                      </p>
+                    </div>
+                    <Switch
+                      checked={mintable}
+                      disabled={true}
+                      className="data-[state=checked]:bg-purple-500 opacity-100"
+                    />
+                  </div>
+
                   {/* Burnable - Always enabled */}
                   <div className="flex items-center">
                     <div className="flex-1">
@@ -341,19 +436,19 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                     />
                   </div>
 
-                  {/* Mintable - Always enabled */}
+                  {/* Denylist - Always enabled */}
                   <div className="flex items-center">
                     <div className="flex-1">
                       <div className="flex items-center">
-                        <Coins className="mr-2 h-4 w-4 text-yellow-400" />
-                        <Label className="text-zinc-300">Mintable</Label>
+                        <Shield className="mr-2 h-4 w-4 text-red-400" />
+                        <Label className="text-zinc-300">Denylist</Label>
                       </div>
                       <p className="ml-6 mt-1 text-xs text-zinc-500">
-                        Allows creating new tokens after deployment
+                        Allows blocking specific addresses from transferring tokens
                       </p>
                     </div>
                     <Switch
-                      checked={mintable}
+                      checked={denylist}
                       disabled={true}
                       className="data-[state=checked]:bg-purple-500 opacity-100"
                     />
@@ -375,24 +470,6 @@ export default function TokenFormRegulated({ network, onBack, onSwitchTemplate }
                       checked={pausable}
                       onCheckedChange={setPausable}
                       className="data-[state=checked]:bg-purple-500"
-                    />
-                  </div>
-
-                  {/* Denylist - Always enabled */}
-                  <div className="flex items-center">
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <Shield className="mr-2 h-4 w-4 text-red-400" />
-                        <Label className="text-zinc-300">Denylist</Label>
-                      </div>
-                      <p className="ml-6 mt-1 text-xs text-zinc-500">
-                        Allows blocking specific addresses from transferring tokens
-                      </p>
-                    </div>
-                    <Switch
-                      checked={denylist}
-                      disabled={true}
-                      className="data-[state=checked]:bg-purple-500 opacity-100"
                     />
                   </div>
                 </div>

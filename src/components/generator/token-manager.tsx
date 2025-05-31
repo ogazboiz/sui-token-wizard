@@ -134,27 +134,24 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
       comingSoon: !hasCreatedToken,
       route: `/generator/${network}/token${packageId ? `?packageId=${packageId}` : ''}`,
     },
-    // CLOSED-LOOP ONLY TOOLS
+    // UNIVERSAL TOOLS (Available for all token types)
     {
-      id: "policy",
-      name: "Token Policy",
-      icon: <ScrollText className="w-5 h-5" />,
-      isActive: activeTool === "policy",
-      isNew: hasCreatedToken && tokenType === "closed-loop",
-      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
-      route: `/generator/${network}/policy${packageId ? `?packageId=${packageId}` : ''}`,
-      showOnlyForClosedLoop: true,
+      id: "mint-tokens",
+      name: "Mint Tokens",
+      icon: <Coins className="w-5 h-5" />,
+      isActive: activeTool === "mint-tokens",
+      isNew: hasCreatedToken,
+      comingSoon: !hasCreatedToken,
+      route: `/generator/${network}/mint${packageId ? `?packageId=${packageId}` : ''}`,
     },
     {
-      id: "action-requests",
-      name: "Action Requests",
-      icon: <Plus className="w-5 h-5" />,
-      isActive: activeTool === "action-requests",
-      isNew: hasCreatedToken && tokenType === "closed-loop" && hasPolicyCreated,
-      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
-      route: `/generator/${network}/action-requests${packageId ? `?packageId=${packageId}` : ''}`,
-      showOnlyForClosedLoop: true,
-      requiresPolicy: true,
+      id: "burn-tokens",
+      name: "Burn Tokens",
+      icon: <Flame className="w-5 h-5" />,
+      isActive: activeTool === "burn-tokens",
+      isNew: hasCreatedToken,
+      comingSoon: !hasCreatedToken,
+      route: `/generator/${network}/burn${packageId ? `?packageId=${packageId}` : ''}`,
     },
     // REGULATED ONLY TOOLS
     {
@@ -177,24 +174,27 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
       route: `/generator/${network}/pausable${packageId ? `?packageId=${packageId}` : ''}`,
       showOnlyForRegulated: true,
     },
-    // UNIVERSAL TOOLS (Available for all token types)
+    // CLOSED-LOOP ONLY TOOLS
     {
-      id: "mint-tokens",
-      name: "Mint Tokens",
-      icon: <Coins className="w-5 h-5" />,
-      isActive: activeTool === "mint-tokens",
-      isNew: hasCreatedToken,
-      comingSoon: !hasCreatedToken,
-      route: `/generator/${network}/mint${packageId ? `?packageId=${packageId}` : ''}`,
+      id: "policy",
+      name: "Token Policy",
+      icon: <ScrollText className="w-5 h-5" />,
+      isActive: activeTool === "policy",
+      isNew: hasCreatedToken && tokenType === "closed-loop",
+      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
+      route: `/generator/${network}/policy${packageId ? `?packageId=${packageId}` : ''}`,
+      showOnlyForClosedLoop: true,
     },
     {
-      id: "burn-tokens",
-      name: "Burn Tokens",
-      icon: <Flame className="w-5 h-5" />,
-      isActive: activeTool === "burn-tokens",
-      isNew: hasCreatedToken,
-      comingSoon: !hasCreatedToken,
-      route: `/generator/${network}/burn${packageId ? `?packageId=${packageId}` : ''}`,
+      id: "action-requests",
+      name: "Action Requests",
+      icon: <Plus className="w-5 h-5" />,
+      isActive: activeTool === "action-requests",
+      isNew: hasCreatedToken && tokenType === "closed-loop" && hasPolicyCreated,
+      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
+      route: `/generator/${network}/action-requests${packageId ? `?packageId=${packageId}` : ''}`,
+      showOnlyForClosedLoop: true,
+      requiresPolicy: true,
     },
     // COMING SOON TOOLS
     {
@@ -365,8 +365,8 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
           {/* Dashboard/Back Button Section */}
           <div className="p-3 border-b border-zinc-800 bg-zinc-800/30">
-            <Link 
-              href="/dashboard" 
+            <Link
+              href="/dashboard"
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg transition-all duration-200 group"
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -401,27 +401,24 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
             {filteredTools.map((tool) => (
               <button
                 key={tool.id}
-                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between transition-all duration-200 ${
-                  tool.isActive 
-                    ? "bg-teal-500/20 text-teal-400 border border-teal-500/30" 
-                    : tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender')
-                      ? "text-zinc-600 cursor-not-allowed" 
-                      : tool.comingSoon
-                        ? "text-zinc-500 cursor-not-allowed opacity-70"
-                        : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 cursor-pointer"
-                }`}
+                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between transition-all duration-200 ${tool.isActive
+                  ? "bg-teal-500/20 text-teal-400 border border-teal-500/30"
+                  : tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender')
+                    ? "text-zinc-600 cursor-not-allowed"
+                    : tool.comingSoon
+                      ? "text-zinc-500 cursor-not-allowed opacity-70"
+                      : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 cursor-pointer"
+                  }`}
                 disabled={tool.comingSoon}
                 onClick={() => !tool.comingSoon && handleToolSelect(tool.id, tool.route)}
               >
                 <div className="flex items-center">
-                  <div className={`w-6 h-6 mr-2 flex items-center justify-center ${
-                    tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-50' : ''
-                  }`}>
+                  <div className={`w-6 h-6 mr-2 flex items-center justify-center ${tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-50' : ''
+                    }`}>
                     {tool.icon}
                   </div>
-                  <span className={`font-medium ${
-                    tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-70' : ''
-                  }`}>
+                  <span className={`font-medium ${tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-70' : ''
+                    }`}>
                     {tool.name}
                   </span>
                   {tool.isNew && (
@@ -442,8 +439,8 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
 
           {/* Footer */}
           <div className="p-4 mt-4 border-t border-zinc-800">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-600 transition-colors"
             >
               Need other tools? Contact us
@@ -487,12 +484,6 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
           {activeTool === "token-page" && (
             <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
-          {activeTool === "policy" && (
-            <PolicyTokens network={network} tokenData={tokenData} />
-          )}
-          {activeTool === "action-requests" && (
-            <ActionRequests network={network} tokenData={tokenData} />
-          )}
           {activeTool === "mint-tokens" && (
             <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
@@ -504,6 +495,12 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
           )}
           {activeTool === "pausable" && (
             <PausableTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
+          )}
+          {activeTool === "policy" && (
+            <PolicyTokens network={network} tokenData={tokenData} />
+          )}
+          {activeTool === "action-requests" && (
+            <ActionRequests network={network} tokenData={tokenData} />
           )}
         </div>
       </div>

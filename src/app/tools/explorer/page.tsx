@@ -18,14 +18,14 @@ export default function ExplorerPage() {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      const explorerUrl = `https://suiexplorer.com/object/${searchQuery.trim()}`
+      const explorerUrl = `https://suiscan.xyz/testnet/object/${searchQuery.trim()}`
       window.open(explorerUrl, "_blank")
     }
   }
 
   const handleWalletExplore = () => {
     if (account?.address) {
-      const explorerUrl = `https://suiexplorer.com/address/${account.address}`
+      const explorerUrl = `https://suiscan.xyz/testnet/account/${account.address}`
       window.open(explorerUrl, "_blank")
     }
   }
@@ -48,7 +48,7 @@ export default function ExplorerPage() {
     {
       title: "Latest Transactions",
       description: "View recent transactions on the Sui network",
-      url: "https://suivision.xyz/transactionss",
+      url: "https://suivision.xyz/transactions",
     },
     {
       title: "Top Packages",
@@ -59,9 +59,9 @@ export default function ExplorerPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
-           <Navbar/>
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
-      
+
         {/* Breadcrumb */}
         <div className="flex items-center text-sm text-zinc-400 mb-8">
           <Link href="/" className="hover:text-white flex items-center">
@@ -114,7 +114,7 @@ export default function ExplorerPage() {
                   </div>
                   <Button
                     onClick={handleSearch}
-                    className="bg-teal-500 hover:bg-teal-600 text-white px-6 h-12"
+                    className="bg-teal-500 hover:bg-teal-600 text-white px-6 h-12 cursor-pointer"
                     disabled={!searchQuery.trim()}
                   >
                     <Search className="w-4 h-4 mr-2" />
@@ -153,11 +153,11 @@ export default function ExplorerPage() {
                         variant="outline"
                         size="sm"
                         onClick={copyAddress}
-                        className="border-zinc-700 text-zinc-400 hover:text-white"
+                        className="border-zinc-700 text-zinc-400 hover:text-white cursor-pointer"
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
-                      <Button onClick={handleWalletExplore} className="bg-purple-500 hover:bg-purple-600 text-white">
+                      <Button onClick={handleWalletExplore} className="bg-purple-500 hover:bg-purple-600 text-white cursor-pointer">
                         <ExternalLink className="w-4 h-4 mr-2" />
                         View in Explorer
                       </Button>
@@ -184,7 +184,7 @@ export default function ExplorerPage() {
                     <p className="text-zinc-400 mb-4 text-sm">{link.description}</p>
                     <Button
                       variant="outline"
-                      className="w-full border-zinc-700 text-zinc-300 hover:text-white"
+                      className="w-full border-zinc-700 text-zinc-300 hover:text-white cursor-pointer"
                       onClick={() => window.open(link.url, "_blank")}
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />

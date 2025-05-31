@@ -2,7 +2,7 @@
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, HelpCircle, Flame, Shield, Loader2, Users, Lock, Check } from "lucide-react"
+import { ArrowLeft, HelpCircle, Flame, Shield, Loader2, Users, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

@@ -2,7 +2,7 @@
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, HelpCircle, Flame, Shield, Loader2, Users, Lock } from "lucide-react"
+import { ArrowLeft, HelpCircle, Flame, Loader2, Users, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,6 +32,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
 
   const [tokenName, setTokenName] = useState("")
   const [tokenSymbol, setTokenSymbol] = useState("")
+  const [initialSupply, setInitialSupply] = useState("")
   const [customDecimals, setCustomDecimals] = useState(false)
   const [decimals, setDecimals] = useState("9")
   const [description, setDescription] = useState("")
@@ -41,7 +42,6 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
   // Closed-loop features are always enabled
   const burnable = true
   const mintable = true
-  const denylist = true
   const allowlist = true
   const transferRestrictions = true
 
@@ -60,7 +60,7 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!tokenName || !tokenSymbol || !decimals || !description) {
+    if (!tokenName || !tokenSymbol || !decimals || !description || !initialSupply) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -164,6 +164,12 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
               description: "Your closed-loop token has been created and is ready to use.",
             })
 
+            await mintCoin({
+              pkgId: pkgId,
+              treasuryCap: treasuryCap,
+              initialSupply: initialSupply,
+            });
+
             setTimeout(() => {
               router.push(`/generator/${network}/token/?packageId=${pkgId}`)
             }, 1000)
@@ -181,6 +187,50 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
             variant: "destructive",
           })
         }
+      }
+    );
+  };
+
+  const mintCoin = async ({
+    pkgId,
+    treasuryCap,
+    initialSupply,
+  }: {
+    pkgId: string;
+    treasuryCap: string;
+    initialSupply: string;
+  }) => {
+    if (!account) return;
+
+    const tx = new Transaction();
+    tx.setGasBudget(100_000_000);
+
+    tx.moveCall({
+      target: `${pkgId}::token::mint`,
+      arguments: [
+        tx.object(treasuryCap),
+        tx.pure.u64(initialSupply),
+        tx.pure.address(account.address),
+      ],
+    });
+
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Minted tokens!",
+            description: `Minted ${initialSupply} tokens to your wallet.`,
+          });
+        },
+        onError: (err) => {
+          toast({
+            title: "Minting failed",
+            description: "There was a problem minting the tokens.",
+            variant: "destructive",
+          });
+          console.error("Minting error:", err);
+        },
       }
     );
   };
@@ -324,6 +374,32 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                 </p>
               </div>
 
+              <div>
+                <Label htmlFor="initialSupply" className="flex items-center text-zinc-300">
+                  Initial Supply*
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="ml-1 h-3.5 w-3.5 text-zinc-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="w-48 text-xs">The initial number of tokens created in your wallet</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <Input
+                  id="initialSupply"
+                  type="number"
+                  value={initialSupply}
+                  onChange={(e) => setInitialSupply(e.target.value)}
+                  placeholder="1000000000"
+                  className="mt-1 border-zinc-700 bg-zinc-900 text-white placeholder:text-zinc-500 focus-visible:ring-teal-500"
+                  min="0"
+                />
+                <p className="mt-1 text-xs text-zinc-500">The initial number of tokens to be minted to your wallet</p>
+              </div>
+
               <div className="border-t border-zinc-700 pt-4">
                 <h4 className="text-white font-medium mb-3 flex items-center">
                   Closed-Loop Features
@@ -332,25 +408,6 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                   </span>
                 </h4>
                 <div className="space-y-4">
-                  <div className="flex items-center">
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <Flame className="h-4 w-4 text-orange-400 mr-2" />
-                        <Label className="text-zinc-300">
-                          Burnable
-                        </Label>
-                      </div>
-                      <p className="text-zinc-500 text-xs mt-1 ml-6">
-                        Remove tokens from circulation for deflationary mechanics
-                      </p>
-                    </div>
-                    <Switch
-                      checked={burnable}
-                      disabled={true}
-                      className="data-[state=checked]:bg-emerald-500 opacity-100"
-                    />
-                  </div>
-
                   <div className="flex items-center">
                     <div className="flex-1">
                       <div className="flex items-center">
@@ -373,17 +430,17 @@ export default function TokenFormClosedLoop({ network, onBack, onSwitchTemplate 
                   <div className="flex items-center">
                     <div className="flex-1">
                       <div className="flex items-center">
-                        <Shield className="h-4 w-4 text-red-400 mr-2" />
+                        <Flame className="h-4 w-4 text-orange-400 mr-2" />
                         <Label className="text-zinc-300">
-                          Denylist
+                          Burnable
                         </Label>
                       </div>
                       <p className="text-zinc-500 text-xs mt-1 ml-6">
-                        Block malicious addresses from participating
+                        Remove tokens from circulation for deflationary mechanics
                       </p>
                     </div>
                     <Switch
-                      checked={denylist}
+                      checked={burnable}
                       disabled={true}
                       className="data-[state=checked]:bg-emerald-500 opacity-100"
                     />

@@ -241,13 +241,10 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
-
-
 ### Community
-- [Discord Server](https://discord.gg/suitokenwizard)
+
 - [GitHub Discussions](https://github.com/ogazboiz/sui-token-wizard/discussions)
-- [Twitter](https://twitter.com/suitokenwizard)
+
 
 ### Issues
 If you encounter any issues, please [create a GitHub issue](https://github.com/your-username/sui-token-creator/issues/new) with:

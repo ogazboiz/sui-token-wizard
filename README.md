@@ -258,13 +258,6 @@ If you encounter any issues, please [create a GitHub issue](https://github.com/y
 
 
 
-## 📊 Statistics
-
-- **Total Tokens Created**: 15,420+
-- **Active Users**: 3,421+
-- **Total Transactions**: 89,234+
-- **Networks Supported**: 3 (Mainnet, Testnet, Devnet)
-
 ## 🙏 Acknowledgments
 
 - [Sui Foundation](https://sui.io/) for the amazing blockchain platform
@@ -278,8 +271,6 @@ If you encounter any issues, please [create a GitHub issue](https://github.com/y
   <p>Made with ❤️ by the Sui Token Creator team</p>
   <p>
     <a href="https://sui-token-wizard.vercel.app/">Website</a> •
-    <a href="https://docs.suitokencreator.com">Documentation</a> •
-    <a href="https://discord.gg/suitokencreator">Discord</a> •
-    <a href="https://twitter.com/suitokencreator">Twitter</a>
-  </p>
+    <a href="https://sui-token-wizard.vercel.app/docs/getting-started">Documentation</a> •
+    </p>
 </div>

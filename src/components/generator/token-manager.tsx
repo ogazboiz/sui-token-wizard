@@ -413,8 +413,8 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
       <div className="container mx-auto px-4 pt-6">
         <div className="grid lg:grid-cols-[320px_1fr] gap-6">
           {/* Centered Sidebar */}
-          <div className="lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:flex lg:items-center">
-            <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden flex flex-col w-full">
+          <div className="lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:flex ">
+            <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden flex flex-col w-full mb-6">
               {/* Dashboard/Back Button Section */}
               <div className="p-3 border-b border-zinc-800 bg-zinc-800/30 flex-shrink-0">
                 <Link 
@@ -509,7 +509,7 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
           </div>
 
           {/* Main Content */}
-          <div className="min-w-0">
+          <div className="min-w-0 pb-4">
           {activeTool === "token-creator" && (
             <>
               <motion.div

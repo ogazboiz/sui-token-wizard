@@ -1,6 +1,6 @@
 "use client"
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ChevronRight, Home, Sparkles, Plus, Users, Shield, Coins, Flame, FileText, Loader2, Pause, ScrollText, Droplets, LayoutDashboard, ArrowLeft } from "lucide-react"
@@ -53,7 +53,48 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
   const [hasCreatedToken, setHasCreatedToken] = useState(false)
   const [tokenData, setTokenData] = useState<TokenData | undefined>(undefined)
   const [tokenType, setTokenType] = useState<'standard' | 'regulated' | 'closed-loop' | null>(null)
-  const [hasPolicyCreated, setHasPolicyCreated] = useState(false)
+
+  // Intelligent cleanup - only clear when actually leaving token management
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Only clear if not staying in generator routes
+      const currentPath = window.location.pathname
+      if (!currentPath.includes('/generator/')) {
+        localStorage.removeItem('tokenPolicy')
+        localStorage.removeItem('actionRequests')
+        console.log('Cleaned up localStorage on page unload')
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      
+      // Only clean up if we're actually leaving the token management area
+      const newPath = window.location.pathname
+      if (!newPath.includes('/generator/')) {
+        localStorage.removeItem('tokenPolicy')
+        localStorage.removeItem('actionRequests')
+        console.log('Cleaned up localStorage on component unmount')
+      }
+    }
+  }, [])
+
+  // Smart package switching - only clear when switching to different token
+  const prevPackageIdRef = useRef<string | null>(null)
+  
+  useEffect(() => {
+    if (prevPackageIdRef.current && prevPackageIdRef.current !== packageId && packageId) {
+      console.log('Package ID changed from', prevPackageIdRef.current, 'to', packageId)
+      
+      // Clear previous session data when switching to different token
+      localStorage.removeItem('tokenPolicy')
+      localStorage.removeItem('actionRequests')
+      console.log('Cleaned up localStorage on token switch')
+    }
+    prevPackageIdRef.current = packageId
+  }, [packageId])
 
   // Check if the user has a token and detect its type
   useEffect(() => {
@@ -68,11 +109,6 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
         if (detectedType) {
           setTokenType(detectedType)
           setHasCreatedToken(true)
-          // todo: make dynamic
-          if (detectedType === "closed-loop") {
-            const policyData = localStorage.getItem('tokenPolicy')
-            setHasPolicyCreated(!!policyData)
-          }
         } else {
           setHasCreatedToken(true)
           setTokenType('standard')
@@ -134,24 +170,27 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
       comingSoon: !hasCreatedToken,
       route: `/generator/${network}/token${packageId ? `?packageId=${packageId}` : ''}`,
     },
-    // UNIVERSAL TOOLS (Available for all token types)
+    // CLOSED-LOOP ONLY TOOLS
     {
-      id: "mint-tokens",
-      name: "Mint Tokens",
-      icon: <Coins className="w-5 h-5" />,
-      isActive: activeTool === "mint-tokens",
-      isNew: hasCreatedToken,
-      comingSoon: !hasCreatedToken,
-      route: `/generator/${network}/mint${packageId ? `?packageId=${packageId}` : ''}`,
+      id: "policy",
+      name: "Token Policy",
+      icon: <ScrollText className="w-5 h-5" />,
+      isActive: activeTool === "policy",
+      isNew: hasCreatedToken && tokenType === "closed-loop",
+      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
+      route: `/generator/${network}/policy${packageId ? `?packageId=${packageId}` : ''}`,
+      showOnlyForClosedLoop: true,
     },
     {
-      id: "burn-tokens",
-      name: "Burn Tokens",
-      icon: <Flame className="w-5 h-5" />,
-      isActive: activeTool === "burn-tokens",
-      isNew: hasCreatedToken,
-      comingSoon: !hasCreatedToken,
-      route: `/generator/${network}/burn${packageId ? `?packageId=${packageId}` : ''}`,
+      id: "action-requests",
+      name: "Action Requests",
+      icon: <Plus className="w-5 h-5" />,
+      isActive: activeTool === "action-requests",
+      isNew: hasCreatedToken && tokenType === "closed-loop",
+      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
+      route: `/generator/${network}/action-requests${packageId ? `?packageId=${packageId}` : ''}`,
+      showOnlyForClosedLoop: true,
+      // Removed requiresPolicy - Action Requests always shows for closed-loop tokens
     },
     // REGULATED ONLY TOOLS
     {
@@ -174,27 +213,24 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
       route: `/generator/${network}/pausable${packageId ? `?packageId=${packageId}` : ''}`,
       showOnlyForRegulated: true,
     },
-    // CLOSED-LOOP ONLY TOOLS
+    // UNIVERSAL TOOLS (Available for all token types)
     {
-      id: "policy",
-      name: "Token Policy",
-      icon: <ScrollText className="w-5 h-5" />,
-      isActive: activeTool === "policy",
-      isNew: hasCreatedToken && tokenType === "closed-loop",
-      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
-      route: `/generator/${network}/policy${packageId ? `?packageId=${packageId}` : ''}`,
-      showOnlyForClosedLoop: true,
+      id: "mint-tokens",
+      name: "Mint Tokens",
+      icon: <Coins className="w-5 h-5" />,
+      isActive: activeTool === "mint-tokens",
+      isNew: hasCreatedToken,
+      comingSoon: !hasCreatedToken,
+      route: `/generator/${network}/mint${packageId ? `?packageId=${packageId}` : ''}`,
     },
     {
-      id: "action-requests",
-      name: "Action Requests",
-      icon: <Plus className="w-5 h-5" />,
-      isActive: activeTool === "action-requests",
-      isNew: hasCreatedToken && tokenType === "closed-loop" && hasPolicyCreated,
-      comingSoon: !hasCreatedToken || tokenType !== "closed-loop",
-      route: `/generator/${network}/action-requests${packageId ? `?packageId=${packageId}` : ''}`,
-      showOnlyForClosedLoop: true,
-      requiresPolicy: true,
+      id: "burn-tokens",
+      name: "Burn Tokens",
+      icon: <Flame className="w-5 h-5" />,
+      isActive: activeTool === "burn-tokens",
+      isNew: hasCreatedToken,
+      comingSoon: !hasCreatedToken,
+      route: `/generator/${network}/burn${packageId ? `?packageId=${packageId}` : ''}`,
     },
     // COMING SOON TOOLS
     {
@@ -212,7 +248,7 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
     },
   ]
 
-  // Filter tools based on token type
+  // Filter tools based on token type - SIMPLIFIED LOGIC
   const filteredTools = tools.filter(tool => {
     if (tool.id === "token-creator") return true
 
@@ -316,148 +352,166 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
 
   if (!isConnected) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center text-sm text-zinc-400 mb-6">
-          <Link href="/" className="hover:text-white flex items-center">
-            <Home className="w-4 h-4 mr-1" />
-          </Link>
-          <ChevronRight className="w-4 h-4 mx-1" />
-          <Link href="/generate" className="hover:text-white">
-            {getNetworkName()}
-          </Link>
-          <ChevronRight className="w-4 h-4 mx-1" />
-          <span className="text-white">Token Creator</span>
+      <div className="min-h-screen">
+        {/* Sticky Breadcrumb */}
+        <div className="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center text-sm text-zinc-400">
+              <Link href="/" className="hover:text-white flex items-center">
+                <Home className="w-4 h-4 mr-1" />
+              </Link>
+              <ChevronRight className="w-4 h-4 mx-1" />
+              <Link href="/generate" className="hover:text-white">
+                {getNetworkName()}
+              </Link>
+              <ChevronRight className="w-4 h-4 mx-1" />
+              <span className="text-white">Token Creator</span>
+            </div>
+          </div>
         </div>
-        <div className="max-w-xl mx-auto">
-          <Alert className="bg-zinc-900 border-zinc-800">
-            <Terminal className="h-4 w-4 text-teal-500" />
-            <AlertTitle className="text-white">Wallet Not Connected</AlertTitle>
-            <AlertDescription className="text-zinc-400">
-              You need to connect your wallet to create or manage tokens on {getNetworkName()}.
-              <div className="mt-4 flex justify-center">
-                <ConnectButton
-                  connectText="Connect Wallet to Continue"
-                  className="bg-teal-500 hover:bg-teal-600 text-white"
-                />
-              </div>
-            </AlertDescription>
-          </Alert>
+        
+        <div className="container mx-auto px-4 py-6">
+          <div className="max-w-xl mx-auto">
+            <Alert className="bg-zinc-900 border-zinc-800">
+              <Terminal className="h-4 w-4 text-teal-500" />
+              <AlertTitle className="text-white">Wallet Not Connected</AlertTitle>
+              <AlertDescription className="text-zinc-400">
+                You need to connect your wallet to create or manage tokens on {getNetworkName()}.
+                <div className="mt-4 flex justify-center">
+                  <ConnectButton
+                    connectText="Connect Wallet to Continue"
+                    className="bg-teal-500 hover:bg-teal-600 text-white"
+                  />
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex items-center text-sm text-zinc-400 mb-6">
-        <Link href="/" className="hover:text-white flex items-center">
-          <Home className="w-4 h-4 mr-1" />
-        </Link>
-        <ChevronRight className="w-4 h-4 mx-1" />
-        <Link href="/generate" className="hover:text-white">
-          {getNetworkName()}
-        </Link>
-        <ChevronRight className="w-4 h-4 mx-1" />
-        <span className="text-white">{getActiveToolName()}{getTokenTypeDisplay()}</span>
-      </div>
-
-      <div className="h-[90vh] grid md:grid-cols-[300px_1fr] gap-6">
-        <div className="sticky top-6 flex flex-col justify-between bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
-          {/* Tools Header */}
-          <div className="p-5 border-b border-zinc-800 h-[12%]">
-            <h2 className="font-medium text-white text-xl flex items-center">
-              Tools {tokenType && (
-                <span className={`ml-2 text-xs px-2 py-1 rounded ${tokenType === 'closed-loop' ? 'bg-emerald-500/20 text-emerald-400' :
-                  tokenType === 'regulated' ? 'bg-purple-500/20 text-purple-400' :
-                    'bg-blue-500/20 text-blue-400'
-                  }`}>
-                  {tokenType === 'closed-loop' ? 'Closed-Loop' :
-                    tokenType === 'regulated' ? 'Regulated' : 'Standard'}
-                </span>
-              )}
-              <span className="ml-1 text-orange-400">🔥</span>
-            </h2>
-            {packageId ? (
-              <p className="text-sm text-zinc-500 mt-3">
-                Package: {packageId.slice(0, 8)}...{packageId.slice(-6)}
-              </p>
-            ) : (
-              <p className="text-sm text-zinc-500 mt-3">
-                Package: Not Selected
-              </p>
-            )}
-          </div>
-
-          {/* Tools List */}
-          <div className="p-2 py-10 flex flex-col gap-5 h-full">
-            {filteredTools.map((tool) => (
-              <button
-                key={tool.id}
-                className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between transition-all duration-200 ${tool.isActive
-                  ? "bg-teal-500/20 text-teal-400 border border-teal-500/30"
-                  : tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender')
-                    ? "text-zinc-600 cursor-not-allowed"
-                    : tool.comingSoon
-                      ? "text-zinc-500 cursor-not-allowed opacity-70"
-                      : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 cursor-pointer"
-                  }`}
-                disabled={tool.comingSoon}
-                onClick={() => !tool.comingSoon && handleToolSelect(tool.id, tool.route)}
-              >
-                <div className="flex items-center">
-                  <div className={`w-6 h-6 mr-2 flex items-center justify-center ${tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-50' : ''
-                    }`}>
-                    {tool.icon}
-                  </div>
-                  <span className={`font-medium ${tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-70' : ''
-                    }`}>
-                    {tool.name}
-                  </span>
-                  {tool.isNew && (
-                    <span className="ml-2 text-xs bg-teal-500/20 text-teal-400 px-1.5 py-0.5 rounded font-medium">
-                      New
-                    </span>
-                  )}
-                  {tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') && (
-                    <span className="ml-2 text-xs bg-zinc-700/50 text-zinc-500 px-1.5 py-0.5 rounded font-medium border border-zinc-700/30">
-                      Soon
-                    </span>
-                  )}
-                </div>
-                {!tool.comingSoon && <ChevronRight className="w-4 h-4 opacity-50" />}
-              </button>
-            ))}
-          </div>
-
-          {/* Footer */}
-          <div className="flex flex-col justify-center items-center mt-4 border-t border-zinc-800 p-4 gap-4 h-[24%]">
-            {/* Back to Dashboard */}
-            <div>
-              <Link
-                href="/dashboard"
-                className={`w-full flex items-center justify-center gap-2 px-8 py-2.5 hover:text-white rounded-lg transition-all duration-200 group bg-zinc-800 text-zinc-300
-                  }`}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span className="font-medium">My Dashboard</span>
-                <ArrowLeft className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" />
-              </Link>
-            </div>
-
-            <div>
-              <Button
-                variant="outline"
-                className="w-full text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-600 transition-colors"
-              >
-                Need other tools? Contact us
-              </Button>
-            </div>
+    <div className="min-h-screen">
+      {/* Sticky Breadcrumb */}
+      <div className="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center text-sm text-zinc-400">
+            <Link href="/" className="hover:text-white flex items-center">
+              <Home className="w-4 h-4 mr-1" />
+            </Link>
+            <ChevronRight className="w-4 h-4 mx-1" />
+            <Link href="/generate" className="hover:text-white">
+              {getNetworkName()}
+            </Link>
+            <ChevronRight className="w-4 h-4 mx-1" />
+            <span className="text-white">{getActiveToolName()}{getTokenTypeDisplay()}</span>
           </div>
         </div>
+      </div>
 
-        <div className="overflow-y-auto h-[calc(90vh)]">
+      <div className="container mx-auto px-4 pt-6">
+        <div className="grid lg:grid-cols-[320px_1fr] gap-6">
+          {/* Centered Sidebar */}
+          <div className="lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:flex lg:items-center">
+            <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden flex flex-col w-full">
+              {/* Dashboard/Back Button Section */}
+              <div className="p-3 border-b border-zinc-800 bg-zinc-800/30 flex-shrink-0">
+                <Link 
+                  href="/dashboard" 
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg transition-all duration-200 group"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="font-medium">My Dashboard</span>
+                  <ArrowLeft className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </div>
+
+              {/* Tools Header */}
+              <div className="p-4 border-b border-zinc-800 flex-shrink-0">
+                <h2 className="font-medium text-white flex items-center flex-wrap">
+                  Tools{tokenType && (
+                    <span className={`ml-2 text-xs px-2 py-1 rounded ${tokenType === 'closed-loop' ? 'bg-emerald-500/20 text-emerald-400' :
+                      tokenType === 'regulated' ? 'bg-purple-500/20 text-purple-400' :
+                        'bg-blue-500/20 text-blue-400'
+                      }`}>
+                      {tokenType === 'closed-loop' ? 'Closed-Loop' :
+                        tokenType === 'regulated' ? 'Regulated' : 'Standard'}
+                    </span>
+                  )}
+                  <span className="ml-1 text-orange-400">🔥</span>
+                </h2>
+                {packageId && (
+                  <p className="text-xs text-zinc-500 mt-1 break-all">
+                    Package: {packageId.slice(0, 8)}...{packageId.slice(-6)}
+                  </p>
+                )}
+              </div>
+
+              {/* Scrollable Tools List */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="p-2 space-y-1">
+                  {filteredTools.map((tool) => (
+                    <button
+                      key={tool.id}
+                      className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between transition-all duration-200 ${
+                        tool.isActive 
+                          ? "bg-teal-500/20 text-teal-400 border border-teal-500/30" 
+                          : tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender')
+                            ? "text-zinc-600 cursor-not-allowed" 
+                            : tool.comingSoon
+                              ? "text-zinc-500 cursor-not-allowed opacity-70"
+                              : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 cursor-pointer"
+                      }`}
+                      disabled={tool.comingSoon}
+                      onClick={() => !tool.comingSoon && handleToolSelect(tool.id, tool.route)}
+                    >
+                      <div className="flex items-center min-w-0 flex-1">
+                        <div className={`w-6 h-6 mr-3 flex items-center justify-center flex-shrink-0 ${
+                          tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-50' : ''
+                        }`}>
+                          {tool.icon}
+                        </div>
+                        <span className={`font-medium truncate ${
+                          tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') ? 'opacity-70' : ''
+                        }`}>
+                          {tool.name}
+                        </span>
+                        <div className="flex items-center ml-2 flex-shrink-0">
+                          {tool.isNew && (
+                            <span className="text-xs bg-teal-500/20 text-teal-400 px-1.5 py-0.5 rounded font-medium">
+                              New
+                            </span>
+                          )}
+                          {tool.comingSoon && (tool.id === 'liquidity-pool' || tool.id === 'multisender') && (
+                            <span className="text-xs bg-zinc-700/50 text-zinc-500 px-1.5 py-0.5 rounded font-medium border border-zinc-700/30">
+                              Soon
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {!tool.comingSoon && <ChevronRight className="w-4 h-4 opacity-50 ml-2 flex-shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-zinc-800 flex-shrink-0">
+                <Button 
+                  variant="outline" 
+                  className="w-full text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-600 transition-colors text-sm"
+                >
+                  Need other tools? Contact us
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="min-w-0">
           {activeTool === "token-creator" && (
-            <div className="scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-zinc-900">
+            <>
               <motion.div
                 className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mb-8"
                 initial={{ opacity: 0, y: 20 }}
@@ -486,10 +540,16 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
                 selectedTemplate={selectedTemplate}
                 onTemplateSelect={handleTemplateSelect}
               />
-            </div>
+            </>
           )}
           {activeTool === "token-page" && (
             <TokenPage network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
+          )}
+          {activeTool === "policy" && (
+            <PolicyTokens network={network} tokenData={tokenData} />
+          )}
+          {activeTool === "action-requests" && (
+            <ActionRequests network={network} tokenData={tokenData} />
           )}
           {activeTool === "mint-tokens" && (
             <MintTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
@@ -503,14 +563,9 @@ export default function TokenManager({ network = "testnet" }: TokenManagerProps)
           {activeTool === "pausable" && (
             <PausableTokens network={network} tokenData={tokenData} isLoading={isLoading} refetch={refetch} />
           )}
-          {activeTool === "policy" && (
-            <PolicyTokens network={network} tokenData={tokenData} />
-          )}
-          {activeTool === "action-requests" && (
-            <ActionRequests network={network} tokenData={tokenData} />
-          )}
         </div>
       </div>
+    </div>
     </div>
   )
 }

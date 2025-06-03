@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Copy, ExternalLink, Edit3, Save, X, Loader2 } from "lucide-react"
+import { Copy, ExternalLink, Edit3, Save, X, Loader2, Search, Filter, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,6 +26,17 @@ export interface TokenPageProps {
 }
 
 type EditMode = 'name' | 'symbol' | 'description' | 'all' | null
+
+// Minted Token Interface
+interface MintedToken {
+  id: number
+  tokenName: string
+  coinId: string
+  owner: string
+  amount: number
+  mintedAt: string
+  transactionId: string
+}
 
 export default function TokenPage({ network, tokenData, isLoading, refetch }: TokenPageProps) {
   console.log("network", network);
@@ -54,6 +65,29 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
     description: ""
   })
   const [isUpdating, setIsUpdating] = useState(false)
+
+  // Generate dummy minted tokens data - Replace this with real blockchain data
+  const generateMintedTokens = (tokenName: string = "Token"): MintedToken[] => {
+    const tokens: MintedToken[] = [];
+    const owners = [
+      "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t",
+      "0x2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u",
+      "0x3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v",
+    ];
+
+    for (let i = 1; i <= 8; i++) {
+      tokens.push({
+        id: i,
+        tokenName: `${tokenName} ${i}`,
+        coinId: `0x${Math.random().toString(16).substr(2, 40)}${i.toString().padStart(8, '0')}`,
+        owner: owners[Math.floor(Math.random() * owners.length)],
+        amount: Math.floor(Math.random() * 10000) + 100,
+        mintedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        transactionId: `0x${Math.random().toString(16).substr(2, 64)}`
+      });
+    }
+    return tokens;
+  };
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -121,8 +155,6 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
     try {
       const tx = new Transaction()
       tx.setGasBudget(10_000_000)
-
-      // const updatedValue = editValue;
 
       tx.moveCall({
         target: `${derivedCoinType}::update_${editMode}`,
@@ -195,7 +227,7 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
     try {
       const tx = new Transaction()
       tx.setGasBudget(10_000_000)
-      // console.log("this does not have update_metadata?", derivedCoinType); //oh for previous pkgid deployed
+
       tx.moveCall({
         target: `${derivedCoinType}::update_metadata`,
         arguments: [
@@ -554,6 +586,39 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
             </Button>
           </CardFooter>
         </Card>
+
+        {/* NEW: Minted Tokens Card */}
+        <Card className="bg-zinc-900 border-zinc-800 text-white">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl flex items-center">
+                  <TrendingUp className="h-5 w-5 text-teal-400 mr-2" />
+                  Minted Tokens
+                </CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Track all minted {tokenData?.name} tokens and their owners
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-zinc-700 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800"
+                onClick={() => (window.location.href = `/generator/${network}/mint/?packageId=${tokenData?.pkgId}`)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Mint New
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <MintedTokensList 
+              tokenData={tokenData} 
+              network={network} 
+              onCopy={copyToClipboard}
+            />
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Edit Modal */}
@@ -665,7 +730,214 @@ export default function TokenPage({ network, tokenData, isLoading, refetch }: To
   )
 }
 
-// Keep all the other interface and component definitions the same
+// NEW: Minted Tokens List Component
+interface MintedTokensListProps {
+  tokenData: TokenData | undefined
+  network: string
+  onCopy: (text: string) => void
+}
+
+function MintedTokensList({ tokenData, network, onCopy }: MintedTokensListProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedOwner, setSelectedOwner] = useState("all")
+
+  // TODO: Replace with real blockchain data
+  const generateMintedTokens = (tokenName: string = "Token"): MintedToken[] => {
+    const tokens: MintedToken[] = [];
+    const owners = [
+      "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t",
+      "0x2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u",
+      "0x3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v",
+    ];
+
+    for (let i = 1; i <= 8; i++) {
+      tokens.push({
+        id: i,
+        tokenName: `${tokenName} ${i}`,
+        coinId: `0x${Math.random().toString(16).substr(2, 40)}${i.toString().padStart(8, '0')}`,
+        owner: owners[Math.floor(Math.random() * owners.length)],
+        amount: Math.floor(Math.random() * 10000) + 100,
+        mintedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        transactionId: `0x${Math.random().toString(16).substr(2, 64)}`
+      });
+    }
+    return tokens;
+  };
+
+  const mintedTokens = generateMintedTokens(tokenData?.name || "Token");
+  const uniqueOwners = [...new Set(mintedTokens.map(token => token.owner))];
+
+  const filteredTokens = mintedTokens.filter(token => {
+    const matchesSearch = token.tokenName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         token.coinId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         token.owner.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesOwner = selectedOwner === "all" || token.owner === selectedOwner;
+    
+    return matchesSearch && matchesOwner;
+  });
+
+  const truncateAddress = (address: string) => {
+    return `${address.substring(0, 8)}...${address.substring(address.length - 6)}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+          <Input
+            type="text"
+            placeholder="Search by token name, coin ID, or owner..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-zinc-800 border-zinc-700 text-white placeholder-zinc-400"
+          />
+        </div>
+        
+        <div className="relative">
+          <Filter className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+          <select
+            value={selectedOwner}
+            onChange={(e) => setSelectedOwner(e.target.value)}
+            className="pl-10 pr-8 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none cursor-pointer"
+          >
+            <option value="all">All Owners</option>
+            {uniqueOwners.map((owner, index) => (
+              <option key={owner} value={owner}>
+                Owner {index + 1} ({truncateAddress(owner)})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-zinc-800 rounded-lg p-3 border border-zinc-700">
+          <div className="text-lg font-bold text-teal-400">{mintedTokens.length}</div>
+          <div className="text-zinc-400 text-xs">Total Minted</div>
+        </div>
+        <div className="bg-zinc-800 rounded-lg p-3 border border-zinc-700">
+          <div className="text-lg font-bold text-blue-400">{uniqueOwners.length}</div>
+          <div className="text-zinc-400 text-xs">Unique Owners</div>
+        </div>
+        <div className="bg-zinc-800 rounded-lg p-3 border border-zinc-700">
+          <div className="text-lg font-bold text-green-400">
+            {mintedTokens.reduce((sum, token) => sum + token.amount, 0).toLocaleString()}
+          </div>
+          <div className="text-zinc-400 text-xs">Total Supply</div>
+        </div>
+      </div>
+
+      {/* Results count */}
+      <p className="text-zinc-400 text-sm">
+        Showing {filteredTokens.length} of {mintedTokens.length} tokens
+      </p>
+
+      {/* Token List */}
+      <div className="space-y-3 max-h-80 overflow-y-auto">
+        {filteredTokens.length === 0 ? (
+          <div className="text-center py-8">
+            <Coins className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
+            <p className="text-zinc-400">No tokens found matching your criteria</p>
+          </div>
+        ) : (
+          filteredTokens.map((token) => (
+            <div
+              key={token.id}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg p-4 hover:border-zinc-600 transition-colors"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                {/* Token Info */}
+                <div className="lg:col-span-1">
+                  <div className="font-semibold text-teal-400 mb-1">
+                    {token.tokenName}
+                  </div>
+                  <div className="text-zinc-400 text-sm">
+                    Amount: <span className="text-white font-medium">{token.amount.toLocaleString()}</span>
+                  </div>
+                  <div className="text-zinc-400 text-xs mt-1">
+                    {formatDate(token.mintedAt)}
+                  </div>
+                </div>
+
+                {/* Owner */}
+                <div className="lg:col-span-1">
+                  <div className="text-zinc-400 text-xs mb-1">Owner</div>
+                  <div className="flex items-center">
+                    <span className="text-sm font-mono text-white mr-2">
+                      {truncateAddress(token.owner)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onCopy(token.owner)}
+                      className="h-6 w-6 text-zinc-400 hover:text-white"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Coin ID */}
+                <div className="lg:col-span-1">
+                  <div className="text-zinc-400 text-xs mb-1">Coin ID</div>
+                  <div className="flex items-center">
+                    <span className="text-sm font-mono text-white mr-2">
+                      {truncateAddress(token.coinId)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onCopy(token.coinId)}
+                      className="h-6 w-6 text-zinc-400 hover:text-white"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="lg:col-span-1 flex items-center justify-end space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => window.open(`https://suiscan.xyz/${network}/object/${token.coinId}`, '_blank')}
+                    className="h-8 w-8 text-zinc-400 hover:text-white bg-zinc-700 hover:bg-zinc-600"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => (window.location.href = `/generator/${network}/burn/?packageId=${tokenData?.pkgId}&coinId=${token.coinId}`)}
+                    className="h-8 w-8 text-red-400 hover:text-red-300 bg-red-900/20 hover:bg-red-900/40 border border-red-700/50"
+                  >
+                    🔥
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Keep all the existing component interfaces and implementations
 interface InfoCardProps {
   label: string
   value: string
